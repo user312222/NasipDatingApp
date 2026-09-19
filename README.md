@@ -39,8 +39,8 @@
 
 - **Framework:** [Flutter](https://flutter.dev/)
 - **Language:** [Dart](https://dart.dev/)
-- **Backend / Database:** Firebase (Authentication, Firestore, Storage) or Supabase *(Update based on your exact stack)*
-- **State Management:** Riverpod / Provider / BLoC *(Leave the one you use)*
+- **Backend / Database:** Firebase
+- **State Management:**  BLoC 
 
 ---
 
@@ -53,9 +53,3 @@ Follow these instructions to get a copy of the project up and running on your lo
 - Flutter SDK (Version x.x.x or higher)
 - Dart SDK
 - Android Studio / VS Code (with Flutter extensions installed)
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/YOUR_USERNAME/nasip-dating-app.git](https://github.com/YOUR_USERNAME/nasip-dating-app.git)
