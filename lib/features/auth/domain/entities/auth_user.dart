@@ -23,11 +23,15 @@ class AuthUser extends Equatable {
 
   bool get isVerified => verifiedAt != null;
 
-  AuthUser copyWith({AccountType? accountType, DateTime? verifiedAt}) => AuthUser(
+  AuthUser copyWith({
+    AccountType? accountType,
+    DateTime? verifiedAt,
+    bool clearVerifiedAt = false,
+  }) => AuthUser(
     id: id,
     phone: phone,
     accountType: accountType ?? this.accountType,
-    verifiedAt: verifiedAt ?? this.verifiedAt,
+    verifiedAt: clearVerifiedAt ? null : (verifiedAt ?? this.verifiedAt),
   );
 
   @override

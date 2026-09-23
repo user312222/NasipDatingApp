@@ -15,7 +15,9 @@ sealed class Failure extends Equatable {
 
 /// The backend (Firebase/Firestore, REST API, ...) returned an error.
 final class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Sunucuyla iletişimde bir sorun oluştu.']);
+  const ServerFailure([
+    super.message = 'Sunucuyla iletişimde bir sorun oluştu.',
+  ]);
 }
 
 /// No network connectivity.

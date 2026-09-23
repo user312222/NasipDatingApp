@@ -15,11 +15,19 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
   @override
   Future<Result<List<Candidate>>> getCandidates(CandidateFilter filter) =>
-      _guard(() => remoteDataSource.getCandidates(filter), 'Adaylar yüklenemedi.');
+      _guard(
+        () => remoteDataSource.getCandidates(filter),
+        'Adaylar yüklenemedi.',
+      );
 
   @override
-  Future<Result<SwipeOutcome>> swipe({required Candidate candidate, required SwipeAction action}) =>
-      _guard(() => remoteDataSource.swipe(candidate: candidate, action: action), 'Bir sorun oluştu.');
+  Future<Result<SwipeOutcome>> swipe({
+    required Candidate candidate,
+    required SwipeAction action,
+  }) => _guard(
+    () => remoteDataSource.swipe(candidate: candidate, action: action),
+    'Bir sorun oluştu.',
+  );
 
   @override
   Future<Result<List<Match>>> getMyMatches() =>
@@ -30,11 +38,17 @@ class MatchingRepositoryImpl implements MatchingRepository {
     required String matchId,
     required bool visible,
   }) => _guard(
-    () => remoteDataSource.setMatchVisibleToFamily(matchId: matchId, visible: visible),
+    () => remoteDataSource.setMatchVisibleToFamily(
+      matchId: matchId,
+      visible: visible,
+    ),
     'Bir sorun oluştu.',
   );
 
-  Future<Result<T>> _guard<T>(Future<T> Function() action, String fallbackMessage) async {
+  Future<Result<T>> _guard<T>(
+    Future<T> Function() action,
+    String fallbackMessage,
+  ) async {
     try {
       return Ok(await action());
     } on ServerException catch (e) {

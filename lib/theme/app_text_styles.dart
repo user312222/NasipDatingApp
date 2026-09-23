@@ -6,11 +6,17 @@ import 'package:google_fonts/google_fonts.dart';
 /// `Bi Nasip/...`). Colorless on purpose — [AppTheme] applies ink colors
 /// per-brightness when it builds each [TextTheme].
 abstract final class AppTextStyles {
-  static TextStyle get displayLarge =>
-      GoogleFonts.fraunces(fontSize: 34, fontWeight: FontWeight.w600, height: 1.16);
+  static TextStyle get displayLarge => GoogleFonts.fraunces(
+    fontSize: 34,
+    fontWeight: FontWeight.w600,
+    height: 1.16,
+  );
 
-  static TextStyle get displayHeadline =>
-      GoogleFonts.fraunces(fontSize: 26, fontWeight: FontWeight.w600, height: 1.2);
+  static TextStyle get displayHeadline => GoogleFonts.fraunces(
+    fontSize: 26,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+  );
 
   static TextStyle get titleLarge =>
       GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w600, height: 1.28);
@@ -36,6 +42,9 @@ abstract final class AppTextStyles {
 
   /// Decorative Arabic accent face — brand moments only (e.g. a splash
   /// screen mark), never for functional/UI text.
-  static TextStyle get accentArabic =>
-      GoogleFonts.arefRuqaa(fontSize: 22, fontWeight: FontWeight.w400, height: 1.3);
+  static TextStyle get accentArabic => GoogleFonts.arefRuqaa(
+    fontSize: 22,
+    fontWeight: FontWeight.w400,
+    height: 1.3,
+  );
 }

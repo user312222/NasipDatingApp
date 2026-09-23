@@ -47,7 +47,8 @@ class _WaitlistViewState extends State<_WaitlistView> {
       body: BlocConsumer<WaitlistCubit, WaitlistState>(
         listener: (context, state) {
           if (state is WaitlistFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -63,7 +64,10 @@ class _WaitlistViewState extends State<_WaitlistView> {
                     style: textTheme.labelSmall?.copyWith(color: colors.brass),
                   ),
                   const SizedBox(height: 12),
-                  Text('Herkesin bi nasibi var.', style: textTheme.displayLarge),
+                  Text(
+                    'Herkesin bi nasibi var.',
+                    style: textTheme.displayLarge,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'Evliliği hedefleyen, mahremiyetini kendi elinde tutmak isteyen medeni '
@@ -141,18 +145,24 @@ class _WaitlistForm extends StatelessWidget {
               TextFormField(
                 controller: nameController,
                 decoration: const InputDecoration(labelText: 'AD'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Adını gir' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Adını gir' : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
                 controller: contactController,
-                decoration: const InputDecoration(labelText: 'E-POSTA VEYA TELEFON'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Gerekli' : null,
+                decoration: const InputDecoration(
+                  labelText: 'E-POSTA VEYA TELEFON',
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Gerekli' : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
                 controller: cityController,
-                decoration: const InputDecoration(labelText: 'ŞEHİR (OPSİYONEL)'),
+                decoration: const InputDecoration(
+                  labelText: 'ŞEHİR (OPSİYONEL)',
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -161,7 +171,10 @@ class _WaitlistForm extends StatelessWidget {
                     ? const SizedBox(
                         height: 18,
                         width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Bana da nasip olsun'),
               ),
@@ -189,7 +202,11 @@ class _SuccessCard extends StatelessWidget {
           children: [
             Icon(Icons.auto_awesome, color: colors.brass, size: 28),
             const SizedBox(height: 12),
-            Text('Teşekkürler, $name.', style: textTheme.titleLarge, textAlign: TextAlign.center),
+            Text(
+              'Teşekkürler, $name.',
+              style: textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(
               'Erken erişim daveti hazır olduğunda sana haber vereceğiz.',

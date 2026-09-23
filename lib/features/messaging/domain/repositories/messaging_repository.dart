@@ -11,7 +11,10 @@ abstract interface class MessagingRepository {
   });
 
   /// FR-5.1. Returns the updated conversation.
-  Future<Result<Conversation>> sendMessage({required String matchId, required String text});
+  Future<Result<Conversation>> sendMessage({
+    required String matchId,
+    required String text,
+  });
 
   /// FR-5.2: mark the one-time nudge as shown so it never appears again
   /// for this conversation.

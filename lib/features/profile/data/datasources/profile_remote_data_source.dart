@@ -5,11 +5,14 @@ import '../models/profile_model.dart';
 /// Firebase Storage (photo upload, replacing `photoRefs` placeholders with
 /// real download URLs) once the backend exists — `ProfileRepositoryImpl`
 /// and everything above it stays unchanged.
-abstract interface class ProfileLocalDataSource {
+abstract interface class ProfileRemoteDataSource {
   Future<void> save(ProfileModel profile);
+
+  /// See `ProfileRepository.hasProfile`.
+  Future<bool> hasProfile(String userId);
 }
 
-class ProfileLocalDataSourceImpl implements ProfileLocalDataSource {
+class MockProfileRemoteDataSource implements ProfileRemoteDataSource {
   final List<ProfileModel> _profiles = [];
 
   @override
@@ -21,6 +24,11 @@ class ProfileLocalDataSourceImpl implements ProfileLocalDataSource {
     if (profile.age < 18) {
       throw const ServerException('18 yaşından küçükler kayıt olamaz.');
     }
+    _profiles.removeWhere((p) => p.userId == profile.userId);
     _profiles.add(profile);
   }
+
+  @override
+  Future<bool> hasProfile(String userId) async =>
+      _profiles.any((p) => p.userId == userId);
 }

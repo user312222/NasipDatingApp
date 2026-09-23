@@ -32,7 +32,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         listener: (context, state) {
           if (state is OtpSent) context.push('/otp');
           if (state is OtpRequestFailed) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: BlocBuilder<AuthCubit, AuthState>(
@@ -51,7 +52,9 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Telefon numaran yalnızca doğrulama ve hesabınla ilgili önemli bildirimler için kullanılır.',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.inkSoft,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     TextField(
@@ -66,12 +69,17 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     ElevatedButton(
                       onPressed: isSending
                           ? null
-                          : () => context.read<AuthCubit>().requestOtp(_phoneController.text.trim()),
+                          : () => context.read<AuthCubit>().requestOtp(
+                              _phoneController.text.trim(),
+                            ),
                       child: isSending
                           ? const SizedBox(
                               height: 18,
                               width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Kod gönder'),
                     ),

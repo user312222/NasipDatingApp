@@ -1,16 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
+import 'core/restart/restart_app.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
+import 'features/family/presentation/bloc/guardian_cubit.dart';
 import 'features/profile/presentation/bloc/profile_cubit.dart';
+import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initDependencies();
-  runApp(const BiNasipApp());
+  runApp(const RestartApp(child: BiNasipApp()));
 }
 
 class BiNasipApp extends StatelessWidget {
@@ -26,6 +31,7 @@ class BiNasipApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<ProfileCubit>()),
+        BlocProvider(create: (_) => sl<GuardianCubit>()),
       ],
       child: MaterialApp.router(
         title: 'Bi Nasip',

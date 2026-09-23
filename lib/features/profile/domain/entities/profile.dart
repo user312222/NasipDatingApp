@@ -21,7 +21,7 @@ enum PhotoVisibility {
 }
 
 /// A completed profile, ready to save. `photoRefs` are placeholder
-/// filenames for now — see `ProfileLocalDataSource` — they'll become
+/// filenames for now — see `ProfileRemoteDataSource` — they'll become
 /// Firebase Storage download URLs once photo upload is wired.
 class Profile extends Equatable {
   const Profile({

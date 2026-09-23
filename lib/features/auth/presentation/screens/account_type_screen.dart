@@ -59,7 +59,7 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
                     ? null
                     : () {
                         context.read<AuthCubit>().selectAccountType(_selected!);
-                        context.push('/phone');
+                        context.push('/consent');
                       },
                 child: const Text('Devam et'),
               ),
@@ -105,7 +105,9 @@ class _Card extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               color: selected ? colors.plum : colors.inkSoft,
             ),
             const SizedBox(width: 14),
@@ -115,7 +117,12 @@ class _Card extends StatelessWidget {
                 children: [
                   Text(title, style: textTheme.titleSmall),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft)),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.inkSoft,
+                    ),
+                  ),
                 ],
               ),
             ),

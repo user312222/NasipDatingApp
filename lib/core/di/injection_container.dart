@@ -1,19 +1,46 @@
 import 'package:get_it/get_it.dart';
 
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/datasources/firebase_auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/check_invite_code.dart';
+import '../../features/auth/domain/usecases/get_current_session.dart';
+import '../../features/auth/domain/usecases/log_out.dart';
 import '../../features/auth/domain/usecases/request_phone_otp.dart';
 import '../../features/auth/domain/usecases/submit_selfie_verification.dart';
 import '../../features/auth/domain/usecases/verify_phone_otp.dart';
 import '../../features/auth/presentation/bloc/auth_cubit.dart';
+import '../../features/account/data/datasources/account_remote_data_source.dart';
+import '../../features/account/data/datasources/firestore_account_remote_data_source.dart';
+import '../../features/consent/data/datasources/consent_remote_data_source.dart';
+import '../../features/consent/data/datasources/firestore_consent_remote_data_source.dart';
+import '../../features/consent/data/repositories/consent_repository_impl.dart';
+import '../../features/consent/domain/repositories/consent_repository.dart';
+import '../../features/consent/domain/usecases/record_consent.dart';
+import '../../features/account/data/repositories/account_repository_impl.dart';
+import '../../features/account/domain/repositories/account_repository.dart';
+import '../../features/account/domain/usecases/delete_account.dart';
+import '../../features/account/presentation/bloc/account_cubit.dart';
+import '../../features/family/data/datasources/family_remote_data_source.dart';
+import '../../features/family/data/datasources/firestore_family_remote_data_source.dart';
+import '../../features/family/data/repositories/family_repository_impl.dart';
+import '../../features/family/domain/repositories/family_repository.dart';
+import '../../features/family/domain/usecases/get_or_create_invite_code.dart';
+import '../../features/family/domain/usecases/get_visible_matches.dart';
+import '../../features/family/domain/usecases/link_guardian.dart';
+import '../../features/family/presentation/bloc/family_link_cubit.dart';
+import '../../features/family/presentation/bloc/guardian_cubit.dart';
+import '../../features/matching/data/datasources/firestore_matching_remote_data_source.dart';
 import '../../features/matching/data/datasources/matching_remote_data_source.dart';
+import '../../features/matching/domain/usecases/get_my_matches.dart';
+import '../../features/matching/domain/usecases/set_match_visible_to_family.dart';
 import '../../features/matching/data/repositories/matching_repository_impl.dart';
 import '../../features/matching/domain/repositories/matching_repository.dart';
 import '../../features/matching/domain/usecases/get_candidates.dart';
 import '../../features/matching/domain/usecases/swipe_candidate.dart';
 import '../../features/matching/presentation/bloc/matching_cubit.dart';
+import '../../features/messaging/data/datasources/firestore_messaging_remote_data_source.dart';
 import '../../features/messaging/data/datasources/messaging_remote_data_source.dart';
 import '../../features/messaging/data/repositories/messaging_repository_impl.dart';
 import '../../features/messaging/domain/repositories/messaging_repository.dart';
@@ -21,9 +48,19 @@ import '../../features/messaging/domain/usecases/dismiss_family_nudge.dart';
 import '../../features/messaging/domain/usecases/open_conversation.dart';
 import '../../features/messaging/domain/usecases/send_message.dart';
 import '../../features/messaging/presentation/bloc/chat_cubit.dart';
-import '../../features/profile/data/datasources/profile_local_data_source.dart';
+import '../../features/safety/data/datasources/firestore_safety_remote_data_source.dart';
+import '../../features/safety/data/datasources/safety_remote_data_source.dart';
+import '../../features/safety/data/repositories/safety_repository_impl.dart';
+import '../../features/safety/domain/repositories/safety_repository.dart';
+import '../../features/safety/domain/usecases/block_user.dart';
+import '../../features/safety/domain/usecases/moderate_photo.dart';
+import '../../features/safety/domain/usecases/report_user.dart';
+import '../../features/safety/presentation/bloc/safety_cubit.dart';
+import '../../features/profile/data/datasources/firestore_profile_remote_data_source.dart';
+import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/has_profile.dart';
 import '../../features/profile/domain/usecases/save_profile.dart';
 import '../../features/profile/presentation/bloc/profile_cubit.dart';
 import '../../features/waitlist/data/datasources/waitlist_local_data_source.dart';
@@ -40,10 +77,14 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   _initWaitlist();
+  _initConsent();
   _initAuth();
   _initProfile();
   _initMatching();
   _initMessaging();
+  _initFamily();
+  _initSafety();
+  _initAccount();
 }
 
 void _initWaitlist() {
@@ -71,6 +112,8 @@ void _initAuth() {
       requestPhoneOtp: sl(),
       verifyPhoneOtp: sl(),
       submitSelfieVerification: sl(),
+      getCurrentSession: sl(),
+      recordConsent: sl(),
     ),
   );
 
@@ -79,12 +122,29 @@ void _initAuth() {
   sl.registerLazySingleton(() => RequestPhoneOtp(sl()));
   sl.registerLazySingleton(() => VerifyPhoneOtp(sl()));
   sl.registerLazySingleton(() => SubmitSelfieVerification(sl()));
+  sl.registerLazySingleton(() => GetCurrentSession(sl()));
+  sl.registerLazySingleton(() => LogOut(sl()));
 
   // Data
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => MockAuthRemoteDataSource());
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => FirebaseAuthRemoteDataSource(fallback: MockAuthRemoteDataSource()),
+  );
+}
+
+void _initConsent() {
+  // Domain
+  sl.registerLazySingleton(() => RecordConsent(sl()));
+
+  // Data
+  sl.registerLazySingleton<ConsentRepository>(
+    () => ConsentRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<ConsentRemoteDataSource>(
+    () => FirestoreConsentRemoteDataSource(),
+  );
 }
 
 void _initProfile() {
@@ -93,12 +153,15 @@ void _initProfile() {
 
   // Domain
   sl.registerLazySingleton(() => SaveProfile(sl()));
+  sl.registerLazySingleton(() => HasProfile(sl()));
 
   // Data
   sl.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(localDataSource: sl()),
+    () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton<ProfileLocalDataSource>(() => ProfileLocalDataSourceImpl());
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => FirestoreProfileRemoteDataSource(),
+  );
 }
 
 void _initMatching() {
@@ -110,12 +173,16 @@ void _initMatching() {
   // Domain
   sl.registerLazySingleton(() => GetCandidates(sl()));
   sl.registerLazySingleton(() => SwipeCandidate(sl()));
+  sl.registerLazySingleton(() => GetMyMatches(sl()));
+  sl.registerLazySingleton(() => SetMatchVisibleToFamily(sl()));
 
   // Data
   sl.registerLazySingleton<MatchingRepository>(
     () => MatchingRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton<MatchingRemoteDataSource>(() => MockMatchingRemoteDataSource());
+  sl.registerLazySingleton<MatchingRemoteDataSource>(
+    () => FirestoreMatchingRemoteDataSource(sl()),
+  );
 }
 
 void _initMessaging() {
@@ -138,5 +205,70 @@ void _initMessaging() {
   sl.registerLazySingleton<MessagingRepository>(
     () => MessagingRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton<MessagingRemoteDataSource>(() => MockMessagingRemoteDataSource());
+  sl.registerLazySingleton<MessagingRemoteDataSource>(
+    () => FirestoreMessagingRemoteDataSource(),
+  );
+}
+
+void _initAccount() {
+  // Presentation — provided locally by SettingsScreen.
+  sl.registerFactory(() => AccountCubit(deleteAccount: sl(), logOut: sl()));
+
+  // Domain
+  sl.registerLazySingleton(() => DeleteAccount(sl()));
+
+  // Data
+  sl.registerLazySingleton<AccountRepository>(
+    () => AccountRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<AccountRemoteDataSource>(
+    () => FirestoreAccountRemoteDataSource(),
+  );
+}
+
+void _initSafety() {
+  // Presentation — each SafetyMenuButton provides its own cubit.
+  sl.registerFactory(() => SafetyCubit(reportUser: sl(), blockUser: sl()));
+
+  // Domain
+  sl.registerLazySingleton(() => ReportUser(sl()));
+  sl.registerLazySingleton(() => BlockUser(sl()));
+  sl.registerLazySingleton(() => ModeratePhoto(sl()));
+
+  // Data
+  sl.registerLazySingleton<SafetyRepository>(
+    () => SafetyRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<SafetyRemoteDataSource>(
+    () => FirestoreSafetyRemoteDataSource(),
+  );
+}
+
+void _initFamily() {
+  // Presentation — GuardianCubit at the app root (two screens share it);
+  // FamilyLinkCubit is provided locally by FamilyLinkScreen.
+  sl.registerFactory(
+    () => GuardianCubit(linkGuardian: sl(), getVisibleMatches: sl()),
+  );
+  sl.registerFactory(
+    () => FamilyLinkCubit(
+      getOrCreateInviteCode: sl(),
+      getMyMatches: sl(),
+      setMatchVisibleToFamily: sl(),
+    ),
+  );
+
+  // Domain
+  sl.registerLazySingleton(() => LinkGuardian(sl()));
+  sl.registerLazySingleton(() => GetVisibleMatches(sl()));
+  sl.registerLazySingleton(() => GetOrCreateInviteCode(sl()));
+
+  // Data — the mock family source shares the mock matching source's
+  // in-memory store (a real backend would just query the same collection).
+  sl.registerLazySingleton<FamilyRepository>(
+    () => FamilyRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<FamilyRemoteDataSource>(
+    () => FirestoreFamilyRemoteDataSource(),
+  );
 }

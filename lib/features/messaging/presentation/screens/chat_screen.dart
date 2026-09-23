@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../safety/presentation/widgets/safety_menu_button.dart';
 import '../../domain/entities/chat_message.dart';
 import '../bloc/chat_cubit.dart';
 
@@ -12,11 +14,13 @@ import '../bloc/chat_cubit.dart';
 class ChatRouteArgs {
   const ChatRouteArgs({
     required this.matchId,
+    required this.otherPartyUserId,
     required this.otherPartyName,
     required this.otherPartyAvatarSeed,
   });
 
   final String matchId;
+  final String otherPartyUserId;
   final String otherPartyName;
   final int otherPartyAvatarSeed;
 }
@@ -27,11 +31,13 @@ class ChatScreen extends StatelessWidget {
   const ChatScreen({
     super.key,
     required this.matchId,
+    required this.otherPartyUserId,
     required this.otherPartyName,
     required this.otherPartyAvatarSeed,
   });
 
   final String matchId;
+  final String otherPartyUserId;
   final String otherPartyName;
   final int otherPartyAvatarSeed;
 
@@ -44,13 +50,22 @@ class ChatScreen extends StatelessWidget {
           otherPartyName: otherPartyName,
           otherPartyAvatarSeed: otherPartyAvatarSeed,
         ),
-      child: const _ChatView(),
+      child: _ChatView(
+        otherPartyUserId: otherPartyUserId,
+        otherPartyName: otherPartyName,
+      ),
     );
   }
 }
 
 class _ChatView extends StatefulWidget {
-  const _ChatView();
+  const _ChatView({
+    required this.otherPartyUserId,
+    required this.otherPartyName,
+  });
+
+  final String otherPartyUserId;
+  final String otherPartyName;
 
   @override
   State<_ChatView> createState() => _ChatViewState();
@@ -88,17 +103,32 @@ class _ChatViewState extends State<_ChatView> {
         if (state is ChatLoaded) _scrollToBottom();
       },
       builder: (context, state) {
-        final title = state is ChatLoaded ? state.conversation.otherPartyName : '';
+        final title = state is ChatLoaded
+            ? state.conversation.otherPartyName
+            : '';
         return Scaffold(
-          appBar: AppBar(title: Text(title.isEmpty ? 'Sohbet' : title)),
+          appBar: AppBar(
+            title: Text(title.isEmpty ? 'Sohbet' : title),
+            actions: [
+              SafetyMenuButton(
+                targetUserId: widget.otherPartyUserId,
+                targetName: widget.otherPartyName,
+                onBlocked: () => context.pop(),
+              ),
+            ],
+          ),
           body: switch (state) {
             ChatLoading() => const Center(child: CircularProgressIndicator()),
             ChatError(:final message) => Center(
-              child: Text(message, style: textTheme.bodyLarge?.copyWith(color: colors.rose)),
+              child: Text(
+                message,
+                style: textTheme.bodyLarge?.copyWith(color: colors.rose),
+              ),
             ),
             ChatLoaded(:final conversation, :final isSending) => Column(
               children: [
-                if (conversation.shouldShowFamilyNudge) const _FamilyNudgeCard(),
+                if (conversation.shouldShowFamilyNudge)
+                  const _FamilyNudgeCard(),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
@@ -132,7 +162,9 @@ class _MessageBubble extends StatelessWidget {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMe ? colors.plum : colors.surface,
@@ -146,7 +178,9 @@ class _MessageBubble extends StatelessWidget {
         ),
         child: Text(
           message.text,
-          style: textTheme.bodyLarge?.copyWith(color: isMe ? colors.bg : colors.ink),
+          style: textTheme.bodyLarge?.copyWith(
+            color: isMe ? colors.bg : colors.ink,
+          ),
         ),
       ),
     );
@@ -180,7 +214,10 @@ class _Composer extends StatelessWidget {
             IconButton.filled(
               onPressed: isSending ? null : () => _send(context),
               icon: const Icon(Icons.send),
-              style: IconButton.styleFrom(backgroundColor: colors.plum, foregroundColor: colors.bg),
+              style: IconButton.styleFrom(
+                backgroundColor: colors.plum,
+                foregroundColor: colors.bg,
+              ),
             ),
           ],
         ),
@@ -221,7 +258,10 @@ class _FamilyNudgeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Bir sonraki adımı düşünmek ister misin?', style: textTheme.titleSmall),
+                Text(
+                  'Bir sonraki adımı düşünmek ister misin?',
+                  style: textTheme.titleSmall,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'İstersen aileni sürece dahil etmeyi ya da bir buluşma ayarlamayı '

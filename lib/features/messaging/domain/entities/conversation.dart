@@ -25,7 +25,8 @@ class Conversation extends Equatable {
   /// conversation — once true, it never shows again here.
   final bool familyNudgeShown;
 
-  DateTime? get firstMessageAt => messages.isEmpty ? null : messages.first.sentAt;
+  DateTime? get firstMessageAt =>
+      messages.isEmpty ? null : messages.first.sentAt;
 
   /// FR-5.2: 30 total messages OR 7 days of active conversation,
   /// whichever comes first — and only if not already shown.
@@ -37,7 +38,10 @@ class Conversation extends Equatable {
     return DateTime.now().difference(first).inDays >= 7;
   }
 
-  Conversation copyWith({List<ChatMessage>? messages, bool? familyNudgeShown}) => Conversation(
+  Conversation copyWith({
+    List<ChatMessage>? messages,
+    bool? familyNudgeShown,
+  }) => Conversation(
     matchId: matchId,
     otherPartyName: otherPartyName,
     otherPartyAvatarSeed: otherPartyAvatarSeed,

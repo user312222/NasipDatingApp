@@ -34,7 +34,9 @@ class ProfileCompleteScreen extends StatelessWidget {
                 Icon(Icons.auto_awesome, size: 48, color: colors.brass),
                 const SizedBox(height: 16),
                 Text(
-                  profile == null ? 'Profilin hazır.' : '${profile.name}, profilin hazır.',
+                  profile == null
+                      ? 'Profilin hazır.'
+                      : '${profile.name}, profilin hazır.',
                   style: textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -52,7 +54,9 @@ class ProfileCompleteScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     _visibilityLabel(profile.photoVisibility),
-                    style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.inkSoft,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],

@@ -42,7 +42,8 @@ class ProfileModel extends Profile {
     'familyInvolvementOptIn': familyInvolvementOptIn,
     if (educationLevel != null) 'educationLevel': educationLevel,
     if (occupation != null) 'occupation': occupation,
-    if (religiousPracticeNote != null) 'religiousPracticeNote': religiousPracticeNote,
+    if (religiousPracticeNote != null)
+      'religiousPracticeNote': religiousPracticeNote,
     if (madhhab != null) 'madhhab': madhhab,
   };
 }

@@ -10,7 +10,13 @@ import 'candidate.dart';
 /// this field is wired through the repository interface now so it isn't
 /// a breaking change later, but the mock data source ignores it.
 class CandidateFilter extends Equatable {
-  const CandidateFilter({this.city, this.minAge, this.maxAge, this.intent, this.language});
+  const CandidateFilter({
+    this.city,
+    this.minAge,
+    this.maxAge,
+    this.intent,
+    this.language,
+  });
 
   final String? city;
   final int? minAge;

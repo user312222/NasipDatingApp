@@ -26,7 +26,10 @@ class ProfilePrivacyScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Fotoğraflarını kim, ne zaman görsün?', style: textTheme.titleLarge),
+              Text(
+                'Fotoğraflarını kim, ne zaman görsün?',
+                style: textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               Text(
                 'Görünürlük bir varsayılan değil, bir tercih. Şu an en kısıtlı seviyedesin — '
@@ -44,7 +47,8 @@ class ProfilePrivacyScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _VisibilityCard(
                 title: 'Sadece istek üzerine',
-                subtitle: 'Biri istediğinde bildirim alırsın, onaylarsan görünür.',
+                subtitle:
+                    'Biri istediğinde bildirim alırsın, onaylarsan görünür.',
                 level: PhotoVisibility.onRequestOnly,
                 selected: selected,
                 colors: colors,
@@ -106,7 +110,9 @@ class _VisibilityCard extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               color: isSelected ? colors.plum : colors.inkSoft,
             ),
             const SizedBox(width: 14),
@@ -116,7 +122,12 @@ class _VisibilityCard extends StatelessWidget {
                 children: [
                   Text(title, style: textTheme.titleSmall),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft)),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.inkSoft,
+                    ),
+                  ),
                 ],
               ),
             ),

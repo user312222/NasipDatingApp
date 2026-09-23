@@ -12,7 +12,9 @@ abstract interface class FamilyRepository {
   });
 
   /// FR-8.5: guardian-side — everything this guardian is allowed to see.
-  Future<Result<List<FamilyVisibleMatch>>> getVisibleMatches(String guardianUserId);
+  Future<Result<List<FamilyVisibleMatch>>> getVisibleMatches(
+    String guardianUserId,
+  );
 
   /// FR-8.3: single-side — creates one on first call, returns the same
   /// code on every later call for this user.

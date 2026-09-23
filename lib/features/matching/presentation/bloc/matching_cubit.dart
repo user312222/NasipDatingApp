@@ -12,15 +12,19 @@ import '../../domain/usecases/swipe_candidate.dart';
 part 'matching_state.dart';
 
 class MatchingCubit extends Cubit<MatchingState> {
-  MatchingCubit({required GetCandidates getCandidates, required SwipeCandidate swipeCandidate})
-    : _getCandidates = getCandidates,
-      _swipeCandidate = swipeCandidate,
-      super(const MatchingLoading());
+  MatchingCubit({
+    required GetCandidates getCandidates,
+    required SwipeCandidate swipeCandidate,
+  }) : _getCandidates = getCandidates,
+       _swipeCandidate = swipeCandidate,
+       super(const MatchingLoading());
 
   final GetCandidates _getCandidates;
   final SwipeCandidate _swipeCandidate;
 
-  Future<void> loadCandidates({CandidateFilter filter = CandidateFilter.empty}) async {
+  Future<void> loadCandidates({
+    CandidateFilter filter = CandidateFilter.empty,
+  }) async {
     emit(const MatchingLoading());
     final result = await _getCandidates(filter);
     switch (result) {
@@ -29,6 +33,20 @@ class MatchingCubit extends Cubit<MatchingState> {
       case Err<List<Candidate>>(:final failure):
         emit(MatchingError(failure.message));
     }
+  }
+
+  /// FR-6.2: drops a just-blocked candidate from the in-memory feed so the
+  /// next card slides into place without a refetch resetting progress.
+  void removeCandidate(String candidateId) {
+    final current = state;
+    if (current is! MatchingLoaded) return;
+    emit(
+      current.copyWith(
+        candidates: current.candidates
+            .where((c) => c.id != candidateId)
+            .toList(),
+      ),
+    );
   }
 
   Future<void> swipe(SwipeAction action) async {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../bloc/auth_cubit.dart';
+import '../session_router.dart';
 
 class InviteGateScreen extends StatefulWidget {
   const InviteGateScreen({super.key});
@@ -17,6 +18,16 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
   String? _errorText;
 
   @override
+  void initState() {
+    super.initState();
+    // Session restore (see `AuthCubit.restoreSession`) — runs once, right
+    // when the app cold-starts here. A returning, already-verified user
+    // gets routed straight past invite/phone/OTP/selfie instead of
+    // replaying the whole registration flow.
+    context.read<AuthCubit>().restoreSession();
+  }
+
+  @override
   void dispose() {
     _codeController.dispose();
     super.dispose();
@@ -28,104 +39,121 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: BlocListener<AuthCubit, AuthState>(
+      body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is InviteAccepted) {
             context.push('/account-type');
           } else if (state is InviteRejected) {
             setState(() => _errorText = 'Bu kod tanınmıyor.');
+          } else if (state is SessionActive) {
+            routeActiveSession(context, state.user);
           }
         },
-        child: BlocBuilder<AuthCubit, AuthState>(
-          builder: (context, state) {
-            final isChecking = state is InviteCheckInProgress;
-            return SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'DAVETİYELİ ERKEN ERİŞİM',
-                          style: textTheme.labelSmall?.copyWith(color: colors.brass),
-                          textAlign: TextAlign.center,
+        builder: (context, state) {
+          if (state is SessionRestoring) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final isChecking = state is InviteCheckInProgress;
+          return SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'DAVETİYELİ ERKEN ERİŞİM',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colors.brass,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Bi Nasip’e hoş geldin.',
-                          style: textTheme.headlineMedium,
-                          textAlign: TextAlign.center,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Bi Nasip’e hoş geldin.',
+                        style: textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.inkSoft,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',
-                          style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 28),
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                TextField(
-                                  controller: _codeController,
-                                  textCapitalization: TextCapitalization.characters,
-                                  decoration: InputDecoration(
-                                    labelText: 'DAVETİYE KODU',
-                                    errorText: _errorText,
-                                  ),
-                                  onChanged: (_) {
-                                    if (_errorText != null) setState(() => _errorText = null);
-                                  },
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 28),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: _codeController,
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                decoration: InputDecoration(
+                                  labelText: 'DAVETİYE KODU',
+                                  errorText: _errorText,
                                 ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: isChecking
-                                      ? null
-                                      : () {
-                                          final code = _codeController.text.trim();
-                                          if (code.isEmpty) {
-                                            setState(() => _errorText = 'Kodu gir');
-                                            return;
-                                          }
-                                          context.read<AuthCubit>().checkInviteCode(code);
-                                        },
-                                  child: isChecking
-                                      ? const SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Text('Devam et'),
-                                ),
-                              ],
-                            ),
+                                onChanged: (_) {
+                                  if (_errorText != null) {
+                                    setState(() => _errorText = null);
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: isChecking
+                                    ? null
+                                    : () {
+                                        final code = _codeController.text
+                                            .trim();
+                                        if (code.isEmpty) {
+                                          setState(
+                                            () => _errorText = 'Kodu gir',
+                                          );
+                                          return;
+                                        }
+                                        context
+                                            .read<AuthCubit>()
+                                            .checkInviteCode(code);
+                                      },
+                                child: isChecking
+                                    ? const SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Devam et'),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        TextButton(
-                          onPressed: () => context.push('/waitlist'),
-                          child: Text(
-                            'Davetiye kodun yok mu? Bekleme listesine katıl',
-                            style: textTheme.bodyMedium?.copyWith(color: colors.plum),
+                      ),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () => context.push('/waitlist'),
+                        child: Text(
+                          'Davetiye kodun yok mu? Bekleme listesine katıl',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.plum,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

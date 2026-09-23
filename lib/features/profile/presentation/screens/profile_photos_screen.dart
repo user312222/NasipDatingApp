@@ -5,7 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/result/result.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../safety/domain/usecases/moderate_photo.dart';
 import '../bloc/profile_cubit.dart';
 
 class ProfilePhotosScreen extends StatefulWidget {
@@ -23,11 +26,26 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
   Future<void> _pickPhotos() async {
     final picked = await _picker.pickMultiImage(limit: 6);
     if (picked.isEmpty) return;
-    final bytesList = await Future.wait(picked.map((x) => x.readAsBytes()));
-    final combined = [..._photos, ...bytesList].take(6).toList();
+    // FR-6.3: every photo goes through moderation before it's accepted.
+    final moderate = sl<ModeratePhoto>();
+    final accepted = <Uint8List>[];
+    final rejections = <String>[];
+    for (final file in picked) {
+      final bytes = await file.readAsBytes();
+      final result = await moderate(
+        ModeratePhotoParams(fileName: file.name, bytes: bytes),
+      );
+      switch (result) {
+        case Ok<void>():
+          accepted.add(bytes);
+        case Err<void>(:final failure):
+          rejections.add(failure.message);
+      }
+    }
+    final combined = [..._photos, ...accepted].take(6).toList();
     setState(() {
       _photos = combined;
-      _error = null;
+      _error = rejections.isEmpty ? null : rejections.join('\n');
     });
     if (!mounted) return;
     context.read<ProfileCubit>().updatePhotos(_photos);
@@ -51,7 +69,10 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('En az 1, en fazla 6 fotoğraf ekle.', style: textTheme.titleLarge),
+              Text(
+                'En az 1, en fazla 6 fotoğraf ekle.',
+                style: textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               Text(
                 'Fotoğraflarının kime, ne zaman görüneceğini ilerleyen bir adımda sen belirleyeceksin.',
@@ -89,7 +110,11 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
                             child: CircleAvatar(
                               radius: 12,
                               backgroundColor: colors.plumStrong,
-                              child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              child: const Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -100,7 +125,10 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colors.rose)),
+                Text(
+                  _error!,
+                  style: textTheme.bodyMedium?.copyWith(color: colors.rose),
+                ),
               ],
               const SizedBox(height: 16),
               ElevatedButton(

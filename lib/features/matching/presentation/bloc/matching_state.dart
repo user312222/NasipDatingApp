@@ -42,7 +42,8 @@ final class MatchingLoaded extends MatchingState {
   /// FR-4.3 (or any other swipe failure) — same one-shot-emission idea.
   final String? swipeError;
 
-  Candidate? get current => currentIndex < candidates.length ? candidates[currentIndex] : null;
+  Candidate? get current =>
+      currentIndex < candidates.length ? candidates[currentIndex] : null;
 
   bool get exhausted => currentIndex >= candidates.length;
 

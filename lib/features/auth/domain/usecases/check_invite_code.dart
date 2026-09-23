@@ -7,5 +7,6 @@ class CheckInviteCode implements UseCase<void, String> {
   final AuthRepository _repository;
 
   @override
-  Future<Result<void>> call(String params) => _repository.checkInviteCode(params);
+  Future<Result<void>> call(String params) =>
+      _repository.checkInviteCode(params);
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "886003158382",
+    "project_id": "binasip",
+    "storage_bucket": "binasip.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886003158382:android:8c0363a5600c867693457f",
+        "android_client_info": {
+          "package_name": "com.example.binasip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHsOZqehvx4yU2CpE0Lx8BFOCuIqIVA5o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

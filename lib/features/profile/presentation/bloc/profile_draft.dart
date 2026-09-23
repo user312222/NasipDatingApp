@@ -42,11 +42,14 @@ class ProfileDraft extends Equatable {
     if (b == null) return null;
     final now = DateTime.now();
     var years = now.year - b.year;
-    if (now.month < b.month || (now.month == b.month && now.day < b.day)) years--;
+    if (now.month < b.month || (now.month == b.month && now.day < b.day)) {
+      years--;
+    }
     return years;
   }
 
-  bool get hasValidDetails => name.trim().isNotEmpty && city.trim().isNotEmpty && (age ?? 0) >= 18;
+  bool get hasValidDetails =>
+      name.trim().isNotEmpty && city.trim().isNotEmpty && (age ?? 0) >= 18;
 
   ProfileDraft copyWith({
     List<Uint8List>? photos,
@@ -70,9 +73,11 @@ class ProfileDraft extends Equatable {
       city: city ?? this.city,
       educationLevel: educationLevel ?? this.educationLevel,
       occupation: occupation ?? this.occupation,
-      religiousPracticeNote: religiousPracticeNote ?? this.religiousPracticeNote,
+      religiousPracticeNote:
+          religiousPracticeNote ?? this.religiousPracticeNote,
       madhhab: madhhab ?? this.madhhab,
-      familyInvolvementOptIn: familyInvolvementOptIn ?? this.familyInvolvementOptIn,
+      familyInvolvementOptIn:
+          familyInvolvementOptIn ?? this.familyInvolvementOptIn,
     );
   }
 

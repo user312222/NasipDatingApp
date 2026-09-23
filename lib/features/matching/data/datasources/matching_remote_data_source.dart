@@ -1,4 +1,5 @@
 import '../../../../core/error/exceptions.dart';
+import '../../../safety/data/datasources/safety_remote_data_source.dart';
 import '../../domain/entities/candidate.dart';
 import '../../domain/entities/candidate_filter.dart';
 import '../../domain/entities/match.dart';
@@ -12,12 +13,25 @@ import '../../domain/entities/swipe_outcome.dart';
 /// touching `MatchingRepositoryImpl` or anything above it.
 abstract interface class MatchingRemoteDataSource {
   Future<List<Candidate>> getCandidates(CandidateFilter filter);
-  Future<SwipeOutcome> swipe({required Candidate candidate, required SwipeAction action});
+  Future<SwipeOutcome> swipe({
+    required Candidate candidate,
+    required SwipeAction action,
+  });
   Future<List<Match>> getMyMatches();
-  Future<void> setMatchVisibleToFamily({required String matchId, required bool visible});
+  Future<void> setMatchVisibleToFamily({
+    required String matchId,
+    required bool visible,
+  });
 }
 
 class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
+  /// [_safety] supplies the block list (FR-6.2) — a data-layer-only
+  /// dependency, same idea as `MockFamilyRemoteDataSource` sharing this
+  /// store; a real backend would just filter in the query.
+  MockMatchingRemoteDataSource(this._safety);
+
+  final SafetyRemoteDataSource _safety;
+
   /// FR-4.3.
   static const _dailyLikeLimit = 12;
 
@@ -101,9 +115,13 @@ class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
   @override
   Future<List<Candidate>> getCandidates(CandidateFilter filter) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
+    final blocked = await _safety.getBlockedIds();
     return _all.where((c) {
+      if (blocked.contains(c.id)) return false;
       if (filter.city != null && filter.city!.trim().isNotEmpty) {
-        if (c.city.toLowerCase() != filter.city!.trim().toLowerCase()) return false;
+        if (c.city.toLowerCase() != filter.city!.trim().toLowerCase()) {
+          return false;
+        }
       }
       if (filter.minAge != null && c.age < filter.minAge!) return false;
       if (filter.maxAge != null && c.age > filter.maxAge!) return false;
@@ -113,7 +131,10 @@ class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
   }
 
   @override
-  Future<SwipeOutcome> swipe({required Candidate candidate, required SwipeAction action}) async {
+  Future<SwipeOutcome> swipe({
+    required Candidate candidate,
+    required SwipeAction action,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
 
     if (action == SwipeAction.pass) {
@@ -121,7 +142,9 @@ class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
     }
 
     if (_likesUsedToday >= _dailyLikeLimit) {
-      throw const ServerException('Bugünkü beğeni hakkın doldu. Yarın devam edebilirsin.');
+      throw const ServerException(
+        'Bugünkü beğeni hakkın doldu. Yarın devam edebilirsin.',
+      );
     }
     _likesUsedToday++;
 
@@ -140,11 +163,18 @@ class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
   @override
   Future<List<Match>> getMyMatches() async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    return _myMatches.values.toList()..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
+    final blocked = await _safety.getBlockedIds();
+    return _myMatches.values
+        .where((m) => !blocked.contains(m.candidate.id))
+        .toList()
+      ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
   }
 
   @override
-  Future<void> setMatchVisibleToFamily({required String matchId, required bool visible}) async {
+  Future<void> setMatchVisibleToFamily({
+    required String matchId,
+    required bool visible,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     final existing = _myMatches[matchId];
     if (existing == null) {

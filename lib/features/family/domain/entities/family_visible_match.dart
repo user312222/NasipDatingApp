@@ -25,5 +25,11 @@ class FamilyVisibleMatch extends Equatable {
   final DateTime matchedAt;
 
   @override
-  List<Object?> get props => [candidateName, candidateAge, candidateCity, statusLabel, matchedAt];
+  List<Object?> get props => [
+    candidateName,
+    candidateAge,
+    candidateCity,
+    statusLabel,
+    matchedAt,
+  ];
 }

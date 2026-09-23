@@ -14,20 +14,22 @@ class WaitlistEntryModel extends WaitlistEntry {
 
   final DateTime? createdAt;
 
-  factory WaitlistEntryModel.fromEntity(WaitlistEntry entity) => WaitlistEntryModel(
-    name: entity.name,
-    contact: entity.contact,
-    city: entity.city,
-  );
+  factory WaitlistEntryModel.fromEntity(WaitlistEntry entity) =>
+      WaitlistEntryModel(
+        name: entity.name,
+        contact: entity.contact,
+        city: entity.city,
+      );
 
-  factory WaitlistEntryModel.fromJson(Map<String, dynamic> json) => WaitlistEntryModel(
-    name: json['name'] as String,
-    contact: json['contact'] as String,
-    city: json['city'] as String?,
-    createdAt: json['createdAt'] == null
-        ? null
-        : DateTime.parse(json['createdAt'] as String),
-  );
+  factory WaitlistEntryModel.fromJson(Map<String, dynamic> json) =>
+      WaitlistEntryModel(
+        name: json['name'] as String,
+        contact: json['contact'] as String,
+        city: json['city'] as String?,
+        createdAt: json['createdAt'] == null
+            ? null
+            : DateTime.parse(json['createdAt'] as String),
+      );
 
   Map<String, dynamic> toJson() => {
     'name': name,

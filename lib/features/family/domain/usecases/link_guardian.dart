@@ -19,7 +19,12 @@ class LinkGuardianParams extends Equatable {
   final String inviteCode;
 
   @override
-  List<Object?> get props => [guardianUserId, guardianName, relationship, inviteCode];
+  List<Object?> get props => [
+    guardianUserId,
+    guardianName,
+    relationship,
+    inviteCode,
+  ];
 }
 
 class LinkGuardian implements UseCase<void, LinkGuardianParams> {
@@ -27,10 +32,11 @@ class LinkGuardian implements UseCase<void, LinkGuardianParams> {
   final FamilyRepository _repository;
 
   @override
-  Future<Result<void>> call(LinkGuardianParams params) => _repository.linkGuardian(
-    guardianUserId: params.guardianUserId,
-    guardianName: params.guardianName,
-    relationship: params.relationship,
-    inviteCode: params.inviteCode,
-  );
+  Future<Result<void>> call(LinkGuardianParams params) =>
+      _repository.linkGuardian(
+        guardianUserId: params.guardianUserId,
+        guardianName: params.guardianName,
+        relationship: params.relationship,
+        inviteCode: params.inviteCode,
+      );
 }

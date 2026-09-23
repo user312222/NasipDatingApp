@@ -14,7 +14,11 @@ class WaitlistCubit extends Cubit<WaitlistState> {
 
   final SubmitWaitlistEntry _submitWaitlistEntry;
 
-  Future<void> submit({required String name, required String contact, String? city}) async {
+  Future<void> submit({
+    required String name,
+    required String contact,
+    String? city,
+  }) async {
     emit(const WaitlistSubmitting());
     final result = await _submitWaitlistEntry(
       WaitlistEntry(name: name, contact: contact, city: city),

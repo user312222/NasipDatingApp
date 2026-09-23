@@ -8,5 +8,6 @@ class GetMyMatches implements UseCase<List<Match>, NoParams> {
   final MatchingRepository _repository;
 
   @override
-  Future<Result<List<Match>>> call(NoParams params) => _repository.getMyMatches();
+  Future<Result<List<Match>>> call(NoParams params) =>
+      _repository.getMyMatches();
 }

@@ -20,14 +20,16 @@ class OpenConversationParams extends Equatable {
   List<Object?> get props => [matchId, otherPartyName, otherPartyAvatarSeed];
 }
 
-class OpenConversation implements UseCase<Conversation, OpenConversationParams> {
+class OpenConversation
+    implements UseCase<Conversation, OpenConversationParams> {
   const OpenConversation(this._repository);
   final MessagingRepository _repository;
 
   @override
-  Future<Result<Conversation>> call(OpenConversationParams params) => _repository.openConversation(
-    matchId: params.matchId,
-    otherPartyName: params.otherPartyName,
-    otherPartyAvatarSeed: params.otherPartyAvatarSeed,
-  );
+  Future<Result<Conversation>> call(OpenConversationParams params) =>
+      _repository.openConversation(
+        matchId: params.matchId,
+        otherPartyName: params.otherPartyName,
+        otherPartyAvatarSeed: params.otherPartyAvatarSeed,
+      );
 }

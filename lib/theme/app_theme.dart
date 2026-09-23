@@ -32,8 +32,12 @@ abstract final class AppTheme {
       onTertiaryContainer: colors.plumStrong,
       error: isLight ? const Color(0xFFB3261E) : const Color(0xFFF2B8B5),
       onError: isLight ? Colors.white : const Color(0xFF601410),
-      errorContainer: isLight ? const Color(0xFFF9DEDC) : const Color(0xFF8C1D18),
-      onErrorContainer: isLight ? const Color(0xFF410E0B) : const Color(0xFFF9DEDC),
+      errorContainer: isLight
+          ? const Color(0xFFF9DEDC)
+          : const Color(0xFF8C1D18),
+      onErrorContainer: isLight
+          ? const Color(0xFF410E0B)
+          : const Color(0xFFF9DEDC),
       surface: colors.surface,
       onSurface: colors.ink,
       surfaceContainerHighest: colors.plumTint,
@@ -48,7 +52,9 @@ abstract final class AppTheme {
     );
 
     final baseTextTheme = GoogleFonts.soraTextTheme(
-      isLight ? Typography.material2021().black : Typography.material2021().white,
+      isLight
+          ? Typography.material2021().black
+          : Typography.material2021().white,
     );
 
     final textTheme = baseTextTheme
@@ -101,7 +107,10 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.bg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(3),
           borderSide: BorderSide(color: colors.line),
@@ -116,7 +125,11 @@ abstract final class AppTheme {
         ),
         labelStyle: AppTextStyles.labelCaption.copyWith(color: colors.inkSoft),
       ),
-      dividerTheme: DividerThemeData(color: colors.line, thickness: 1, space: 1),
+      dividerTheme: DividerThemeData(
+        color: colors.line,
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 }

@@ -22,7 +22,34 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   DateTime? _birthDate;
   String? _error;
 
-  static const _madhhabSuggestions = ['Sünni', 'Caferi', 'Alevi', 'Belirtmek istemiyorum'];
+  /// KVKK m.6: din bilgisi özel nitelikli veridir ve ayrı bir açık rıza
+  /// gerektirir — [religiousPracticeNote]/[madhhab]'ı boş bırakmak bu
+  /// rızaya hiç ihtiyaç duymaz, ama biri doldurulursa (ve "Belirtmek
+  /// istemiyorum" gibi aslında hiçbir şey açıklamayan bir seçim değilse)
+  /// devam etmeden önce bu kutunun işaretlenmesi şart.
+  bool _sensitiveDataConsent = false;
+
+  static const _madhhabSuggestions = [
+    'Sünni',
+    'Caferi',
+    'Alevi',
+    'Belirtmek istemiyorum',
+  ];
+
+  bool get _hasSensitiveData =>
+      _religiousNoteController.text.trim().isNotEmpty ||
+      (_madhhabController.text.trim().isNotEmpty &&
+          _madhhabController.text.trim() != 'Belirtmek istemiyorum');
+
+  @override
+  void initState() {
+    super.initState();
+    // Rıza kutusunun görünürlüğü/gerekliliği yazarken anlık güncellensin.
+    _religiousNoteController.addListener(_onSensitiveFieldChanged);
+    _madhhabController.addListener(_onSensitiveFieldChanged);
+  }
+
+  void _onSensitiveFieldChanged() => setState(() {});
 
   @override
   void dispose() {
@@ -53,6 +80,14 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
       setState(() => _error = 'Ad, doğum tarihi ve şehir zorunlu.');
       return;
     }
+    if (_hasSensitiveData && !_sensitiveDataConsent) {
+      setState(
+        () => _error =
+            'Dini pratik/mezhep bilgini paylaşmak için aşağıdaki onayı '
+            'işaretlemelisin — ya da bu alanları boş bırakabilirsin.',
+      );
+      return;
+    }
     context.read<ProfileCubit>().updateDetails(
       name: _nameController.text,
       birthDate: _birthDate!,
@@ -66,7 +101,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
       religiousPracticeNote: _religiousNoteController.text.trim().isEmpty
           ? null
           : _religiousNoteController.text.trim(),
-      madhhab: _madhhabController.text.trim().isEmpty ? null : _madhhabController.text.trim(),
+      madhhab: _madhhabController.text.trim().isEmpty
+          ? null
+          : _madhhabController.text.trim(),
     );
     context.push('/profile/family');
   }
@@ -108,12 +145,16 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
               const SizedBox(height: 14),
               TextField(
                 controller: _educationController,
-                decoration: const InputDecoration(labelText: 'EĞİTİM (OPSİYONEL)'),
+                decoration: const InputDecoration(
+                  labelText: 'EĞİTİM (OPSİYONEL)',
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: _occupationController,
-                decoration: const InputDecoration(labelText: 'MESLEK (OPSİYONEL)'),
+                decoration: const InputDecoration(
+                  labelText: 'MESLEK (OPSİYONEL)',
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -127,7 +168,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
               const SizedBox(height: 14),
               TextField(
                 controller: _madhhabController,
-                decoration: const InputDecoration(labelText: 'MEZHEP (OPSİYONEL)'),
+                decoration: const InputDecoration(
+                  labelText: 'MEZHEP (OPSİYONEL)',
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -137,20 +180,81 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                     .map(
                       (m) => ActionChip(
                         label: Text(m),
-                        onPressed: () => setState(() => _madhhabController.text = m),
+                        onPressed: () =>
+                            setState(() => _madhhabController.text = m),
                         backgroundColor: colors.plumTint,
-                        labelStyle: textTheme.bodyMedium?.copyWith(color: colors.plumStrong),
+                        labelStyle: textTheme.bodyMedium?.copyWith(
+                          color: colors.plumStrong,
+                        ),
                         side: BorderSide.none,
                       ),
                     )
                     .toList(),
               ),
+              if (_hasSensitiveData) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colors.plumTint,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Din/mezhep bilgisi, KVKK’ya göre özel nitelikli '
+                        'veridir ve ayrı bir açık rıza gerektirir.',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.plumStrong,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => setState(
+                          () => _sensitiveDataConsent = !_sensitiveDataConsent,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: _sensitiveDataConsent,
+                              onChanged: (v) => setState(
+                                () => _sensitiveDataConsent = v ?? false,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
+                                  'Yukarıda yazdığım dini pratik/mezhep '
+                                  'bilgisinin işlenmesini açıkça kabul '
+                                  'ediyorum.',
+                                  style: textTheme.bodyMedium,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colors.rose)),
+                Text(
+                  _error!,
+                  style: textTheme.bodyMedium?.copyWith(color: colors.rose),
+                ),
               ],
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: _continue, child: const Text('Devam et')),
+              ElevatedButton(
+                onPressed: _continue,
+                child: const Text('Devam et'),
+              ),
             ],
           ),
         ),

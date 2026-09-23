@@ -7,5 +7,6 @@ class DismissFamilyNudge implements UseCase<void, String> {
   final MessagingRepository _repository;
 
   @override
-  Future<Result<void>> call(String params) => _repository.dismissFamilyNudge(params);
+  Future<Result<void>> call(String params) =>
+      _repository.dismissFamilyNudge(params);
 }

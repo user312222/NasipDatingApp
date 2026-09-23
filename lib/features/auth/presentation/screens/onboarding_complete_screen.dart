@@ -43,9 +43,12 @@ class OnboardingCompleteScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
                 ElevatedButton(
-                  onPressed: () =>
-                      context.push(isGuardian ? '/guardian/link' : '/profile/photos'),
-                  child: Text(isGuardian ? 'Bağlantı kur' : 'Profilini oluştur'),
+                  onPressed: () => context.push(
+                    isGuardian ? '/guardian/link' : '/profile/photos',
+                  ),
+                  child: Text(
+                    isGuardian ? 'Bağlantı kur' : 'Profilini oluştur',
+                  ),
                 ),
               ],
             ),

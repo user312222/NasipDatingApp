@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../../../core/error/exceptions.dart';
+import '../../domain/entities/account_type.dart';
 import '../../domain/entities/auth_user.dart';
 
 /// **Placeholder data source.** Two real vendors sit behind this interface
@@ -12,8 +13,19 @@ import '../../domain/entities/auth_user.dart';
 abstract interface class AuthRemoteDataSource {
   Future<void> checkInviteCode(String code);
   Future<void> requestOtp(String phone);
-  Future<AuthUser> verifyOtp({required String phone, required String code});
+  Future<AuthUser> verifyOtp({
+    required String phone,
+    required String code,
+    required AccountType accountType,
+  });
   Future<AuthUser> submitSelfieVerification(AuthUser user);
+
+  /// See `AuthRepository.getCurrentSession`. The mock has nothing to
+  /// restore from — it never persists past a single in-memory session.
+  Future<AuthUser?> getCurrentSession();
+
+  /// See `AuthRepository.logOut`.
+  Future<void> logOut();
 }
 
 class MockAuthRemoteDataSource implements AuthRemoteDataSource {
@@ -42,13 +54,23 @@ class MockAuthRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<AuthUser> verifyOtp({required String phone, required String code}) async {
+  Future<AuthUser> verifyOtp({
+    required String phone,
+    required String code,
+    required AccountType accountType,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (code.trim() != _mockOtp) {
       throw const ServerException('Kod hatalı. Tekrar dener misin?');
     }
-    return AuthUser(id: _fakeId(), phone: phone);
+    return AuthUser(id: _fakeId(), phone: phone, accountType: accountType);
   }
+
+  @override
+  Future<AuthUser?> getCurrentSession() async => null;
+
+  @override
+  Future<void> logOut() async {}
 
   @override
   Future<AuthUser> submitSelfieVerification(AuthUser user) async {

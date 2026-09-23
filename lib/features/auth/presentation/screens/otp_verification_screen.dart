@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../theme/app_colors.dart';
 import '../bloc/auth_cubit.dart';
+import '../session_router.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
@@ -31,7 +31,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -40,7 +39,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         listener: (context, state) {
           if (state is PhoneVerified) context.push('/selfie-verification');
           if (state is OtpVerifyFailed) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
+          }
+          if (state is SessionActive) {
+            // This phone number already belonged to a fully-onboarded
+            // account — Firebase just signed back into that same uid, so
+            // treat this as a login rather than continuing the
+            // registration flow (no re-selfie, no re-uploading photos).
+            routeActiveSession(context, state.user);
           }
         },
         child: BlocBuilder<AuthCubit, AuthState>(
@@ -52,18 +59,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('+90 $_phone numarasına gönderilen 6 haneli kodu gir.', style: textTheme.bodyLarge),
-                    const SizedBox(height: 8),
                     Text(
-                      'Bu ön izlemede kod her zaman 123456.',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+                      '+90 $_phone numarasına gönderilen 6 haneli kodu gir.',
+                      style: textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 24),
                     TextField(
                       controller: _codeController,
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      decoration: const InputDecoration(labelText: 'DOĞRULAMA KODU'),
+                      decoration: const InputDecoration(
+                        labelText: 'DOĞRULAMA KODU',
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: isVerifying
@@ -76,7 +83,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ? const SizedBox(
                               height: 18,
                               width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Doğrula'),
                     ),

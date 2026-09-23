@@ -14,7 +14,8 @@ class ProfileFamilyInvolvementScreen extends StatefulWidget {
       _ProfileFamilyInvolvementScreenState();
 }
 
-class _ProfileFamilyInvolvementScreenState extends State<ProfileFamilyInvolvementScreen> {
+class _ProfileFamilyInvolvementScreenState
+    extends State<ProfileFamilyInvolvementScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -26,7 +27,8 @@ class _ProfileFamilyInvolvementScreenState extends State<ProfileFamilyInvolvemen
         listener: (context, state) {
           if (state is ProfileSubmitted) context.go('/profile/complete');
           if (state is ProfileSubmitError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: BlocBuilder<ProfileCubit, ProfileState>(
@@ -44,14 +46,21 @@ class _ProfileFamilyInvolvementScreenState extends State<ProfileFamilyInvolvemen
                     Text(
                       'Ailen/velin bu süreci görsün mü? Tamamen sana kalmış — istersen '
                       'süreci kendi başına, istersen ailenle birlikte yürüt. Sonradan da değiştirebilirsin.',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.inkSoft,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Card(
                       child: SwitchListTile(
                         value: optIn,
-                        onChanged: (v) => context.read<ProfileCubit>().updateFamilyInvolvement(v),
-                        title: Text('Ailem/velim bu süreci görsün', style: textTheme.titleSmall),
+                        onChanged: (v) => context
+                            .read<ProfileCubit>()
+                            .updateFamilyInvolvement(v),
+                        title: Text(
+                          'Ailem/velim bu süreci görsün',
+                          style: textTheme.titleSmall,
+                        ),
                         activeThumbColor: colors.plum,
                       ),
                     ),
@@ -60,17 +69,19 @@ class _ProfileFamilyInvolvementScreenState extends State<ProfileFamilyInvolvemen
                       onPressed: isSubmitting
                           ? null
                           : () {
-                              final authState = context.read<AuthCubit>().state;
-                              final userId = authState is OnboardingComplete
-                                  ? authState.user.id
-                                  : 'unknown_user';
+                              final userId =
+                                  context.read<AuthCubit>().currentUser?.id ??
+                                  'unknown_user';
                               context.read<ProfileCubit>().submit(userId);
                             },
                       child: isSubmitting
                           ? const SizedBox(
                               height: 18,
                               width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Profili tamamla'),
                     ),

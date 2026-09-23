@@ -1,6 +1,6 @@
 # Bi Nasip — MVP Gereksinimleri
 
-**Durum:** FR-1 → FR-5 kuruldu; FR-6 → FR-8 tanımlandı, kurulum bekliyor (bkz. Bölüm 7 için tek açık karar)
+**Durum:** FR-1 → FR-8 kuruldu (mock veri kaynaklarıyla; gerçek backend/sağlayıcı entegrasyonları bekliyor). Bölüm 7'de tek açık karar var.
 **Kapsam:** Türkiye, Türkçe-first, evlilik-öncelikli, mahremiyet-öncelikli, medeni Müslüman bekârlar için tanışma uygulaması. Dar başlangıç: kapalı beta, davetiyeli, ilk 500 kullanıcı.
 
 ---
@@ -48,6 +48,7 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-1.1 Kullanıcı telefon numarası ile kayıt olur, SMS OTP ile doğrular.
 - FR-1.2 Kullanıcı, hesap açılışında **zorunlu** selfie-liveness doğrulamasından geçer (kimlik belgesi/T.C. kimlik istenmez — sadece "bu fotoğrafı gerçek/canlı bir insan mı çekti" kontrolü). Doğrulama 3. parti sağlayıcı (Veriff/Yoti/Didit vb.) üzerinden yapılır; ham selfie/biyometrik veri Bi Nasip'in kendi altyapısında hiçbir zaman saklanmaz — sadece sağlayıcıdan dönen `verified: true/false` + zaman damgası tutulur. Mümkünse aynı akışta sağlayıcının yaş tahmini (facial age estimation) özelliği de kullanılır, görüntü işlem sonrası saklanmaz.
 - FR-1.3 Davetiye kodu olmayan kullanıcı bekleme listesine yönlendirilir (Faz 1: closed beta).
+- FR-1.4 Telefon numarası istenmeden ÖNCE, kullanıcı KVKK aydınlatma metnini görür ve iki ayrı açık rızayı (veri işleme + yurt dışı aktarım) onaylamadan devam edemez *(kuruldu — `lib/features/consent/`, `/consent` ekranı, Firestore `consents/{uid}`'e kaydediliyor. **Metin taslaktır, hukuki inceleme gerekiyor** — bkz. Bölüm 7)*.
 
 ### FR-2 — Profil Oluşturma *(kuruldu — `lib/features/profile/`, mock veri kaynağıyla; gerçek fotoğraf seçimi `image_picker` ile canlı çalışıyor, yükleme/depolama henüz Firebase Storage'a bağlı değil)*
 - FR-2.1 Kullanıcı en az 1, en fazla 6 fotoğraf ekleyebilir.
@@ -68,16 +69,16 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-5.1 Eşleşen kullanıcılar metin tabanlı sohbet edebilir.
 - FR-5.2 Bir sohbette **toplam 30 mesaj değişimi VEYA 7 gün aktif yazışma** (hangisi önce gerçekleşirse) sonrasında, "aile görüşmesi" veya "buluşma" önerisi tek seferlik, nazik bir kart olarak gösterilir — zorlayıcı değil, kapatılabilir (retention/conversion nudge — Elif/araştırma bulgusu: "sohbet sonu yok" şikayeti).
 
-### FR-6 — Güven & Güvenlik
+### FR-6 — Güven & Güvenlik *(kuruldu — `lib/features/safety/`; şikayet (`reports`) ve engelleme (`blockedUsers`) artık Firestore'da, keşif kartında ve sohbet ekranında "⋮" menüsünde. Fotoğraf moderasyonu (FR-6.3) hâlâ mock — gerçek görüntü analizi (Cloud Vision vb.) Cloud Storage + Blaze plan gerektiriyor; mock kuralı: dosya adı "unsafe" içeriyorsa reddedilir. Kapsam notu: şikayet kullanıcı bazlı — tek tek mesaj şikayeti henüz yok)*
 - FR-6.1 Kullanıcı herhangi bir profili/mesajı şikayet edebilir.
 - FR-6.2 Kullanıcı engelleme yapabilir; engellenen kullanıcı bir daha görünmez.
 - FR-6.3 Yüklenen fotoğraflar managed moderation API'sinden geçer (uygunsuz içerik otomatik reddedilir).
 
-### FR-7 — Hesap & Veri
+### FR-7 — Hesap & Veri *(kuruldu — `lib/features/account/`; `/settings` ekranı keşif ve veli ekranlarının üst çubuğundaki dişli ikonundan açılıyor. Hesap silme artık gerçek: Firestore'daki profil/publicProfile/users/aile bağlantısı belgeleri ve Firebase Auth hesabının kendisi siliniyor (son adım oturumu kalıcı olarak kapatıyor, telefon numarasını yeni kayıt için serbest bırakıyor). FR-7.2 mimari olarak zaten karşılanıyor: `AuthUser` sadece `verifiedAt` taşır, ham selfie hiçbir yerde tutulmaz. Kapsam notu: Cloud Functions (Blaze) olmadığı için `likes`/`matches`/mesajlar silinemiyor — bunlar sahiplerinin ikisine de ait, tek taraflı silinmesi karşı tarafın verisini bozabilir; kalan kayıtlar zaten eksik profille "Kullanıcı" gibi yer tutucularla gösterilecek şekilde ele alınıyor)*
 - FR-7.1 Kullanıcı hesabını ve tüm verisini silebilir (KVKK "unutulma hakkı").
 - FR-7.2 Doğrulama sonucu (yalnızca `verified: true/false` + zaman damgası) profil/aktivite verisinden ayrı bir veri deposunda tutulur; ham selfie/biyometrik veri Bi Nasip tarafında hiç tutulmaz, işleme tamamen 3. parti sağlayıcıda kalır.
 
-### FR-8 — Veli/Aile Hesabı *(yeni — henüz kurulmadı)*
+### FR-8 — Veli/Aile Hesabı *(kuruldu — `lib/features/family/` + `AccountType` in auth + `Match.visibleToFamily` in matching, artık Firestore'a bağlı (`familyInviteCodes`, `familyInviteCodeLookup`, `guardianOf`, `familyVisible` koleksiyonları); davet kodu artık gerçek, rastgele üretilen 8 haneli bir kod. Kapsam notu: "aileme göster" anahtarı şimdilik sadece `/family/settings` ekranında — eşleşme kutlama diyaloğunda henüz yok. Cloud Functions (Blaze) olmadığı için bazı kurallar istemci tarafından zorlanıyor — ayrıntı için `firestore.rules` ve `firestore_family_remote_data_source.dart`'taki notlara bkz.)*
 
 Senaryo: kullanıcı zaten evli, kendisi için eş aramıyor — bir yakınının (örn. çocuğunun) sürecini, o izin verdiği ölçüde takip etmek istiyor. Bu, **ayrı bir hesap türü**; mevcut FR-2.4'teki tek başına toggle bunu karşılamıyordu.
 
@@ -120,3 +121,4 @@ WaitlistEntry { name, contact, city?, createdAt, inviteStatus }
 - [x] ~~Veli hesabı çocuğuna nasıl bağlanır?~~ **Karar: davet kodu, çocuk üretir/veli girer (bkz. FR-8.3).**
 - [x] ~~Veli tam olarak neyi görebilir?~~ **Karar: sadece eşleşme bazında "aileme göster" işaretlenenler (bkz. FR-8.4).**
 - [ ] FR-8.5'teki sohbet durum-etiketi ne kadar detaylı olsun? (Şu an "yeni eşleşme"/"aktif yazışıyorlar" gibi minimal bir etiket öneriliyor — genişletilebilir.)
+- [ ] **FR-1.4 KVKK rıza ekranı metni hukuki incelemeden geçmedi.** `lib/features/consent/presentation/screens/consent_screen.dart`'ta yazılı aydınlatma metni, KVKK m.10'un zorunlu unsurlarını (veri sorumlusu, amaçlar, hukuki sebep, alıcılar, yurt dışı aktarım, saklama süresi, m.11 hakları) kapsayacak şekilde yazıldı ama ben hukukçu değilim — canlıya çıkmadan önce bir hukukçu gözden geçirmeli. Şirket unvanı/iletişim bilgisi ve iletişim kanalı placeholder olarak bırakıldı. Rıza kaydı tutuluyor (`consents/{uid}`) ama tam sürüm geçmişi tutulmuyor (yalnızca en son kabul edilen sürüm) — gerçek uyumluluk için yetersiz olabilir.

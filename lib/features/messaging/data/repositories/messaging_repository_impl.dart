@@ -24,7 +24,10 @@ class MessagingRepositoryImpl implements MessagingRepository {
   );
 
   @override
-  Future<Result<Conversation>> sendMessage({required String matchId, required String text}) =>
+  Future<Result<Conversation>> sendMessage({
+    required String matchId,
+    required String text,
+  }) =>
       _guard(() => remoteDataSource.sendMessage(matchId: matchId, text: text));
 
   @override

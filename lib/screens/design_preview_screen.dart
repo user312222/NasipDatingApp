@@ -44,7 +44,10 @@ class DesignPreviewScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text('Herkesin bi nasibi var.', style: textTheme.displayLarge),
           const SizedBox(height: 8),
-          Text('Bu boşluk Türkiye’de hâlâ dolmadı.', style: textTheme.displayMedium),
+          Text(
+            'Bu boşluk Türkiye’de hâlâ dolmadı.',
+            style: textTheme.displayMedium,
+          ),
           const SizedBox(height: 8),
           Text('Bekleme listesine katıl', style: textTheme.titleLarge),
           const SizedBox(height: 8),
@@ -62,9 +65,15 @@ class DesignPreviewScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text('TÜRKİYE’DE YAKINDA', style: textTheme.labelSmall),
           const SizedBox(height: 8),
-          Text('نصيب', style: AppTextStyles.accentArabic.copyWith(color: colors.plum)),
+          Text(
+            'نصيب',
+            style: AppTextStyles.accentArabic.copyWith(color: colors.plum),
+          ),
           const SizedBox(height: 20),
-          ElevatedButton(onPressed: () {}, child: const Text('Bana da nasip olsun')),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('Bana da nasip olsun'),
+          ),
         ],
       ),
     );
@@ -90,11 +99,17 @@ class _Swatch extends StatelessWidget {
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10)),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(fontSize: 10),
+          ),
         ],
       ),
     );

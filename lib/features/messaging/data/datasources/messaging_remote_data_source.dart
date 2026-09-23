@@ -19,7 +19,10 @@ abstract interface class MessagingRemoteDataSource {
     required String otherPartyName,
     required int otherPartyAvatarSeed,
   });
-  Future<Conversation> sendMessage({required String matchId, required String text});
+  Future<Conversation> sendMessage({
+    required String matchId,
+    required String text,
+  });
   Future<void> dismissFamilyNudge(String matchId);
 }
 
@@ -71,7 +74,10 @@ class MockMessagingRemoteDataSource implements MessagingRemoteDataSource {
   }
 
   @override
-  Future<Conversation> sendMessage({required String matchId, required String text}) async {
+  Future<Conversation> sendMessage({
+    required String matchId,
+    required String text,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
     final existing = _conversations[matchId];
     if (existing == null) {
@@ -83,7 +89,9 @@ class MockMessagingRemoteDataSource implements MessagingRemoteDataSource {
       sentAt: DateTime.now(),
       sender: MessageSender.me,
     );
-    final updated = existing.copyWith(messages: [...existing.messages, message]);
+    final updated = existing.copyWith(
+      messages: [...existing.messages, message],
+    );
     _conversations[matchId] = updated;
     return updated;
   }

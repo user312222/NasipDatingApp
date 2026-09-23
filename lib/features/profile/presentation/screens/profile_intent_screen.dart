@@ -34,20 +34,24 @@ class ProfileIntentScreen extends StatelessWidget {
                 title: 'Evlilik',
                 subtitle: 'Ciddi, evliliğe yönelik bir ilişki arıyorum.',
                 selected: selected == ProfileIntent.marriage,
-                onTap: () =>
-                    context.read<ProfileCubit>().updateIntent(ProfileIntent.marriage),
+                onTap: () => context.read<ProfileCubit>().updateIntent(
+                  ProfileIntent.marriage,
+                ),
               ),
               const SizedBox(height: 12),
               _IntentCard(
                 title: 'Henüz emin değilim',
                 subtitle: 'Süreç içinde netleşsin istiyorum.',
                 selected: selected == ProfileIntent.notSureYet,
-                onTap: () =>
-                    context.read<ProfileCubit>().updateIntent(ProfileIntent.notSureYet),
+                onTap: () => context.read<ProfileCubit>().updateIntent(
+                  ProfileIntent.notSureYet,
+                ),
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed: selected == null ? null : () => context.push('/profile/details'),
+                onPressed: selected == null
+                    ? null
+                    : () => context.push('/profile/details'),
                 child: const Text('Devam et'),
               ),
             ],
@@ -84,12 +88,17 @@ class _IntentCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? colors.plumTint : colors.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: selected ? colors.plum : colors.line, width: selected ? 1.5 : 1),
+          border: Border.all(
+            color: selected ? colors.plum : colors.line,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               color: selected ? colors.plum : colors.inkSoft,
             ),
             const SizedBox(width: 14),
@@ -99,7 +108,12 @@ class _IntentCard extends StatelessWidget {
                 children: [
                   Text(title, style: textTheme.titleSmall),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft)),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.inkSoft,
+                    ),
+                  ),
                 ],
               ),
             ),

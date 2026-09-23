@@ -50,7 +50,10 @@ class ChatCubit extends Cubit<ChatState> {
 
     emit(ChatLoaded(current.conversation, isSending: true));
     final result = await _sendMessage(
-      SendMessageParams(matchId: current.conversation.matchId, text: text.trim()),
+      SendMessageParams(
+        matchId: current.conversation.matchId,
+        text: text.trim(),
+      ),
     );
     switch (result) {
       case Ok<Conversation>(:final value):

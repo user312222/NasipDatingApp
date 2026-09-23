@@ -1,0 +1,369 @@
+rules_version = '2';
+
+// Default: everything is closed. Each collection below opens exactly what
+// its feature needs. Messaging/family/safety rules are added when those
+// features move to Firestore.
+//
+// NOTE — written for the Spark plan (no Cloud Functions). Known gaps that
+// a Function should close once on Blaze:
+//  * a user can read the like documents addressed to them, i.e. technically
+//    see who liked them before deciding;
+//  * matches are created by a client, gated by rules that require both
+//    likes to exist;
+//  * publicProfiles is written by the client next to the private profile.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdult(birthDate) {
+      // 18 * 365 days — approximate on purpose.
+      return birthDate is timestamp
+        && birthDate <= request.time - duration.value(6570, 'd');
+    }
+
+    // Session-restore doc (see `AuthCubit.restoreSession`): `accountType`
+    // is written the moment OTP succeeds, `verifiedAt` is added once
+    // selfie verification succeeds. Both writes use `set(merge: true)`,
+    // so `request.resource.data` below is the doc's state AFTER the
+    // merge — that's why `verifiedAt` is only checked when present.
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['accountType', 'verifiedAt'])
+        && request.resource.data.accountType in ['single', 'guardian']
+        && (!('verifiedAt' in request.resource.data)
+            || request.resource.data.verifiedAt is timestamp);
+
+      // FR-7.1: part of account deletion's best-effort cleanup.
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // KVKK consent record (see `ConsentScreen`/`FirestoreConsentRemoteDataSource`)
+    // — one doc per user, written right after OTP succeeds for a NEW
+    // registration. `acceptedAt` (first-ever) and `lastAcceptedAt` (most
+    // recent) both use `set(merge: true)`, same reasoning as `users` above.
+    match /consents/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(
+             ['consentVersion', 'acceptedAt', 'lastAcceptedAt'])
+        && request.resource.data.consentVersion is string
+        && request.resource.data.lastAcceptedAt is timestamp
+        && (!('acceptedAt' in request.resource.data)
+            || request.resource.data.acceptedAt is timestamp);
+
+      // FR-7.1: part of account deletion's best-effort cleanup.
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // FR-2: the private profile — only its owner ever sees or writes it.
+    match /profiles/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+             'userId', 'name', 'birthDate', 'city', 'intent', 'photoRefs',
+             'photoVisibility', 'familyInvolvementOptIn', 'educationLevel',
+             'occupation', 'religiousPracticeNote', 'madhhab', 'updatedAt'])
+        && request.resource.data.userId == userId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.city is string
+        && request.resource.data.intent in ['marriage', 'notSureYet']
+        && request.resource.data.photoVisibility in
+             ['hiddenUntilIUnlock', 'onRequestOnly', 'autoOnMatch']
+        && request.resource.data.photoRefs is list
+        && request.resource.data.photoRefs.size() >= 1
+        && request.resource.data.photoRefs.size() <= 6
+        && request.resource.data.familyInvolvementOptIn is bool
+        && isAdult(request.resource.data.birthDate);
+
+      // FR-7.1: users can delete their own profile.
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // FR-4: what other users may see. Deliberately NO madhhab, religious
+    // note, education, photos or family opt-in — rules cannot hide single
+    // fields, so sensitive ones live only in /profiles above.
+    match /publicProfiles/{userId} {
+      allow read: if signedIn();
+
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+             'userId', 'name', 'birthDate', 'city', 'intent', 'occupation',
+             'updatedAt'])
+        && request.resource.data.userId == userId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.city is string
+        && request.resource.data.intent in ['marriage', 'notSureYet']
+        && (!('occupation' in request.resource.data)
+            || request.resource.data.occupation is string)
+        && isAdult(request.resource.data.birthDate);
+
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // FR-4.3: daily like counter, one doc per user per UTC day. The doc id
+    // is forced to today's key and the count may only go up by exactly one,
+    // up to 12 — so the cap cannot be reset by writing another day's key.
+    match /likeCounters/{counterId} {
+      allow read: if signedIn() && counterId.matches(request.auth.uid + '_.*');
+
+      allow create, update: if signedIn()
+        && counterId == request.auth.uid + '_'
+             + string(request.time.year()) + '-'
+             + string(request.time.month()) + '-'
+             + string(request.time.day())
+        && request.resource.data.keys().hasOnly(['uid', 'count'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.count is int
+        && request.resource.data.count >= 1
+        && request.resource.data.count <= 12
+        && request.resource.data.count ==
+             (resource == null ? 1 : resource.data.count + 1);
+    }
+
+    // FR-4.2: one doc per like, id "{from}_{to}". Creating it must also bump
+    // today's counter by one in the same batch (getAfter), and the target
+    // must have a public profile. Never updated or deleted by clients.
+    match /likes/{likeId} {
+      allow get: if signedIn() && request.auth.uid in likeId.split('_');
+      allow list: if signedIn()
+        && (resource.data.from == request.auth.uid
+            || resource.data.to == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'createdAt'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string
+        && request.resource.data.to != request.auth.uid
+        && likeId == request.auth.uid + '_' + request.resource.data.to
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/publicProfiles/$(request.resource.data.to))
+        && getAfter(/databases/$(database)/documents/likeCounters/$(
+             request.auth.uid + '_'
+             + string(request.time.year()) + '-'
+             + string(request.time.month()) + '-'
+             + string(request.time.day()))).data.count ==
+           (exists(/databases/$(database)/documents/likeCounters/$(
+             request.auth.uid + '_'
+             + string(request.time.year()) + '-'
+             + string(request.time.month()) + '-'
+             + string(request.time.day())))
+             ? get(/databases/$(database)/documents/likeCounters/$(
+                 request.auth.uid + '_'
+                 + string(request.time.year()) + '-'
+                 + string(request.time.month()) + '-'
+                 + string(request.time.day()))).data.count + 1
+             : 1);
+    }
+
+    // FR-4.2: a match between two users, id "{smallerUid}_{largerUid}".
+    // May only be created when BOTH likes exist after the write. The
+    // "aileme göster" flag (FR-8.4) is NOT stored here — see
+    // `familyVisible` below — this doc's only mutable field is the FR-5.2
+    // nudge flag.
+    match /matches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.users;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['users', 'createdAt'])
+        && request.resource.data.users is list
+        && request.resource.data.users.size() == 2
+        && request.auth.uid in request.resource.data.users
+        && request.resource.data.users[0] < request.resource.data.users[1]
+        && matchId == request.resource.data.users[0] + '_'
+             + request.resource.data.users[1]
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/likes/$(
+             request.resource.data.users[0] + '_' + request.resource.data.users[1]))
+        && existsAfter(/databases/$(database)/documents/likes/$(
+             request.resource.data.users[1] + '_' + request.resource.data.users[0]));
+
+      // FR-5.2: either participant can flip the shared one-time nudge flag
+      // to true — same as the mock, this isn't per-user.
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.users
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['familyNudgeShown'])
+        && request.resource.data.familyNudgeShown == true;
+
+      // FR-5: chat messages for this match. Immutable once written —
+      // clients may only create, never edit or delete.
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && request.auth.uid in
+               get(/databases/$(database)/documents/matches/$(matchId)).data.users;
+
+        allow create: if signedIn()
+          && request.auth.uid in
+               get(/databases/$(database)/documents/matches/$(matchId)).data.users
+          && request.resource.data.keys().hasOnly(['text', 'senderId', 'sentAt'])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
+          && request.resource.data.sentAt == request.time;
+
+        allow update, delete: if false;
+      }
+    }
+
+    // FR-8, Spark plan, no Cloud Functions.
+    //
+    // familyInviteCodes/{singleUserId} -> {code}: a single user's own
+    // code (FR-8.3), created once, immutable, readable only by its owner.
+    match /familyInviteCodes/{singleUserId} {
+      allow read: if signedIn() && request.auth.uid == singleUserId;
+
+      allow create: if signedIn()
+        && request.auth.uid == singleUserId
+        && resource == null
+        && request.resource.data.keys().hasOnly(['code'])
+        && request.resource.data.code is string
+        && request.resource.data.code.size() >= 6
+        && request.resource.data.code.size() <= 12;
+
+      // FR-7.1.
+      allow delete: if signedIn() && request.auth.uid == singleUserId;
+    }
+
+    // familyInviteCodeLookup/{code} -> {singleUserId}: the reverse index a
+    // guardian needs to resolve a typed code — readable by any signed-in
+    // user (a code plus a uid, on its own, isn't sensitive), created once
+    // by the code's own owner in the same batch as the doc above.
+    match /familyInviteCodeLookup/{code} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && resource == null
+        && request.resource.data.keys().hasOnly(['singleUserId'])
+        && request.resource.data.singleUserId == request.auth.uid;
+
+      // FR-7.1: only the code's own owner may remove the lookup entry.
+      allow delete: if signedIn()
+        && resource.data.singleUserId == request.auth.uid;
+    }
+
+    // guardianOf/{guardianUserId} -> {singleUserId, guardianName,
+    // relationship, linkedAt}: FR-8.2/8.3, one row per guardian. Only the
+    // guardian may write it — the invite-code lookup above is what
+    // actually validated the code client-side before this write happens.
+    match /guardianOf/{guardianUserId} {
+      allow read: if signedIn() && request.auth.uid == guardianUserId;
+
+      allow create, update: if signedIn()
+        && request.auth.uid == guardianUserId
+        && request.resource.data.keys().hasOnly(
+             ['singleUserId', 'guardianName', 'relationship', 'linkedAt'])
+        && request.resource.data.singleUserId is string
+        && request.resource.data.guardianName is string
+        && request.resource.data.guardianName.size() > 0
+        && request.resource.data.relationship in
+             ['anne', 'baba', 'abla', 'agabey', 'teyze', 'dayi', 'diger']
+        && request.resource.data.linkedAt == request.time;
+
+      // FR-7.1: lets a guardian account delete its own link on account
+      // deletion. (A single account's own deletion doesn't touch this —
+      // an orphaned `guardianOf` doc just resolves to a missing
+      // `publicProfiles`/`familyVisible` result set, which the guardian
+      // screens already handle gracefully.)
+      allow delete: if signedIn() && request.auth.uid == guardianUserId;
+    }
+
+    // familyVisible/{matchId}_{singleUserId} -> {singleUserId, matchId,
+    // otherUserId, matchedAt, markedAt}: FR-8.4 — existence means
+    // `singleUserId` opted to show this match to their own linked
+    // guardian. `matchedAt` is copied from the match's own `createdAt` at
+    // write time (not `request.time`), so the guardian never has to read
+    // `matches` directly. Read is opened to the doc's own single user, or
+    // to a guardian whose `guardianOf` doc points at that same
+    // `singleUserId` — a `list` query filtered to `singleUserId ==
+    // <resolved uid>` satisfies this rule uniformly across every result,
+    // so it works for the guardian's collection query too.
+    match /familyVisible/{docId} {
+      allow read: if signedIn() && (
+        request.auth.uid == resource.data.singleUserId
+        || (
+          exists(/databases/$(database)/documents/guardianOf/$(request.auth.uid))
+          && get(/databases/$(database)/documents/guardianOf/$(request.auth.uid))
+               .data.singleUserId == resource.data.singleUserId
+        )
+      );
+
+      allow create: if signedIn()
+        && request.auth.uid == request.resource.data.singleUserId
+        && docId == request.resource.data.matchId + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(
+             ['singleUserId', 'matchId', 'otherUserId', 'matchedAt', 'markedAt'])
+        && request.resource.data.otherUserId is string
+        && request.resource.data.matchedAt is timestamp
+        && request.resource.data.markedAt == request.time
+        && request.auth.uid in
+             get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.users;
+
+      allow delete: if signedIn()
+        && request.auth.uid == resource.data.singleUserId;
+    }
+
+    // FR-6, Spark plan, no Cloud Functions.
+    //
+    // reports/{reportId} -> {reporterId, targetUserId, reason, details?,
+    // createdAt}: FR-6.1. Create-only for anyone signed in, readable by
+    // nobody client-side (not even the reporter — matches the "Şikayetin
+    // gizli kalır" copy in the UI) — a moderator would review these via
+    // the Admin SDK / console, not a client query.
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['reporterId', 'targetUserId', 'reason', 'details', 'createdAt'])
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.targetUserId is string
+        && request.resource.data.targetUserId != request.auth.uid
+        && request.resource.data.reason in
+             ['fakeProfile', 'harassment', 'inappropriateContent', 'scam',
+              'casualIntent', 'other']
+        && (!('details' in request.resource.data)
+            || request.resource.data.details is string)
+        && request.resource.data.createdAt == request.time;
+
+      allow read, update, delete: if false;
+    }
+
+    // blockedUsers/{blockerId}_{blockedId} -> {blockerId, blockedId,
+    // createdAt}: FR-6.2. Readable (as a list, filtered to
+    // `blockerId == me`) only by the blocker — `matching`'s data layer
+    // reads this to filter discovery/matches, same "cross-feature
+    // sharing at the data layer only" pattern as `familyVisible`.
+    match /blockedUsers/{blockId} {
+      allow create: if signedIn()
+        && blockId == request.auth.uid + '_' + request.resource.data.blockedId
+        && request.resource.data.keys().hasOnly(
+             ['blockerId', 'blockedId', 'createdAt'])
+        && request.resource.data.blockerId == request.auth.uid
+        && request.resource.data.blockedId is string
+        && request.resource.data.blockedId != request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      allow read: if signedIn() && request.auth.uid == resource.data.blockerId;
+
+      allow delete: if signedIn() && request.auth.uid == resource.data.blockerId;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -30,5 +30,13 @@ class Candidate extends Equatable {
   final String? bio;
 
   @override
-  List<Object?> get props => [id, name, age, city, intent, avatarColorSeed, bio];
+  List<Object?> get props => [
+    id,
+    name,
+    age,
+    city,
+    intent,
+    avatarColorSeed,
+    bio,
+  ];
 }
