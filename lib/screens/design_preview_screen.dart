@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/family/domain/entities/family_visible_match.dart';
+import '../features/family/presentation/screens/guardian_home_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
@@ -178,6 +180,27 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
             title: 'Tehlikeli bölge',
             body: 'Geri alınamayan işlemler rose tonuyla ayrışır.',
             danger: true,
+          ),
+          const SizedBox(height: 28),
+          _section(textTheme, 'Yakın eşleşme kartı'),
+          VisibleMatchCard(
+            match: FamilyVisibleMatch(
+              candidateName: 'Zeynep',
+              candidateAge: 27,
+              candidateCity: 'İstanbul',
+              statusLabel: 'Yeni eşleşme',
+              matchedAt: DateTime(2026, 9, 1),
+            ),
+          ),
+          const SizedBox(height: 10),
+          VisibleMatchCard(
+            match: FamilyVisibleMatch(
+              candidateName: 'Elif Nur',
+              candidateAge: 31,
+              candidateCity: 'Eskişehir',
+              statusLabel: 'Aktif yazışıyorlar',
+              matchedAt: DateTime(2026, 8, 20),
+            ),
           ),
           const SizedBox(height: 28),
           _section(textTheme, 'Çipler ve mesajlar'),

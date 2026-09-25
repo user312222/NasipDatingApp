@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:binasip/features/family/presentation/screens/guardian_home_screen.dart';
 import 'package:binasip/screens/design_preview_screen.dart';
 import 'package:binasip/theme/app_theme.dart';
 import 'package:binasip/theme/wizard_widgets.dart';
@@ -29,6 +30,8 @@ void main() {
     expect(find.byType(OptionCard), findsNWidgets(3));
     expect(find.byType(SectionCard), findsNWidgets(2));
     expect(find.byType(WizardHeader), findsOneWidget);
+    expect(find.byType(VisibleMatchCard), findsNWidgets(2));
+    expect(find.text('Aktif yazışıyorlar'), findsOneWidget);
   });
 
   testWidgets('switches to the dark theme via the app bar switch', (

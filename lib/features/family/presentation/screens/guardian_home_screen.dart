@@ -97,7 +97,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               itemCount: matches.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) =>
-                  _VisibleMatchCard(match: matches[index]),
+                  VisibleMatchCard(match: matches[index]),
             );
           },
         ),
@@ -106,8 +106,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   }
 }
 
-class _VisibleMatchCard extends StatelessWidget {
-  const _VisibleMatchCard({required this.match});
+class VisibleMatchCard extends StatelessWidget {
+  const VisibleMatchCard({super.key, required this.match});
   final FamilyVisibleMatch match;
 
   @override
