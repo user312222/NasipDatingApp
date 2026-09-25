@@ -178,6 +178,30 @@ void main() {
     });
   });
 
+  group('SectionCard', () {
+    testWidgets('wraps its content instead of filling a bounded height', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            height: 700,
+            child: Center(
+              child: SectionCard(
+                icon: Icons.visibility_off_outlined,
+                title: 'Başlık',
+                body: 'Kısa bir açıklama.',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final height = tester.getSize(find.byType(SectionCard)).height;
+      expect(height, lessThan(200));
+    });
+  });
+
   group('AvatarPalette', () {
     test('is stable for a seed and wraps around', () {
       expect(AvatarPalette.forSeed(1), AvatarPalette.forSeed(1));
