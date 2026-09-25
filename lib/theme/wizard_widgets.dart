@@ -76,7 +76,7 @@ class WizardProgress extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
                 gradient: i <= current
-                    ? LinearGradient(colors: [colors.plum, _roseAccent])
+                    ? LinearGradient(colors: [colors.plumFill, _roseAccent])
                     : null,
                 color: i <= current ? null : colors.line,
               ),
@@ -140,11 +140,11 @@ class WizardHeader extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [colors.plum, _roseAccent],
+                colors: [colors.plumFill, _roseAccent],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colors.plum.withValues(alpha: 0.30),
+                  color: colors.plumFill.withValues(alpha: 0.30),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -221,14 +221,14 @@ class _GradientButtonState extends State<GradientButton> {
                 ? LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
-                    colors: [colors.plum, _roseAccent],
+                    colors: [colors.plumFill, _roseAccent],
                   )
                 : null,
             color: enabled || widget.loading ? null : colors.line,
             boxShadow: enabled
                 ? [
                     BoxShadow(
-                      color: colors.plum.withValues(alpha: 0.32),
+                      color: colors.plumFill.withValues(alpha: 0.32),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -306,7 +306,7 @@ class OptionCard extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: colors.plum.withValues(alpha: 0.16),
+                    color: colors.plumFill.withValues(alpha: 0.16),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -322,7 +322,7 @@ class OptionCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: selected ? colors.plum : colors.plumTint,
+                  color: selected ? colors.plumFill : colors.plumTint,
                 ),
                 child: Icon(
                   icon,
@@ -359,7 +359,7 @@ class OptionCard extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? colors.plum : Colors.transparent,
+                color: selected ? colors.plumFill : Colors.transparent,
                 border: Border.all(
                   color: selected ? colors.plum : colors.inkSoft,
                   width: 1.6,

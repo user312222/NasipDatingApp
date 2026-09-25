@@ -188,7 +188,7 @@ class _VisibleMatchCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
-              color: colors.plum,
+              color: colors.plumFill,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Text(

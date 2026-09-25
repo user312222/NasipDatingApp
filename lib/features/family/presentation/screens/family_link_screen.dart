@@ -119,11 +119,11 @@ class _InviteCodeCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colors.plum, const Color(0xFFC17B72)],
+          colors: [colors.plumFill, const Color(0xFFC17B72)],
         ),
         boxShadow: [
           BoxShadow(
-            color: colors.plum.withValues(alpha: 0.3),
+            color: colors.plumFill.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -270,7 +270,7 @@ class _MatchSwitchTile extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeThumbColor: Colors.white,
-            activeTrackColor: colors.plum,
+            activeTrackColor: colors.plumFill,
           ),
         ],
       ),

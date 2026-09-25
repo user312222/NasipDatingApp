@@ -314,7 +314,7 @@ class _MessageBubble extends StatelessWidget {
                 ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [colors.plum, const Color(0xFF9C4590)],
+                    colors: [colors.plumFill, const Color(0xFF9C4590)],
                   )
                 : null,
             color: isMe ? null : colors.surface,
@@ -420,11 +420,11 @@ class _Composer extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [colors.plum, const Color(0xFFC17B72)],
+                    colors: [colors.plumFill, const Color(0xFFC17B72)],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: colors.plum.withValues(alpha: 0.35),
+                      color: colors.plumFill.withValues(alpha: 0.35),
                       blurRadius: 12,
                       offset: const Offset(0, 5),
                     ),

@@ -353,7 +353,7 @@ class _MatchCelebrationState extends State<_MatchCelebration>
                       child: Icon(
                         Icons.favorite_rounded,
                         size: 44,
-                        color: colors.plum,
+                        color: colors.plumFill,
                       ),
                     ),
                   ],
@@ -384,7 +384,7 @@ class _MatchCelebrationState extends State<_MatchCelebration>
                       child: FilledButton(
                         onPressed: widget.onChat,
                         style: FilledButton.styleFrom(
-                          backgroundColor: colors.plum,
+                          backgroundColor: colors.plumFill,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -440,7 +440,7 @@ class _ChromeIconButton extends StatelessWidget {
       child: Tooltip(
         message: tooltip,
         child: Material(
-          color: primary ? colors.plum : colors.plumTint,
+          color: primary ? colors.plumFill : colors.plumTint,
           shape: const CircleBorder(),
           elevation: primary ? 3 : 0,
           shadowColor: colors.plumStrong.withValues(alpha: 0.4),
@@ -770,7 +770,7 @@ class _CandidateCard extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: colors.plum,
+                                color: colors.plumFill,
                                 borderRadius: BorderRadius.circular(18),
                               ),
                               child: Text(
@@ -835,7 +835,7 @@ class _CandidateCard extends StatelessWidget {
               opacity: dragProgress.clamp(0, 1),
               child: Transform.rotate(
                 angle: -0.22,
-                child: _SwipeStamp(label: 'BEĞEN', color: colors.plum),
+                child: _SwipeStamp(label: 'BEĞEN', color: colors.plumFill),
               ),
             ),
           ),
@@ -886,7 +886,7 @@ class _CandidateCard extends StatelessWidget {
               _CircleActionButton(
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.white,
-                gradient: [colors.plum, const Color(0xFFC17B72)],
+                gradient: [colors.plumFill, const Color(0xFFC17B72)],
                 onTap: isSwiping ? null : onLike,
                 tooltip: 'Beğen',
                 large: true,
@@ -1181,7 +1181,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
-                    colors: [colors.plum, const Color(0xFFC17B72)],
+                    colors: [colors.plumFill, const Color(0xFFC17B72)],
                   ),
                 ),
                 child: const Icon(Icons.tune, color: Colors.white, size: 22),

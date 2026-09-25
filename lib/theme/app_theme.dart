@@ -161,7 +161,7 @@ abstract final class AppTheme {
       chipTheme: ChipThemeData(
         showCheckmark: false,
         backgroundColor: colors.surface,
-        selectedColor: colors.plum,
+        selectedColor: colors.plumFill,
         side: BorderSide(color: colors.line),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         labelStyle: AppTextStyles.bodyDefault.copyWith(

@@ -101,7 +101,7 @@ class _GuardianLinkScreenState extends State<GuardianLinkScreen> {
                           label: Text(r.label),
                           selected: selected,
                           showCheckmark: false,
-                          selectedColor: colors.plum,
+                          selectedColor: colors.plumFill,
                           backgroundColor: colors.surface,
                           side: BorderSide(
                             color: selected ? colors.plum : colors.line,

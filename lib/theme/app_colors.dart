@@ -16,6 +16,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.plum,
     required this.plumStrong,
     required this.plumTint,
+    required this.plumFill,
     required this.brass,
     required this.brassTint,
     required this.rose,
@@ -30,6 +31,11 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color plum;
   final Color plumStrong;
   final Color plumTint;
+
+  /// A plum that stays dark enough to carry white text in both themes
+  /// (`plum` itself turns light pink in dark mode) — use for filled
+  /// buttons, badges and gradients with white content on top.
+  final Color plumFill;
   final Color brass;
   final Color brassTint;
   final Color rose;
@@ -44,6 +50,7 @@ class AppColors extends ThemeExtension<AppColors> {
     plum: Color(0xFF5B2C55),
     plumStrong: Color(0xFF331A38),
     plumTint: Color(0xFFEFE1EA),
+    plumFill: Color(0xFF5B2C55),
     brass: Color(0xFFB8863F),
     brassTint: Color(0xFFF1E3C4),
     rose: Color(0xFFA9726B),
@@ -59,6 +66,7 @@ class AppColors extends ThemeExtension<AppColors> {
     plum: Color(0xFFC495BC),
     plumStrong: Color(0xFFE3C3DC),
     plumTint: Color(0xFF2E1B33),
+    plumFill: Color(0xFF7A3B71),
     brass: Color(0xFFE0BD7A),
     brassTint: Color(0xFF372A18),
     rose: Color(0xFFD9AFA8),
@@ -75,6 +83,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? plum,
     Color? plumStrong,
     Color? plumTint,
+    Color? plumFill,
     Color? brass,
     Color? brassTint,
     Color? rose,
@@ -89,6 +98,7 @@ class AppColors extends ThemeExtension<AppColors> {
       plum: plum ?? this.plum,
       plumStrong: plumStrong ?? this.plumStrong,
       plumTint: plumTint ?? this.plumTint,
+      plumFill: plumFill ?? this.plumFill,
       brass: brass ?? this.brass,
       brassTint: brassTint ?? this.brassTint,
       rose: rose ?? this.rose,
@@ -108,6 +118,7 @@ class AppColors extends ThemeExtension<AppColors> {
       plum: Color.lerp(plum, other.plum, t)!,
       plumStrong: Color.lerp(plumStrong, other.plumStrong, t)!,
       plumTint: Color.lerp(plumTint, other.plumTint, t)!,
+      plumFill: Color.lerp(plumFill, other.plumFill, t)!,
       brass: Color.lerp(brass, other.brass, t)!,
       brassTint: Color.lerp(brassTint, other.brassTint, t)!,
       rose: Color.lerp(rose, other.rose, t)!,
