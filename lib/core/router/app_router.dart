@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/screens/settings_screen.dart';
@@ -23,6 +24,21 @@ import '../../features/profile/presentation/screens/profile_privacy_screen.dart'
 import '../../features/waitlist/presentation/screens/waitlist_screen.dart';
 import '../../screens/design_preview_screen.dart';
 
+/// Session restore only runs from `/` (`InviteGateScreen` calls
+/// `AuthCubit.restoreSession`), so a web reload — or any deep link — that
+/// starts on another route would open it with no signed-in user in
+/// `AuthCubit`. On the very first navigation, send such locations through
+/// `/` so the session is restored and the user is routed onward. Public
+/// pages are exempt.
+bool _booted = false;
+const _publicRoutes = {'/', '/waitlist', '/design-preview'};
+
+String? _bootRedirect(BuildContext context, GoRouterState state) {
+  if (_booted) return null;
+  _booted = true;
+  return _publicRoutes.contains(state.matchedLocation) ? null : '/';
+}
+
 /// App-wide route table. Each feature contributes its screens here;
 /// once a feature grows routes of its own it can expose a
 /// `List<RouteBase> waitlistRoutes` and this file just concatenates them.
@@ -33,6 +49,7 @@ import '../../screens/design_preview_screen.dart';
 /// partially-verified user) survives navigating between steps.
 final appRouter = GoRouter(
   initialLocation: '/',
+  redirect: _bootRedirect,
   routes: [
     GoRoute(path: '/', builder: (context, state) => const InviteGateScreen()),
     GoRoute(
