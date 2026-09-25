@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/format/chat_time.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../messaging/domain/entities/chat_message.dart';
 import '../../../messaging/presentation/screens/chat_screen.dart';
 import '../../domain/entities/match.dart';
 import '../bloc/matches_cubit.dart';
@@ -53,13 +55,16 @@ class _MatchesView extends StatelessWidget {
                   style: textTheme.bodyLarge?.copyWith(color: colors.rose),
                 ),
               );
-            case MatchesLoaded(:final matches):
+            case MatchesLoaded(:final matches, :final previews):
               if (matches.isEmpty) return const _EmptyMatches();
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 itemCount: matches.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) => _MatchTile(match: matches[i]),
+                itemBuilder: (context, i) => _MatchTile(
+                  match: matches[i],
+                  preview: previews[matches[i].id],
+                ),
               );
           }
         },
@@ -114,9 +119,10 @@ class _EmptyMatches extends StatelessWidget {
 }
 
 class _MatchTile extends StatelessWidget {
-  const _MatchTile({required this.match});
+  const _MatchTile({required this.match, this.preview});
 
   final Match match;
+  final ChatMessage? preview;
 
   @override
   Widget build(BuildContext context) {
@@ -131,15 +137,19 @@ class _MatchTile extends StatelessWidget {
       elevation: 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: () => context.push(
-          '/chat',
-          extra: ChatRouteArgs(
-            matchId: match.id,
-            otherPartyUserId: candidate.id,
-            otherPartyName: candidate.name,
-            otherPartyAvatarSeed: candidate.avatarColorSeed,
-          ),
-        ),
+        onTap: () async {
+          final cubit = context.read<MatchesCubit>();
+          await context.push(
+            '/chat',
+            extra: ChatRouteArgs(
+              matchId: match.id,
+              otherPartyUserId: candidate.id,
+              otherPartyName: candidate.name,
+              otherPartyAvatarSeed: candidate.avatarColorSeed,
+            ),
+          );
+          cubit.refreshPreviews();
+        },
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -174,48 +184,70 @@ class _MatchTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${candidate.name}, ${candidate.age}',
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colors.plumStrong,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
                     Row(
                       children: [
-                        Icon(
-                          Icons.location_on_rounded,
-                          size: 14,
-                          color: colors.rose,
-                        ),
-                        const SizedBox(width: 3),
-                        Flexible(
+                        Expanded(
                           child: Text(
-                            candidate.city,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.inkSoft,
+                            '${candidate.name}, ${candidate.age}',
+                            style: textTheme.titleSmall?.copyWith(
+                              color: colors.plumStrong,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (preview != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            formatChatTimestamp(preview!.sentAt),
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colors.inkSoft,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
+                    const SizedBox(height: 3),
+                    if (preview != null)
+                      Text(
+                        preview!.sender == MessageSender.me
+                            ? 'Sen: ${preview!.text}'
+                            : preview!.text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: preview!.sender == MessageSender.me
+                              ? colors.inkSoft
+                              : colors.ink,
+                        ),
+                      )
+                    else
+                      Text(
+                        'İlk mesajı sen yaz',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.brass,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colors.plumTint,
+              if (preview == null) ...[
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.plumTint,
+                  ),
+                  child: Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 18,
+                    color: colors.plumStrong,
+                  ),
                 ),
-                child: Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  size: 18,
-                  color: colors.plumStrong,
-                ),
-              ),
+              ],
             ],
           ),
         ),

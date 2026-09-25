@@ -42,7 +42,10 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
     required String otherPartyName,
     required int otherPartyAvatarSeed,
   }) async {
-    _display[matchId] = (name: otherPartyName, avatarSeed: otherPartyAvatarSeed);
+    _display[matchId] = (
+      name: otherPartyName,
+      avatarSeed: otherPartyAvatarSeed,
+    );
     try {
       return await _load(matchId);
     } on FirebaseException catch (e) {
@@ -68,6 +71,40 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
             ? 'Mesaj gönderilemedi: izin yok.'
             : 'Mesaj gönderilemedi (${e.code}).',
       );
+    }
+  }
+
+  /// One `limit(1)` query per match, run in parallel — cheap enough at
+  /// list scale and needs no schema/rules change (participants can already
+  /// read a match's messages).
+  @override
+  Future<Map<String, ChatMessage>> getLastMessages(
+    List<String> matchIds,
+  ) async {
+    try {
+      final me = _uid;
+      final snaps = await Future.wait(
+        matchIds.map(
+          (id) => _db
+              .collection('matches')
+              .doc(id)
+              .collection('messages')
+              .orderBy('sentAt', descending: true)
+              .limit(1)
+              .get(),
+        ),
+      );
+      return {
+        for (var i = 0; i < matchIds.length; i++)
+          if (snaps[i].docs.isNotEmpty)
+            matchIds[i]: _toMessage(
+              snaps[i].docs.first.id,
+              snaps[i].docs.first.data(),
+              me,
+            ),
+      };
+    } on FirebaseException catch (e) {
+      throw ServerException('Mesajlar yüklenemedi (${e.code}).');
     }
   }
 
@@ -103,7 +140,8 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
       messages: messagesSnap.docs
           .map((d) => _toMessage(d.id, d.data(), me))
           .toList(),
-      familyNudgeShown: (matchDoc.data()?['familyNudgeShown'] as bool?) ?? false,
+      familyNudgeShown:
+          (matchDoc.data()?['familyNudgeShown'] as bool?) ?? false,
     );
   }
 

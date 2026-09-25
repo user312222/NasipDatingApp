@@ -23,6 +23,7 @@ abstract interface class MessagingRemoteDataSource {
     required String matchId,
     required String text,
   });
+  Future<Map<String, ChatMessage>> getLastMessages(List<String> matchIds);
   Future<void> dismissFamilyNudge(String matchId);
 }
 
@@ -94,6 +95,17 @@ class MockMessagingRemoteDataSource implements MessagingRemoteDataSource {
     );
     _conversations[matchId] = updated;
     return updated;
+  }
+
+  @override
+  Future<Map<String, ChatMessage>> getLastMessages(
+    List<String> matchIds,
+  ) async {
+    return {
+      for (final id in matchIds)
+        if (_conversations[id]?.messages.isNotEmpty ?? false)
+          id: _conversations[id]!.messages.last,
+    };
   }
 
   @override

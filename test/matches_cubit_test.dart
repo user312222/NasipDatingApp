@@ -9,6 +9,10 @@ import 'package:binasip/features/matching/domain/entities/swipe_outcome.dart';
 import 'package:binasip/features/matching/domain/repositories/matching_repository.dart';
 import 'package:binasip/features/matching/domain/usecases/get_my_matches.dart';
 import 'package:binasip/features/matching/presentation/bloc/matches_cubit.dart';
+import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
+import 'package:binasip/features/messaging/domain/entities/conversation.dart';
+import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
+import 'package:binasip/features/messaging/domain/usecases/get_last_messages.dart';
 
 class _FakeMatchingRepository implements MatchingRepository {
   _FakeMatchingRepository(this._result);
@@ -35,6 +39,38 @@ class _FakeMatchingRepository implements MatchingRepository {
   }) => throw UnimplementedError();
 }
 
+class _FakeMessagingRepository implements MessagingRepository {
+  _FakeMessagingRepository(this._result);
+
+  final Result<Map<String, ChatMessage>> _result;
+  List<String>? lastRequestedIds;
+
+  @override
+  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+    List<String> matchIds,
+  ) async {
+    lastRequestedIds = matchIds;
+    return _result;
+  }
+
+  @override
+  Future<Result<Conversation>> openConversation({
+    required String matchId,
+    required String otherPartyName,
+    required int otherPartyAvatarSeed,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Conversation>> sendMessage({
+    required String matchId,
+    required String text,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> dismissFamilyNudge(String matchId) =>
+      throw UnimplementedError();
+}
+
 Match _match(String id, DateTime matchedAt) => Match(
   id: id,
   matchedAt: matchedAt,
@@ -48,8 +84,23 @@ Match _match(String id, DateTime matchedAt) => Match(
   ),
 );
 
-MatchesCubit _cubitWith(Result<List<Match>> result) =>
-    MatchesCubit(getMyMatches: GetMyMatches(_FakeMatchingRepository(result)));
+ChatMessage _message(String text, DateTime sentAt) => ChatMessage(
+  id: 'msg_$text',
+  text: text,
+  sentAt: sentAt,
+  sender: MessageSender.them,
+);
+
+MatchesCubit _cubitWith(
+  Result<List<Match>> matches, {
+  Result<Map<String, ChatMessage>> previews = const Ok({}),
+  _FakeMessagingRepository? messaging,
+}) => MatchesCubit(
+  getMyMatches: GetMyMatches(_FakeMatchingRepository(matches)),
+  getLastMessages: GetLastMessages(
+    messaging ?? _FakeMessagingRepository(previews),
+  ),
+);
 
 void main() {
   test('starts in the loading state', () {
@@ -86,5 +137,54 @@ void main() {
     await cubit.load();
 
     expect(cubit.state, const MatchesError('Eşleşmeler yüklenemedi.'));
+  });
+
+  group('previews', () {
+    test('are attached and matches re-ordered by latest activity', () async {
+      final a = _match('a', DateTime(2026, 1, 1));
+      final b = _match('b', DateTime(2026, 2, 1));
+      // `a` is the older match but has the most recent message.
+      final lastA = _message('selam', DateTime(2026, 3, 1));
+      final cubit = _cubitWith(Ok([a, b]), previews: Ok({'a': lastA}));
+
+      await cubit.load();
+
+      final state = cubit.state as MatchesLoaded;
+      expect(state.matches, [a, b]);
+      expect(state.previews, {'a': lastA});
+    });
+
+    test('are requested for every match id', () async {
+      final messaging = _FakeMessagingRepository(const Ok({}));
+      final cubit = _cubitWith(
+        Ok([_match('a', DateTime(2026, 1, 1)), _match('b', DateTime(2026, 2, 1))]),
+        messaging: messaging,
+      );
+
+      await cubit.load();
+
+      expect(messaging.lastRequestedIds, unorderedEquals(['a', 'b']));
+    });
+
+    test('a failed preview fetch keeps the list as it was', () async {
+      final a = _match('a', DateTime(2026, 1, 1));
+      final cubit = _cubitWith(
+        Ok([a]),
+        previews: const Err(ServerFailure('Mesajlar yüklenemedi.')),
+      );
+
+      await cubit.load();
+
+      expect(cubit.state, MatchesLoaded([a]));
+    });
+
+    test('no preview request is made when there are no matches', () async {
+      final messaging = _FakeMessagingRepository(const Ok({}));
+      final cubit = _cubitWith(const Ok(<Match>[]), messaging: messaging);
+
+      await cubit.load();
+
+      expect(messaging.lastRequestedIds, isNull);
+    });
   });
 }

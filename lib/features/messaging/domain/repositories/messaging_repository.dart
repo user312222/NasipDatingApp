@@ -1,4 +1,5 @@
 import '../../../../core/result/result.dart';
+import '../entities/chat_message.dart';
 import '../entities/conversation.dart';
 
 abstract interface class MessagingRepository {
@@ -15,6 +16,12 @@ abstract interface class MessagingRepository {
     required String matchId,
     required String text,
   });
+
+  /// The most recent message of each given match (for list previews).
+  /// Matches with no messages yet are simply absent from the map.
+  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+    List<String> matchIds,
+  );
 
   /// FR-5.2: mark the one-time nudge as shown so it never appears again
   /// for this conversation.
