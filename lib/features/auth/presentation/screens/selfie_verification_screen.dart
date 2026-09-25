@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/result/result.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../../profile/domain/usecases/has_profile.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/entities/auth_user.dart';
@@ -38,7 +39,10 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
   /// the check that actually protects every already-onboarded account
   /// from being sent through the profile wizard — and re-uploading
   /// photos — a second time.
-  Future<void> _routeAfterOnboarding(BuildContext context, AuthUser user) async {
+  Future<void> _routeAfterOnboarding(
+    BuildContext context,
+    AuthUser user,
+  ) async {
     if (user.accountType == AccountType.single) {
       final result = await sl<HasProfile>()(HasProfileParams(user.id));
       if (!context.mounted) return;
@@ -57,7 +61,7 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kimlik Doğrulama')),
+      appBar: AppBar(),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is OnboardingComplete) {
@@ -71,50 +75,30 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             final isSubmitting = state is SelfieVerificationInProgress;
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
+            return WizardBackdrop(
+              child: WizardBody(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.camera_alt_outlined,
-                      size: 40,
-                      color: colors.brass,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Son bir adım: canlılık doğrulaması.',
-                      style: textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Kimlik belgesi istemiyoruz — sadece kısa bir selfie ile bu hesabın gerçek, '
-                      'canlı bir kişiye ait olduğunu doğruluyoruz. Fotoğrafın bizim sunucularımızda '
-                      'hiçbir zaman saklanmaz; işlem tamamen bağımsız bir doğrulama sağlayıcısında yapılır.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colors.inkSoft,
-                      ),
+                    const WizardHeader(
+                      icon: Icons.camera_alt_rounded,
+                      title: 'Son bir adım: canlılık doğrulaması.',
+                      subtitle:
+                          'Kimlik belgesi istemiyoruz — sadece kısa bir selfie ile bu hesabın gerçek, '
+                          'canlı bir kişiye ait olduğunu doğruluyoruz. Fotoğrafın bizim sunucularımızda '
+                          'hiçbir zaman saklanmaz; işlem tamamen bağımsız bir doğrulama sağlayıcısında yapılır.',
+                      step: 5,
+                      totalSteps: 5,
                     ),
                     const SizedBox(height: 28),
-                    ElevatedButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () => context
-                                .read<AuthCubit>()
-                                .submitSelfieVerification(_user),
-                      child: isSubmitting
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Doğrulamayı başlat'),
+                    GradientButton(
+                      label: 'Doğrulamayı başlat',
+                      loading: isSubmitting,
+                      onPressed: () => context
+                          .read<AuthCubit>()
+                          .submitSelfieVerification(_user),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
                       '(Bu ön izlemede gerçek kamera açılmaz — sağlayıcı entegrasyonu bağlanınca eklenecek.)',
                       style: textTheme.bodyMedium?.copyWith(

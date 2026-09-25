@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../bloc/profile_cubit.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
@@ -114,148 +115,158 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Seni Tanıyalım')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'AD'),
-              ),
-              const SizedBox(height: 14),
-              InkWell(
-                onTap: _pickBirthDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'DOĞUM TARİHİ'),
-                  child: Text(
-                    _birthDate == null
-                        ? 'Seç'
-                        : '${_birthDate!.day}.${_birthDate!.month}.${_birthDate!.year}',
+      appBar: AppBar(),
+      body: WizardBackdrop(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const WizardHeader(
+                  icon: Icons.person_rounded,
+                  title: 'Seni tanıyalım.',
+                  subtitle: 'Birkaç temel bilgi yeter; gerisi opsiyonel.',
+                  step: 4,
+                  totalSteps: 5,
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'AD'),
+                ),
+                const SizedBox(height: 14),
+                InkWell(
+                  onTap: _pickBirthDate,
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'DOĞUM TARİHİ',
+                    ),
+                    child: Text(
+                      _birthDate == null
+                          ? 'Seç'
+                          : '${_birthDate!.day}.${_birthDate!.month}.${_birthDate!.year}',
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _cityController,
-                decoration: const InputDecoration(labelText: 'ŞEHİR'),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _educationController,
-                decoration: const InputDecoration(
-                  labelText: 'EĞİTİM (OPSİYONEL)',
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _cityController,
+                  decoration: const InputDecoration(labelText: 'ŞEHİR'),
                 ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _occupationController,
-                decoration: const InputDecoration(
-                  labelText: 'MESLEK (OPSİYONEL)',
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _religiousNoteController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'DİNİ PRATİĞİN (OPSİYONEL)',
-                  hintText: 'Kendi cümlelerinle, istersen boş bırak',
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _madhhabController,
-                decoration: const InputDecoration(
-                  labelText: 'MEZHEP (OPSİYONEL)',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _madhhabSuggestions
-                    .map(
-                      (m) => ActionChip(
-                        label: Text(m),
-                        onPressed: () =>
-                            setState(() => _madhhabController.text = m),
-                        backgroundColor: colors.plumTint,
-                        labelStyle: textTheme.bodyMedium?.copyWith(
-                          color: colors.plumStrong,
-                        ),
-                        side: BorderSide.none,
-                      ),
-                    )
-                    .toList(),
-              ),
-              if (_hasSensitiveData) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: colors.plumTint,
-                    borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _educationController,
+                  decoration: const InputDecoration(
+                    labelText: 'EĞİTİM (OPSİYONEL)',
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Din/mezhep bilgisi, KVKK’ya göre özel nitelikli '
-                        'veridir ve ayrı bir açık rıza gerektirir.',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.plumStrong,
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _occupationController,
+                  decoration: const InputDecoration(
+                    labelText: 'MESLEK (OPSİYONEL)',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _religiousNoteController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'DİNİ PRATİĞİN (OPSİYONEL)',
+                    hintText: 'Kendi cümlelerinle, istersen boş bırak',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _madhhabController,
+                  decoration: const InputDecoration(
+                    labelText: 'MEZHEP (OPSİYONEL)',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _madhhabSuggestions
+                      .map(
+                        (m) => ActionChip(
+                          label: Text(m),
+                          onPressed: () =>
+                              setState(() => _madhhabController.text = m),
+                          backgroundColor: colors.plumTint,
+                          labelStyle: textTheme.bodyMedium?.copyWith(
+                            color: colors.plumStrong,
+                          ),
+                          side: BorderSide.none,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => setState(
-                          () => _sensitiveDataConsent = !_sensitiveDataConsent,
+                      )
+                      .toList(),
+                ),
+                if (_hasSensitiveData) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: colors.plumTint,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Din/mezhep bilgisi, KVKK’ya göre özel nitelikli '
+                          'veridir ve ayrı bir açık rıza gerektirir.',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.plumStrong,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: _sensitiveDataConsent,
-                              onChanged: (v) => setState(
-                                () => _sensitiveDataConsent = v ?? false,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Text(
-                                  'Yukarıda yazdığım dini pratik/mezhep '
-                                  'bilgisinin işlenmesini açıkça kabul '
-                                  'ediyorum.',
-                                  style: textTheme.bodyMedium,
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => setState(
+                            () =>
+                                _sensitiveDataConsent = !_sensitiveDataConsent,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Checkbox(
+                                value: _sensitiveDataConsent,
+                                onChanged: (v) => setState(
+                                  () => _sensitiveDataConsent = v ?? false,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Text(
+                                    'Yukarıda yazdığım dini pratik/mezhep '
+                                    'bilgisinin işlenmesini açıkça kabul '
+                                    'ediyorum.',
+                                    style: textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _error!,
+                    style: textTheme.bodyMedium?.copyWith(color: colors.rose),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                GradientButton(label: 'Devam et', onPressed: _continue),
               ],
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  style: textTheme.bodyMedium?.copyWith(color: colors.rose),
-                ),
-              ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _continue,
-                child: const Text('Devam et'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

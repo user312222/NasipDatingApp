@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../theme/wizard_widgets.dart';
 import '../bloc/auth_cubit.dart';
 import '../session_router.dart';
 
@@ -31,10 +32,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Doğrulama Kodu')),
+      appBar: AppBar(),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is PhoneVerified) context.push('/selfie-verification');
@@ -53,17 +52,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             final isVerifying = state is OtpVerifyInProgress;
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
+            return WizardBackdrop(
+              child: WizardBody(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      '+90 $_phone numarasına gönderilen 6 haneli kodu gir.',
-                      style: textTheme.bodyLarge,
+                    WizardHeader(
+                      icon: Icons.sms_rounded,
+                      title: 'Kodu gir.',
+                      subtitle:
+                          '+90 $_phone numarasına gönderilen 6 haneli kodu gir.',
+                      step: 4,
+                      totalSteps: 5,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     TextField(
                       controller: _codeController,
                       keyboardType: TextInputType.number,
@@ -72,23 +74,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         labelText: 'DOĞRULAMA KODU',
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: isVerifying
-                          ? null
-                          : () => context.read<AuthCubit>().verifyOtp(
-                              phone: _phone,
-                              code: _codeController.text.trim(),
-                            ),
-                      child: isVerifying
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Doğrula'),
+                    const SizedBox(height: 6),
+                    GradientButton(
+                      label: 'Doğrula',
+                      loading: isVerifying,
+                      onPressed: () => context.read<AuthCubit>().verifyOtp(
+                        phone: _phone,
+                        code: _codeController.text.trim(),
+                      ),
                     ),
                   ],
                 ),

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/restart/restart_app.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../bloc/account_cubit.dart';
 
@@ -89,15 +90,13 @@ class _SettingsView extends StatelessWidget {
       listener: (context, state) {
         if (state is AccountDeleted) RestartApp.restart(context);
         if (state is AccountDeleteFailed) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
         }
         if (state is AccountLoggedOut) RestartApp.restart(context);
         if (state is AccountLogOutFailed) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       builder: (context, state) {
@@ -106,71 +105,139 @@ class _SettingsView extends StatelessWidget {
             state is AccountLoggingOut || state is AccountLoggedOut;
         return Scaffold(
           appBar: AppBar(title: const Text('Hesap & Veri')),
-          body: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              if (user != null) ...[
-                Text('Hesabın', style: textTheme.titleSmall),
-                const SizedBox(height: 4),
-                Text(
-                  '+90 ${user.phone}',
-                  style: textTheme.bodyLarge?.copyWith(color: colors.inkSoft),
+          body: WizardBackdrop(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                if (user != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [colors.plum, const Color(0xFFC17B72)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.plum.withValues(alpha: 0.28),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hesabın',
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '+90 ${user.phone}',
+                                style: textTheme.titleLarge?.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                const SectionCard(
+                  icon: Icons.verified_user_rounded,
+                  title: 'Doğrulama verin',
+                  body:
+                      'Selfie ve biyometrik verin Bi Nasip’te hiç saklanmaz; '
+                      'işlem bağımsız bir doğrulama sağlayıcısında yapılır. Bizde '
+                      'yalnızca "doğrulandı" bilgisi ve zamanı tutulur.',
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
+                SectionCard(
+                  icon: Icons.logout_rounded,
+                  title: 'Oturum',
+                  body: 'Bu cihazdaki oturumunu kapatır; verilerin olduğu gibi kalır.',
+                  child: OutlinedButton.icon(
+                    onPressed: (loggingOut || deleting)
+                        ? null
+                        : () => _confirmLogOut(context),
+                    icon: loggingOut
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.logout),
+                    label: const Text('Çıkış yap'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.plumStrong,
+                      side: BorderSide(
+                        color: colors.plum.withValues(alpha: 0.5),
+                      ),
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SectionCard(
+                  icon: Icons.delete_outline_rounded,
+                  title: 'Verilerin',
+                  danger: true,
+                  body:
+                      'KVKK kapsamında hesabını ve tüm verini istediğin zaman '
+                      'silebilirsin.',
+                  child: OutlinedButton.icon(
+                    onPressed: (deleting || loggingOut)
+                        ? null
+                        : () => _confirmDelete(context, userId),
+                    icon: deleting
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_outline),
+                    label: const Text('Hesabımı ve verilerimi sil'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
               ],
-              Text('Doğrulama verin', style: textTheme.titleSmall),
-              const SizedBox(height: 4),
-              Text(
-                'Selfie ve biyometrik verin Bi Nasip’te hiç saklanmaz; '
-                'işlem bağımsız bir doğrulama sağlayıcısında yapılır. Bizde '
-                'yalnızca "doğrulandı" bilgisi ve zamanı tutulur.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-              ),
-              const SizedBox(height: 32),
-              OutlinedButton.icon(
-                onPressed: (loggingOut || deleting)
-                    ? null
-                    : () => _confirmLogOut(context),
-                icon: loggingOut
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.logout),
-                label: const Text('Çıkış yap'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text('Verilerin', style: textTheme.titleSmall),
-              const SizedBox(height: 4),
-              Text(
-                'KVKK kapsamında hesabını ve tüm verini istediğin zaman '
-                'silebilirsin.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: (deleting || loggingOut)
-                    ? null
-                    : () => _confirmDelete(context, userId),
-                icon: deleting
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline),
-                label: const Text('Hesabımı ve verilerimi sil'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                  side: BorderSide(color: Theme.of(context).colorScheme.error),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

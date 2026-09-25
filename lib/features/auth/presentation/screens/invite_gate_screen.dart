@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../bloc/auth_cubit.dart';
 import '../session_router.dart';
 
@@ -54,100 +55,84 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final isChecking = state is InviteCheckInProgress;
-          return SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'DAVETİYELİ ERKEN ERİŞİM',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: colors.brass,
+          return WizardBackdrop(
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'DAVETİYELİ ERKEN ERİŞİM',
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colors.brass,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Bi Nasip’e hoş geldin.',
-                        style: textTheme.headlineMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.inkSoft,
+                        const SizedBox(height: 18),
+                        const WizardHeader(
+                          icon: Icons.favorite_rounded,
+                          title: 'Bi Nasip’e hoş geldin.',
+                          subtitle: 'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',
+                          centered: true,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 28),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              TextField(
-                                controller: _codeController,
-                                textCapitalization:
-                                    TextCapitalization.characters,
-                                decoration: InputDecoration(
-                                  labelText: 'DAVETİYE KODU',
-                                  errorText: _errorText,
+                        const SizedBox(height: 28),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(22),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TextField(
+                                  controller: _codeController,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  decoration: InputDecoration(
+                                    labelText: 'DAVETİYE KODU',
+                                    errorText: _errorText,
+                                  ),
+                                  onChanged: (_) {
+                                    if (_errorText != null) {
+                                      setState(() => _errorText = null);
+                                    }
+                                  },
                                 ),
-                                onChanged: (_) {
-                                  if (_errorText != null) {
-                                    setState(() => _errorText = null);
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: isChecking
-                                    ? null
-                                    : () {
-                                        final code = _codeController.text
-                                            .trim();
-                                        if (code.isEmpty) {
-                                          setState(
-                                            () => _errorText = 'Kodu gir',
-                                          );
-                                          return;
-                                        }
-                                        context
-                                            .read<AuthCubit>()
-                                            .checkInviteCode(code);
-                                      },
-                                child: isChecking
-                                    ? const SizedBox(
-                                        height: 18,
-                                        width: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('Devam et'),
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                GradientButton(
+                                  label: 'Devam et',
+                                  loading: isChecking,
+                                  onPressed: () {
+                                    final code = _codeController.text.trim();
+                                    if (code.isEmpty) {
+                                      setState(() => _errorText = 'Kodu gir');
+                                      return;
+                                    }
+                                    context.read<AuthCubit>().checkInviteCode(
+                                      code,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextButton(
-                        onPressed: () => context.push('/waitlist'),
-                        child: Text(
-                          'Davetiye kodun yok mu? Bekleme listesine katıl',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colors.plum,
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () => context.push('/waitlist'),
+                          child: Text(
+                            'Davetiye kodun yok mu? Bekleme listesine katıl',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.plum,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

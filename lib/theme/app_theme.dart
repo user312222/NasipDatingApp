@@ -82,16 +82,22 @@ abstract final class AppTheme {
       extensions: [colors],
       appBarTheme: AppBarTheme(
         backgroundColor: colors.bg,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         foregroundColor: colors.ink,
         elevation: 0,
-        titleTextStyle: AppTextStyles.titleLarge.copyWith(color: colors.ink),
+        titleTextStyle: AppTextStyles.displayHeadline.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: colors.plumStrong,
+        ),
       ),
       cardTheme: CardThemeData(
         color: colors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(22),
           side: BorderSide(color: colors.line),
         ),
       ),
@@ -100,8 +106,10 @@ abstract final class AppTheme {
           backgroundColor: colors.plum,
           foregroundColor: colors.bg,
           textStyle: AppTextStyles.button,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -112,18 +120,28 @@ abstract final class AppTheme {
           vertical: 12,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colors.line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colors.line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colors.brass),
         ),
         labelStyle: AppTextStyles.labelCaption.copyWith(color: colors.inkSoft),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titleTextStyle: AppTextStyles.displayHeadline.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: colors.plumStrong,
+        ),
       ),
       dividerTheme: DividerThemeData(
         color: colors.line,

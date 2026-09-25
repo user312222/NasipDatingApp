@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../../domain/entities/relationship.dart';
 import '../bloc/guardian_cubit.dart';
@@ -53,7 +54,7 @@ class _GuardianLinkScreenState extends State<GuardianLinkScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Aile Bağlantısı')),
+      appBar: AppBar(),
       body: BlocConsumer<GuardianCubit, GuardianState>(
         listener: (context, state) {
           if (state is GuardianLinked) context.go('/guardian/home');
@@ -64,79 +65,81 @@ class _GuardianLinkScreenState extends State<GuardianLinkScreen> {
         },
         builder: (context, state) {
           final isLinking = state is GuardianLinking;
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Yakınının hesabına bağlan.',
-                    style: textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Yakının, kendi Bi Nasip hesabından sana bir aile kodu verecek. '
-                    'Kod olmadan hiçbir bilgiye erişemezsin.',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colors.inkSoft,
+          return WizardBackdrop(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const WizardHeader(
+                      icon: Icons.link_rounded,
+                      title: 'Yakınının hesabına bağlan.',
+                      subtitle:
+                          'Yakının, kendi Bi Nasip hesabından sana bir aile kodu verecek. '
+                          'Kod olmadan hiçbir bilgiye erişemezsin.',
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'ADIN'),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'YAKINLIK DERECEN',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colors.inkSoft,
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'ADIN'),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: Relationship.values
-                        .map(
-                          (r) => ChoiceChip(
-                            label: Text(r.label),
-                            selected: _relationship == r,
-                            onSelected: (_) =>
-                                setState(() => _relationship = r),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _codeController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(labelText: 'AİLE KODU'),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Text(
-                      _error!,
-                      style: textTheme.bodyMedium?.copyWith(color: colors.rose),
+                      'YAKINLIK DERECEN',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colors.inkSoft,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: Relationship.values.map((r) {
+                        final selected = _relationship == r;
+                        return ChoiceChip(
+                          label: Text(r.label),
+                          selected: selected,
+                          showCheckmark: false,
+                          selectedColor: colors.plum,
+                          backgroundColor: colors.surface,
+                          side: BorderSide(
+                            color: selected ? colors.plum : colors.line,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          labelStyle: textTheme.bodyMedium?.copyWith(
+                            color: selected ? Colors.white : colors.plumStrong,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onSelected: (_) => setState(() => _relationship = r),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: _codeController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(labelText: 'AİLE KODU'),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.rose,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 22),
+                    GradientButton(
+                      label: 'Bağlan',
+                      loading: isLinking,
+                      onPressed: _submit,
                     ),
                   ],
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: isLinking ? null : _submit,
-                    child: isLinking
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Bağlan'),
-                  ),
-                ],
+                ),
               ),
             ),
           );

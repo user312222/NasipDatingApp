@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../bloc/auth_cubit.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
@@ -23,11 +23,9 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Telefon Numaran')),
+      appBar: AppBar(),
+      extendBodyBehindAppBar: false,
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is OtpSent) context.push('/otp');
@@ -39,24 +37,19 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             final isSending = state is OtpRequestInProgress;
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
+            return WizardBackdrop(
+              child: WizardBody(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Sana bir doğrulama kodu göndereceğiz.',
-                      style: textTheme.titleLarge,
+                    const WizardHeader(
+                      icon: Icons.phone_iphone_rounded,
+                      title: 'Sana bir doğrulama kodu göndereceğiz.',
+                      subtitle: 'Telefon numaran yalnızca doğrulama ve hesabınla ilgili önemli bildirimler için kullanılır.',
+                      step: 3,
+                      totalSteps: 5,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Telefon numaran yalnızca doğrulama ve hesabınla ilgili önemli bildirimler için kullanılır.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colors.inkSoft,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     TextField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
@@ -65,23 +58,13 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                         prefixText: '+90 ',
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: isSending
-                          ? null
-                          : () => context.read<AuthCubit>().requestOtp(
-                              _phoneController.text.trim(),
-                            ),
-                      child: isSending
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Kod gönder'),
+                    const SizedBox(height: 18),
+                    GradientButton(
+                      label: 'Kod gönder',
+                      loading: isSending,
+                      onPressed: () => context.read<AuthCubit>().requestOtp(
+                        _phoneController.text.trim(),
+                      ),
                     ),
                   ],
                 ),

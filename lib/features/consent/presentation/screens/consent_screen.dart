@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 
 /// KVKK consent gate — between `/account-type` and `/phone`, i.e. before
@@ -42,99 +43,100 @@ class _ConsentScreenState extends State<ConsentScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verilerin Nasıl Kullanılıyor')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Devam etmeden önce.',
-                style: textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Bi Nasip’i kullanmak için bazı kişisel verilerini işlememiz '
-                'gerekiyor. Bunu neden ve nasıl yaptığımızı burada özetliyoruz; '
-                'tam metni istediğin zaman okuyabilirsin.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-              ),
-              const SizedBox(height: 20),
-              _SummaryPoint(
-                icon: Icons.badge_outlined,
-                text:
-                    'Telefon numaran, profil bilgilerin ve doğrulama sonucun '
-                    'yalnızca Bi Nasip’i çalıştırmak için kullanılır.',
-              ),
-              _SummaryPoint(
-                icon: Icons.favorite_border,
-                text:
-                    'Din/mezhep gibi hassas bilgileri paylaşmak tamamen '
-                    'sana kalmış — bu alanlar opsiyoneldir.',
-              ),
-              _SummaryPoint(
-                icon: Icons.lock_outline,
-                text:
-                    'Selfie’n hiçbir zaman bizim sunucularımızda saklanmaz; '
-                    'yalnızca "doğrulandı" bilgisi tutulur.',
-              ),
-              _SummaryPoint(
-                icon: Icons.public,
-                text:
-                    'Verilerin, altyapı sağlayıcımız (Firebase/Google Cloud) '
-                    'aracılığıyla Avrupa Birliği sınırları içinde işlenir.',
-              ),
-              const SizedBox(height: 12),
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ExpansionTile(
-                  initiallyExpanded: _noticeExpanded,
-                  onExpansionChanged: (v) =>
-                      setState(() => _noticeExpanded = v),
-                  title: Text(
-                    'Aydınlatma metninin tamamını oku',
-                    style: textTheme.titleSmall,
-                  ),
-                  childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [_FullNoticeText()],
+      appBar: AppBar(),
+      body: WizardBackdrop(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const WizardHeader(
+                  icon: Icons.shield_rounded,
+                  title: 'Devam etmeden önce.',
+                  subtitle:
+                      'Bi Nasip’i kullanmak için bazı kişisel verilerini işlememiz '
+                      'gerekiyor. Bunu neden ve nasıl yaptığımızı burada özetliyoruz; '
+                      'tam metni istediğin zaman okuyabilirsin.',
+                  step: 2,
+                  totalSteps: 5,
                 ),
-              ),
-              const SizedBox(height: 20),
-              _ConsentCheckbox(
-                value: _dataProcessingAccepted,
-                onChanged: (v) =>
-                    setState(() => _dataProcessingAccepted = v ?? false),
-                label:
-                    'Kişisel verilerimin, yukarıdaki aydınlatma metninde '
-                    'açıklanan amaçlarla işlenmesini kabul ediyorum.',
-              ),
-              const SizedBox(height: 12),
-              _ConsentCheckbox(
-                value: _crossBorderAccepted,
-                onChanged: (v) =>
-                    setState(() => _crossBorderAccepted = v ?? false),
-                label:
-                    'Verilerimin yurt dışında (Avrupa Birliği sınırları '
-                    'içinde) barındırılan sunucularda işlenmesine açık rıza '
-                    'veriyorum.',
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _canContinue ? _continue : null,
-                child: const Text('Kabul ediyorum, devam et'),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Bu iki onay olmadan Bi Nasip’i kullanamazsın, çünkü uygulama '
-                'temelde bu verilerin işlenmesine dayanıyor. Fikrini '
-                'değiştirirsen hesabını ve verilerini istediğin zaman '
-                'Ayarlar’dan kalıcı olarak silebilirsin.',
-                style: textTheme.bodySmall?.copyWith(color: colors.inkSoft),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 22),
+                _SummaryPoint(
+                  icon: Icons.badge_outlined,
+                  text:
+                      'Telefon numaran, profil bilgilerin ve doğrulama sonucun '
+                      'yalnızca Bi Nasip’i çalıştırmak için kullanılır.',
+                ),
+                _SummaryPoint(
+                  icon: Icons.favorite_border,
+                  text:
+                      'Din/mezhep gibi hassas bilgileri paylaşmak tamamen '
+                      'sana kalmış — bu alanlar opsiyoneldir.',
+                ),
+                _SummaryPoint(
+                  icon: Icons.lock_outline,
+                  text:
+                      'Selfie’n hiçbir zaman bizim sunucularımızda saklanmaz; '
+                      'yalnızca "doğrulandı" bilgisi tutulur.',
+                ),
+                _SummaryPoint(
+                  icon: Icons.public,
+                  text:
+                      'Verilerin, altyapı sağlayıcımız (Firebase/Google Cloud) '
+                      'aracılığıyla Avrupa Birliği sınırları içinde işlenir.',
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: ExpansionTile(
+                    initiallyExpanded: _noticeExpanded,
+                    onExpansionChanged: (v) =>
+                        setState(() => _noticeExpanded = v),
+                    title: Text(
+                      'Aydınlatma metninin tamamını oku',
+                      style: textTheme.titleSmall,
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [_FullNoticeText()],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _ConsentCheckbox(
+                  value: _dataProcessingAccepted,
+                  onChanged: (v) =>
+                      setState(() => _dataProcessingAccepted = v ?? false),
+                  label:
+                      'Kişisel verilerimin, yukarıdaki aydınlatma metninde '
+                      'açıklanan amaçlarla işlenmesini kabul ediyorum.',
+                ),
+                const SizedBox(height: 12),
+                _ConsentCheckbox(
+                  value: _crossBorderAccepted,
+                  onChanged: (v) =>
+                      setState(() => _crossBorderAccepted = v ?? false),
+                  label:
+                      'Verilerimin yurt dışında (Avrupa Birliği sınırları '
+                      'içinde) barındırılan sunucularda işlenmesine açık rıza '
+                      'veriyorum.',
+                ),
+                const SizedBox(height: 24),
+                GradientButton(
+                  label: 'Kabul ediyorum, devam et',
+                  onPressed: _canContinue ? _continue : null,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Bu iki onay olmadan Bi Nasip’i kullanamazsın, çünkü uygulama '
+                  'temelde bu verilerin işlenmesine dayanıyor. Fikrini '
+                  'değiştirirsen hesabını ve verilerini istediğin zaman '
+                  'Ayarlar’dan kalıcı olarak silebilirsin.',
+                  style: textTheme.bodySmall?.copyWith(color: colors.inkSoft),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -158,9 +160,7 @@ class _SummaryPoint extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: colors.brass),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(text, style: textTheme.bodyMedium)),
         ],
       ),
     );
@@ -298,9 +298,7 @@ class _FullNoticeText extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   body,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colors.inkSoft,
-                  ),
+                  style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
                 ),
               ],
             ),

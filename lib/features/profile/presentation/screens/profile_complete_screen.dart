@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../domain/entities/profile.dart';
 import '../bloc/profile_cubit.dart';
 
@@ -23,49 +24,44 @@ class ProfileCompleteScreen extends StatelessWidget {
     final profile = state is ProfileSubmitted ? state.profile : null;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(Icons.auto_awesome, size: 48, color: colors.brass),
-                const SizedBox(height: 16),
-                Text(
-                  profile == null
-                      ? 'Profilin hazır.'
-                      : '${profile.name}, profilin hazır.',
-                  style: textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  profile == null
-                      ? ''
-                      : '${profile.city} · ${profile.age} · '
-                            '${profile.intent.name == 'marriage' ? 'Evlilik' : 'Henüz emin değil'}'
-                            '${profile.familyInvolvementOptIn ? ' · Aile dahil' : ''}',
-                  style: textTheme.bodyLarge?.copyWith(color: colors.inkSoft),
-                  textAlign: TextAlign.center,
-                ),
-                if (profile != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _visibilityLabel(profile.photoVisibility),
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colors.inkSoft,
+      body: WizardBackdrop(
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WizardHeader(
+                    icon: Icons.auto_awesome_rounded,
+                    title: profile == null
+                        ? 'Profilin hazır.'
+                        : '${profile.name}, profilin hazır.',
+                    subtitle: profile == null
+                        ? null
+                        : '${profile.city} · ${profile.age} · '
+                              '${profile.intent.name == 'marriage' ? 'Evlilik' : 'Henüz emin değil'}'
+                              '${profile.familyInvolvementOptIn ? ' · Aile dahil' : ''}',
+                    centered: true,
+                  ),
+                  if (profile != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      _visibilityLabel(profile.photoVisibility),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.inkSoft,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
+                  ],
+                  const SizedBox(height: 32),
+                  GradientButton(
+                    label: 'Keşfetmeye başla',
+                    onPressed: () => context.go('/discover'),
                   ),
                 ],
-                const SizedBox(height: 28),
-                ElevatedButton(
-                  onPressed: () => context.go('/discover'),
-                  child: const Text('Keşfetmeye başla'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -11,6 +11,7 @@ import '../../domain/entities/candidate_filter.dart';
 import '../../domain/entities/match.dart';
 import '../../domain/entities/swipe_outcome.dart';
 import '../bloc/matching_cubit.dart';
+import '../../../../theme/avatar_palette.dart';
 import '../widgets/crescent_motif_painter.dart';
 
 /// A single self-contained screen — unlike auth/profile, discovery has no
@@ -69,6 +70,11 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
           ),
         ),
         actions: [
+          _ChromeIconButton(
+            icon: Icons.chat_bubble_outline_rounded,
+            onPressed: () => context.push('/matches'),
+            tooltip: 'Eşleşmeler',
+          ),
           BlocBuilder<MatchingCubit, MatchingState>(
             builder: (context, state) {
               final filter = state is MatchingLoaded
@@ -693,19 +699,8 @@ class _CandidateCard extends StatelessWidget {
   /// actual drag gesture; this widget stays presentational.
   final double dragProgress;
 
-  /// Vivid two-color pairs (rather than one color darkened toward black)
-  /// so the illustration reads as energetic/contemporary instead of a
-  /// moody, aged gradient. Exposed via [paletteFor] so the background glow
-  /// in `DiscoveryScreen` can echo the same palette behind the card.
-  static const _illustrationPairs = [
-    [Color(0xFF8A3F80), Color(0xFFD9A15C)], // plum -> warm brass-rose
-    [Color(0xFFDDA646), Color(0xFF8A3F80)], // brass -> plum
-    [Color(0xFFD2897D), Color(0xFF9C4590)], // rose -> plum-pink
-    [Color(0xFF9C4590), Color(0xFFD9A15C)], // plum-pink -> brass
-  ];
-
   static List<Color> paletteFor(Candidate candidate) =>
-      _illustrationPairs[candidate.avatarColorSeed % _illustrationPairs.length];
+      AvatarPalette.forSeed(candidate.avatarColorSeed);
 
   @override
   Widget build(BuildContext context) {

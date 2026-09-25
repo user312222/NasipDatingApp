@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/result/result.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../../safety/domain/usecases/moderate_photo.dart';
 import '../bloc/profile_cubit.dart';
 
@@ -62,67 +63,65 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fotoğrafların')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      appBar: AppBar(),
+      body: WizardBackdrop(
+        child: WizardBody(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'En az 1, en fazla 6 fotoğraf ekle.',
-                style: textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Fotoğraflarının kime, ne zaman görüneceğini ilerleyen bir adımda sen belirleyeceksin.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+              const WizardHeader(
+                icon: Icons.photo_camera_back_rounded,
+                title: 'En az 1, en fazla 6 fotoğraf ekle.',
+                subtitle: 'Fotoğraflarının kime, ne zaman görüneceğini ilerleyen bir adımda sen belirleyeceksin.',
+                step: 1,
+                totalSteps: 5,
               ),
               const SizedBox(height: 20),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: _photos.length < 6 ? _photos.length + 1 : 6,
-                  itemBuilder: (context, index) {
-                    if (index == _photos.length) {
-                      return _AddTile(colors: colors, onTap: _pickPhotos);
-                    }
-                    return Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.memory(
-                            _photos[index],
-                            width: double.infinity,
-                            height: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: _photos.length < 6 ? _photos.length + 1 : 6,
+                itemBuilder: (context, index) {
+                  if (index == _photos.length) {
+                    return _AddTile(colors: colors, onTap: _pickPhotos);
+                  }
+                  return Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.memory(
+                          _photos[index],
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
                         ),
-                        Positioned(
-                          top: 2,
-                          right: 2,
-                          child: GestureDetector(
-                            onTap: () => _removeAt(index),
-                            child: CircleAvatar(
-                              radius: 12,
-                              backgroundColor: colors.plumStrong,
-                              child: const Icon(
-                                Icons.close,
-                                size: 14,
-                                color: Colors.white,
-                              ),
+                      ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () => _removeAt(index),
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundColor: colors.plumStrong,
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                    ],
+                  );
+                },
               ),
+              const Spacer(),
               if (_error != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -131,7 +130,8 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              ElevatedButton(
+              GradientButton(
+                label: 'Devam et',
                 onPressed: () {
                   if (_photos.isEmpty) {
                     setState(() => _error = 'En az 1 fotoğraf ekle.');
@@ -139,7 +139,6 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
                   }
                   context.push('/profile/privacy');
                 },
-                child: const Text('Devam et'),
               ),
             ],
           ),
@@ -158,11 +157,11 @@ class _AddTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(18),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.plumTint,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: colors.line),
         ),
         child: Icon(Icons.add_photo_alternate_outlined, color: colors.plum),

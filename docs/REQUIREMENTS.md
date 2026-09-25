@@ -65,7 +65,7 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-4.2 Karşılıklı beğeni (mutual like) eşleşme oluşturur ve sohbeti açar.
 - FR-4.3 Tek taraflı beğeni günlük **12 ile sınırlı** (spam/düşük-niyet kullanımını azaltmak için; Tinder'ın ~100/gün hacim modelinin tam tersi — "quality over quantity" pozisyonlamasını destekler).
 
-### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, mock veri kaynağıyla; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile ulaşılıyor)*
+### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, mock veri kaynağıyla; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile veya Keşfet'teki "Eşleşmeler" listesinden (`/matches`) ulaşılıyor)*
 - FR-5.1 Eşleşen kullanıcılar metin tabanlı sohbet edebilir.
 - FR-5.2 Bir sohbette **toplam 30 mesaj değişimi VEYA 7 gün aktif yazışma** (hangisi önce gerçekleşirse) sonrasında, "aile görüşmesi" veya "buluşma" önerisi tek seferlik, nazik bir kart olarak gösterilir — zorlayıcı değil, kapatılabilir (retention/conversion nudge — Elif/araştırma bulgusu: "sohbet sonu yok" şikayeti).
 

@@ -137,7 +137,10 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
       final verifiedAt = (data?['verifiedAt'] as Timestamp?)?.toDate();
       return AuthUser(
         id: user.uid,
-        phone: user.phoneNumber ?? '',
+        // Firebase reports E.164 ("+905550000000"); everywhere else in the
+        // app `AuthUser.phone` is the local number and screens prepend
+        // "+90 " themselves, so strip it here or it renders twice.
+        phone: (user.phoneNumber ?? '').replaceFirst(RegExp(r'^\+90'), ''),
         accountType: accountType,
         verifiedAt: verifiedAt,
       );

@@ -12,6 +12,7 @@ import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/phone_entry_screen.dart';
 import '../../features/auth/presentation/screens/selfie_verification_screen.dart';
 import '../../features/matching/presentation/screens/discovery_screen.dart';
+import '../../features/matching/presentation/screens/matches_screen.dart';
 import '../../features/messaging/presentation/screens/chat_screen.dart';
 import '../../features/profile/presentation/screens/profile_complete_screen.dart';
 import '../../features/profile/presentation/screens/profile_details_screen.dart';
@@ -105,6 +106,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/discover',
       builder: (context, state) => const DiscoveryScreen(),
+    ),
+    GoRoute(
+      path: '/matches',
+      builder: (context, state) => const MatchesScreen(),
     ),
     GoRoute(
       path: '/chat',

@@ -39,6 +39,7 @@ import '../../features/matching/data/repositories/matching_repository_impl.dart'
 import '../../features/matching/domain/repositories/matching_repository.dart';
 import '../../features/matching/domain/usecases/get_candidates.dart';
 import '../../features/matching/domain/usecases/swipe_candidate.dart';
+import '../../features/matching/presentation/bloc/matches_cubit.dart';
 import '../../features/matching/presentation/bloc/matching_cubit.dart';
 import '../../features/messaging/data/datasources/firestore_messaging_remote_data_source.dart';
 import '../../features/messaging/data/datasources/messaging_remote_data_source.dart';
@@ -169,6 +170,7 @@ void _initMatching() {
   sl.registerFactory(
     () => MatchingCubit(getCandidates: sl(), swipeCandidate: sl()),
   );
+  sl.registerFactory(() => MatchesCubit(getMyMatches: sl()));
 
   // Domain
   sl.registerLazySingleton(() => GetCandidates(sl()));
