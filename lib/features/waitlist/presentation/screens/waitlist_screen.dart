@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../bloc/waitlist_cubit.dart';
 
 class WaitlistScreen extends StatelessWidget {
@@ -44,6 +45,7 @@ class _WaitlistViewState extends State<_WaitlistView> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(),
       body: BlocConsumer<WaitlistCubit, WaitlistState>(
         listener: (context, state) {
           if (state is WaitlistFailure) {
@@ -52,50 +54,58 @@ class _WaitlistViewState extends State<_WaitlistView> {
           }
         },
         builder: (context, state) {
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 24),
-                  Text(
-                    'TÜRKİYE’DE YAKINDA — DAVETİYELİ ERKEN ERİŞİM',
-                    style: textTheme.labelSmall?.copyWith(color: colors.brass),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Herkesin bi nasibi var.',
-                    style: textTheme.displayLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Evliliği hedefleyen, mahremiyetini kendi elinde tutmak isteyen medeni '
-                    'Müslüman bekârlar için tasarlanan yeni bir tanışma deneyimi.',
-                    style: textTheme.bodyLarge?.copyWith(color: colors.inkSoft),
-                  ),
-                  const SizedBox(height: 32),
-                  if (state is WaitlistSuccess)
-                    _SuccessCard(name: state.name)
-                  else
-                    _WaitlistForm(
-                      formKey: _formKey,
-                      nameController: _nameController,
-                      contactController: _contactController,
-                      cityController: _cityController,
-                      isSubmitting: state is WaitlistSubmitting,
-                      onSubmit: () {
-                        if (_formKey.currentState?.validate() != true) return;
-                        context.read<WaitlistCubit>().submit(
-                          name: _nameController.text.trim(),
-                          contact: _contactController.text.trim(),
-                          city: _cityController.text.trim().isEmpty
-                              ? null
-                              : _cityController.text.trim(),
-                        );
-                      },
+          return WizardBackdrop(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'TÜRKİYE’DE YAKINDA — DAVETİYELİ ERKEN ERİŞİM',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colors.brass,
+                      ),
                     ),
-                ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Herkesin bi nasibi var.',
+                      style: textTheme.displayLarge?.copyWith(
+                        color: colors.plumStrong,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Evliliği hedefleyen, mahremiyetini kendi elinde tutmak isteyen medeni '
+                      'Müslüman bekârlar için tasarlanan yeni bir tanışma deneyimi.',
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colors.inkSoft,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    if (state is WaitlistSuccess)
+                      _SuccessCard(name: state.name)
+                    else
+                      _WaitlistForm(
+                        formKey: _formKey,
+                        nameController: _nameController,
+                        contactController: _contactController,
+                        cityController: _cityController,
+                        isSubmitting: state is WaitlistSubmitting,
+                        onSubmit: () {
+                          if (_formKey.currentState?.validate() != true) return;
+                          context.read<WaitlistCubit>().submit(
+                            name: _nameController.text.trim(),
+                            contact: _contactController.text.trim(),
+                            city: _cityController.text.trim().isEmpty
+                                ? null
+                                : _cityController.text.trim(),
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           );
@@ -165,18 +175,10 @@ class _WaitlistForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: isSubmitting ? null : onSubmit,
-                child: isSubmitting
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Bana da nasip olsun'),
+              GradientButton(
+                label: 'Bana da nasip olsun',
+                loading: isSubmitting,
+                onPressed: onSubmit,
               ),
             ],
           ),
@@ -195,26 +197,44 @@ class _SuccessCard extends StatelessWidget {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(Icons.auto_awesome, color: colors.brass, size: 28),
-            const SizedBox(height: 12),
-            Text(
-              'Teşekkürler, $name.',
-              style: textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Erken erişim daveti hazır olduğunda sana haber vereceğiz.',
-              style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-              textAlign: TextAlign.center,
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.plum, const Color(0xFFC17B72)],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.plum.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 32),
+          const SizedBox(height: 12),
+          Text(
+            'Teşekkürler, $name.',
+            style: textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Erken erişim daveti hazır olduğunda sana haber vereceğiz.',
+            style: textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.88),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

@@ -12,6 +12,7 @@ import '../../domain/entities/match.dart';
 import '../../domain/entities/swipe_outcome.dart';
 import '../bloc/matching_cubit.dart';
 import '../../../../theme/avatar_palette.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../widgets/crescent_motif_painter.dart';
 
 /// A single self-contained screen — unlike auth/profile, discovery has no
@@ -206,12 +207,10 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
                     key: ValueKey(candidate.id),
                     candidate: candidate,
                     isSwiping: loaded.isSwiping,
-                    onPass: () => context.read<MatchingCubit>().swipe(
-                      SwipeAction.pass,
-                    ),
-                    onLike: () => context.read<MatchingCubit>().swipe(
-                      SwipeAction.like,
-                    ),
+                    onPass: () =>
+                        context.read<MatchingCubit>().swipe(SwipeAction.pass),
+                    onLike: () =>
+                        context.read<MatchingCubit>().swipe(SwipeAction.like),
                   ),
                 ),
               ),
@@ -506,7 +505,10 @@ class _ChromeMenuButton extends StatelessWidget {
                 children: [
                   Icon(item.icon, size: 19, color: colors.plumStrong),
                   const SizedBox(width: 12),
-                  Text(item.label, style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    item.label,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -543,10 +545,7 @@ class _BackgroundGlow extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: 0.42),
-              color.withValues(alpha: 0),
-            ],
+            colors: [color.withValues(alpha: 0.42), color.withValues(alpha: 0)],
           ),
         ),
       ),
@@ -595,13 +594,12 @@ class _SwipeableCardState extends State<_SwipeableCard>
     super.initState();
     _controller =
         AnimationController(
-            vsync: this,
-            duration: const Duration(milliseconds: 260),
-          )
-          ..addListener(() {
-            final animation = _animation;
-            if (animation != null) setState(() => _drag = animation.value);
-          });
+          vsync: this,
+          duration: const Duration(milliseconds: 260),
+        )..addListener(() {
+          final animation = _animation;
+          if (animation != null) setState(() => _drag = animation.value);
+        });
   }
 
   @override
@@ -611,9 +609,10 @@ class _SwipeableCardState extends State<_SwipeableCard>
   }
 
   void _animateTo(Offset target, {VoidCallback? onDone}) {
-    _animation = Tween<Offset>(begin: _drag, end: target).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _animation = Tween<Offset>(
+      begin: _drag,
+      end: target,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller
       ..reset()
       ..forward().whenComplete(() => onDone?.call());
@@ -729,7 +728,10 @@ class _CandidateCard extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 60,
-                  child: _IllustrationArea(colorPair: pair, candidate: candidate),
+                  child: _IllustrationArea(
+                    colorPair: pair,
+                    candidate: candidate,
+                  ),
                 ),
                 Expanded(
                   flex: 40,
@@ -1160,34 +1162,86 @@ class _FilterSheetState extends State<_FilterSheet> {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
-        top: 24,
+        top: 4,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Filtreler', style: textTheme.titleLarge),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    colors: [colors.plum, const Color(0xFFC17B72)],
+                  ),
+                ),
+                child: const Icon(Icons.tune, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Filtreler',
+                  style: textTheme.headlineMedium?.copyWith(
+                    fontSize: 24,
+                    color: colors.plumStrong,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() {
+                  _cityController.clear();
+                  _ageRange = const RangeValues(20, 45);
+                  _intent = null;
+                }),
+                child: const Text('Sıfırla'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           TextField(
             controller: _cityController,
             decoration: const InputDecoration(labelText: 'ŞEHİR'),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'YAŞ ARALIĞI: ${_ageRange.start.round()}–${_ageRange.end.round()}',
-            style: textTheme.labelSmall?.copyWith(color: colors.inkSoft),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Text(
+                'YAŞ ARALIĞI',
+                style: textTheme.labelSmall?.copyWith(color: colors.inkSoft),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.plumTint,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  '${_ageRange.start.round()}–${_ageRange.end.round()}',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colors.plumStrong,
+                  ),
+                ),
+              ),
+            ],
           ),
           RangeSlider(
             values: _ageRange,
             min: 18,
             max: 60,
             divisions: 42,
-            activeColor: colors.plum,
             labels: RangeLabels(
               '${_ageRange.start.round()}',
               '${_ageRange.end.round()}',
@@ -1199,9 +1253,10 @@ class _FilterSheetState extends State<_FilterSheet> {
             'NİYET',
             style: textTheme.labelSmall?.copyWith(color: colors.inkSoft),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
               ChoiceChip(
                 label: const Text('Farketmez'),
@@ -1222,8 +1277,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
+          const SizedBox(height: 26),
+          GradientButton(
+            label: 'Uygula',
             onPressed: () {
               Navigator.of(context).pop(
                 CandidateFilter(
@@ -1236,7 +1292,6 @@ class _FilterSheetState extends State<_FilterSheet> {
                 ),
               );
             },
-            child: const Text('Uygula'),
           ),
         ],
       ),

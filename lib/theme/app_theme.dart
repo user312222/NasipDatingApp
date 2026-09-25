@@ -133,6 +133,53 @@ abstract final class AppTheme {
         ),
         labelStyle: AppTextStyles.labelCaption.copyWith(color: colors.inkSoft),
       ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: colors.line,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: colors.line),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: colors.plumStrong,
+        contentTextStyle: AppTextStyles.bodyDefault.copyWith(
+          color: Colors.white,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      chipTheme: ChipThemeData(
+        showCheckmark: false,
+        backgroundColor: colors.surface,
+        selectedColor: colors.plum,
+        side: BorderSide(color: colors.line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        labelStyle: AppTextStyles.bodyDefault.copyWith(
+          color: colors.plumStrong,
+          fontWeight: FontWeight.w600,
+        ),
+        secondaryLabelStyle: AppTextStyles.bodyDefault.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: colors.plum,
+        inactiveTrackColor: colors.line,
+        thumbColor: colors.plum,
+        overlayColor: colors.plum.withValues(alpha: 0.12),
+        rangeThumbShape: const RoundRangeSliderThumbShape(),
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,

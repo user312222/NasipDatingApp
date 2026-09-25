@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/wizard_widgets.dart';
 import '../../domain/entities/report_reason.dart';
 import '../bloc/safety_cubit.dart';
 
@@ -52,10 +53,31 @@ class SafetyMenuButton extends StatelessWidget {
               if (value == 'report') _openReportSheet(context);
               if (value == 'block') _confirmBlock(context);
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'report', child: Text('Şikayet et')),
-              PopupMenuItem(value: 'block', child: Text('Engelle')),
-            ],
+            itemBuilder: (context) {
+              final colors = context.colors;
+              return [
+                PopupMenuItem(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(Icons.flag_outlined, size: 19, color: colors.plum),
+                      const SizedBox(width: 12),
+                      const Text('Şikayet et'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'block',
+                  child: Row(
+                    children: [
+                      Icon(Icons.block, size: 19, color: colors.rose),
+                      const SizedBox(width: 12),
+                      Text('Engelle', style: TextStyle(color: colors.rose)),
+                    ],
+                  ),
+                ),
+              ];
+            },
           ),
         ),
       ),
@@ -93,6 +115,10 @@ class SafetyMenuButton extends StatelessWidget {
             child: const Text('Vazgeç'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.rose,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Engelle'),
           ),
@@ -131,7 +157,7 @@ class _ReportSheetState extends State<_ReportSheet> {
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
-        top: 24,
+        top: 4,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
@@ -139,34 +165,67 @@ class _ReportSheetState extends State<_ReportSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              '${widget.targetName} için şikayet',
-              style: textTheme.titleLarge,
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.roseSoft,
+                  ),
+                  child: Icon(Icons.flag_rounded, color: colors.rose, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${widget.targetName} için şikayet',
+                    style: textTheme.headlineMedium?.copyWith(
+                      fontSize: 22,
+                      color: colors.plumStrong,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               'Şikayetin gizli kalır; kişi bunu bilmez.',
               style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             ...ReportReason.values.map(
-              (r) => InkWell(
-                onTap: () => setState(() => _reason = r),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _reason == r
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
-                        color: _reason == r ? colors.plum : colors.inkSoft,
+              (r) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () => setState(() => _reason = r),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _reason == r ? colors.plumTint : colors.bg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _reason == r ? colors.plum : colors.line,
+                        width: _reason == r ? 1.6 : 1,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(r.label, style: textTheme.bodyLarge),
-                      ),
-                    ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(r.label, style: textTheme.bodyLarge),
+                        ),
+                        if (_reason == r)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 20,
+                            color: colors.plum,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -179,8 +238,9 @@ class _ReportSheetState extends State<_ReportSheet> {
                 labelText: 'EK NOT (OPSİYONEL)',
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            const SizedBox(height: 18),
+            GradientButton(
+              label: 'Şikayet et',
               onPressed: _reason == null
                   ? null
                   : () {
@@ -188,7 +248,6 @@ class _ReportSheetState extends State<_ReportSheet> {
                       widget.onSubmit(_reason!, note.isEmpty ? null : note);
                       Navigator.of(context).pop();
                     },
-              child: const Text('Şikayet et'),
             ),
           ],
         ),
