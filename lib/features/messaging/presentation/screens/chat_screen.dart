@@ -516,6 +516,20 @@ class _FamilyNudgeCard extends StatelessWidget {
                   'değerlendirebilirsin. Tamamen sana kalmış.',
                   style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
                 ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => context.push('/family/settings'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      foregroundColor: colors.plumStrong,
+                    ),
+                    child: const Text('Aileni sürece dahil et'),
+                  ),
+                ),
               ],
             ),
           ),
