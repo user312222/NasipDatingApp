@@ -44,13 +44,13 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 
 ## 4. Fonksiyonel Gereksinimler
 
-### FR-1 — Onboarding & Kimlik Doğrulama *(kuruldu — `lib/features/auth/`, mock veri kaynağıyla; bkz. FR-1.2 notu)*
+### FR-1 — Onboarding & Kimlik Doğrulama *(kuruldu — `lib/features/auth/`; telefon + SMS OTP gerçek (Firebase Phone Auth; oturum geri yükleme ve çıkış dahil). Davetiye kodu doğrulaması ve selfie doğrulaması hâlâ mock — bkz. FR-1.2 notu)*
 - FR-1.1 Kullanıcı telefon numarası ile kayıt olur, SMS OTP ile doğrular.
 - FR-1.2 Kullanıcı, hesap açılışında **zorunlu** selfie-liveness doğrulamasından geçer (kimlik belgesi/T.C. kimlik istenmez — sadece "bu fotoğrafı gerçek/canlı bir insan mı çekti" kontrolü). Doğrulama 3. parti sağlayıcı (Veriff/Yoti/Didit vb.) üzerinden yapılır; ham selfie/biyometrik veri Bi Nasip'in kendi altyapısında hiçbir zaman saklanmaz — sadece sağlayıcıdan dönen `verified: true/false` + zaman damgası tutulur. Mümkünse aynı akışta sağlayıcının yaş tahmini (facial age estimation) özelliği de kullanılır, görüntü işlem sonrası saklanmaz.
 - FR-1.3 Davetiye kodu olmayan kullanıcı bekleme listesine yönlendirilir (Faz 1: closed beta).
 - FR-1.4 Telefon numarası istenmeden ÖNCE, kullanıcı KVKK aydınlatma metnini görür ve iki ayrı açık rızayı (veri işleme + yurt dışı aktarım) onaylamadan devam edemez *(kuruldu — `lib/features/consent/`, `/consent` ekranı, Firestore `consents/{uid}`'e kaydediliyor. **Metin taslaktır, hukuki inceleme gerekiyor** — bkz. Bölüm 7)*.
 
-### FR-2 — Profil Oluşturma *(kuruldu — `lib/features/profile/`, mock veri kaynağıyla; gerçek fotoğraf seçimi `image_picker` ile canlı çalışıyor, yükleme/depolama henüz Firebase Storage'a bağlı değil)*
+### FR-2 — Profil Oluşturma *(kuruldu — `lib/features/profile/`, Firestore'a bağlı (özel `profiles/{uid}` + asgari alanlı herkese açık `publicProfiles/{uid}`); gerçek fotoğraf seçimi `image_picker` ile canlı çalışıyor, yükleme/depolama henüz Firebase Storage'a bağlı değil)*
 - FR-2.1 Kullanıcı en az 1, en fazla 6 fotoğraf ekleyebilir.
 - FR-2.2 Kullanıcı niyetini seçer: "Evlilik", "Henüz emin değilim" (casual/flört seçeneği YOK — pozisyonlama gereği).
 - FR-2.3 Kullanıcı şehir, yaş, eğitim, meslek, dini pratik seviyesi (opsiyonel serbest alan) girer. Mezhep alanı opsiyoneldir ve eşleştirme ekranında **opsiyonel bir filtre** olarak sunulur (varsayılan: kapalı/"farketmez"); zorunlu değildir ve boş bırakan kullanıcılar dışlanmaz. Seçenek listesi kapsayıcı tutulur (serbest metin girişi de desteklenir, kapalı bir kutuya sıkıştırılmaz).
@@ -60,12 +60,12 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-3.1 Kullanıcı (özellikle kadın kullanıcı) fotoğraf görünürlüğünü kademeli açabilir: "eşleşince otomatik", "ben açana kadar gizli", "sadece istek üzerine".
 - FR-3.2 Varsayılan görünürlük seviyesi en kısıtlı seçenektir (opt-in genişletme, opt-out değil).
 
-### FR-4 — Eşleştirme *(kuruldu — `lib/features/matching/`, mock veri kaynağıyla; buton-tabanlı beğen/geç — sürükle-bırak kart animasyonu yok)*
+### FR-4 — Eşleştirme *(kuruldu — `lib/features/matching/`, Firestore'a bağlı (`likes`, `likeCounters`, `matches`; günlük 12 sınırı ve karşılıklı-beğeni koşulu `firestore.rules`'ta zorlanıyor); kart hem sürükle-bırak hem buton ile beğenilir/geçilir, eşleşme kutlaması ve `/matches` listesi var)*
 - FR-4.1 Sistem şehir, yaş aralığı, niyet zaman çizelgesi ve dil filtrelerine göre aday listesi sunar.
 - FR-4.2 Karşılıklı beğeni (mutual like) eşleşme oluşturur ve sohbeti açar.
 - FR-4.3 Tek taraflı beğeni günlük **12 ile sınırlı** (spam/düşük-niyet kullanımını azaltmak için; Tinder'ın ~100/gün hacim modelinin tam tersi — "quality over quantity" pozisyonlamasını destekler).
 
-### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, mock veri kaynağıyla; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile veya Keşfet'teki "Eşleşmeler" listesinden (`/matches`) ulaşılıyor)*
+### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, Firestore'a bağlı ama canlı dinleyici yok: karşı tarafın yeni mesajı sohbet yeniden açılınca görünür; eşleşme listesi son mesajı önizler; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile veya Keşfet'teki "Eşleşmeler" listesinden (`/matches`) ulaşılıyor)*
 - FR-5.1 Eşleşen kullanıcılar metin tabanlı sohbet edebilir.
 - FR-5.2 Bir sohbette **toplam 30 mesaj değişimi VEYA 7 gün aktif yazışma** (hangisi önce gerçekleşirse) sonrasında, "aile görüşmesi" veya "buluşma" önerisi tek seferlik, nazik bir kart olarak gösterilir — zorlayıcı değil, kapatılabilir (retention/conversion nudge — Elif/araştırma bulgusu: "sohbet sonu yok" şikayeti).
 
