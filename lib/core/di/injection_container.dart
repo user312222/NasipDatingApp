@@ -1,4 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../preferences/app_preferences.dart';
 
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/firebase_auth_remote_data_source.dart';
@@ -78,6 +81,10 @@ import '../../features/waitlist/presentation/bloc/waitlist_cubit.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
+  final appPreferences = AppPreferences(await SharedPreferences.getInstance());
+  await appPreferences.init();
+  sl.registerSingleton<AppPreferences>(appPreferences);
+
   _initWaitlist();
   _initConsent();
   _initAuth();

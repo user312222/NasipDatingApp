@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/format/chat_time.dart';
+import '../../../../core/preferences/app_preferences.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../messaging/domain/entities/chat_message.dart';
 import '../../../messaging/presentation/screens/chat_screen.dart';
@@ -32,6 +33,7 @@ class _MatchesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+    final prefs = sl<AppPreferences>();
 
     return Scaffold(
       appBar: AppBar(
@@ -57,13 +59,17 @@ class _MatchesView extends StatelessWidget {
               );
             case MatchesLoaded(:final matches, :final previews):
               if (matches.isEmpty) return const _EmptyMatches();
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                itemCount: matches.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) => _MatchTile(
-                  match: matches[i],
-                  preview: previews[matches[i].id],
+              return ValueListenableBuilder<bool>(
+                valueListenable: prefs.showMatchMessagePreviews,
+                builder: (context, showPreviews, _) => ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                  itemCount: matches.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) => _MatchTile(
+                    match: matches[i],
+                    preview: previews[matches[i].id],
+                    showPreview: showPreviews,
+                  ),
                 ),
               );
           }
@@ -119,10 +125,21 @@ class _EmptyMatches extends StatelessWidget {
 }
 
 class _MatchTile extends StatelessWidget {
-  const _MatchTile({required this.match, this.preview});
+  const _MatchTile({
+    required this.match,
+    this.preview,
+    required this.showPreview,
+  });
 
   final Match match;
   final ChatMessage? preview;
+
+  /// The "Eşleşmeler listesinde mesaj önizlemesi" setting — when off, this
+  /// row never renders message text or activity timestamps, only the
+  /// candidate's own profile info (city). Unrelated to, and never as
+  /// permissive as, what a linked guardian can see (FR-8.5 never shows
+  /// message content there regardless of this setting).
+  final bool showPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +147,7 @@ class _MatchTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final candidate = match.candidate;
     final pair = AvatarPalette.forSeed(candidate.avatarColorSeed);
+    final showMessageRow = showPreview && preview != null;
 
     return Material(
       color: colors.surface,
@@ -195,7 +213,7 @@ class _MatchTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (preview != null) ...[
+                        if (showMessageRow) ...[
                           const SizedBox(width: 8),
                           Text(
                             formatChatTimestamp(preview!.sentAt),
@@ -207,7 +225,7 @@ class _MatchTile extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    if (preview != null)
+                    if (showMessageRow)
                       Text(
                         preview!.sender == MessageSender.me
                             ? 'Sen: ${preview!.text}'
@@ -219,6 +237,26 @@ class _MatchTile extends StatelessWidget {
                               ? colors.inkSoft
                               : colors.ink,
                         ),
+                      )
+                    else if (!showPreview)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_rounded,
+                            size: 14,
+                            color: colors.rose,
+                          ),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(
+                              candidate.city,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colors.inkSoft,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       )
                     else
                       Text(
@@ -233,7 +271,7 @@ class _MatchTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (preview == null) ...[
+              if (!showMessageRow) ...[
                 const SizedBox(width: 10),
                 Container(
                   padding: const EdgeInsets.all(10),

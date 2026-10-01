@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/preferences/app_preferences.dart';
 import '../../../../core/restart/restart_app.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/wizard_widgets.dart';
@@ -167,6 +168,30 @@ class _SettingsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
+                ValueListenableBuilder<bool>(
+                  valueListenable:
+                      sl<AppPreferences>().showMatchMessagePreviews,
+                  builder: (context, showPreviews, _) => SectionCard(
+                    icon: Icons.visibility_outlined,
+                    title: 'Eşleşmeler listesinde mesaj önizlemesi',
+                    body: showPreviews
+                        ? 'Her eşleşme satırında son mesajın bir kısmı görünür. '
+                              'Kapatırsan yalnızca şehir gibi profil bilgisi görünür.'
+                        : 'Eşleşme satırlarında yalnızca profil bilgisi görünüyor; '
+                              'mesaj metni gösterilmiyor.',
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Switch(
+                        value: showPreviews,
+                        onChanged: (v) => sl<AppPreferences>()
+                            .setShowMatchMessagePreviews(v),
+                        activeThumbColor: Colors.white,
+                        activeTrackColor: colors.plumFill,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 const SectionCard(
                   icon: Icons.verified_user_rounded,
                   title: 'Doğrulama verin',
