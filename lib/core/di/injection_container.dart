@@ -50,8 +50,8 @@ import '../../features/messaging/data/repositories/messaging_repository_impl.dar
 import '../../features/messaging/domain/repositories/messaging_repository.dart';
 import '../../features/messaging/domain/usecases/dismiss_family_nudge.dart';
 import '../../features/messaging/domain/usecases/get_last_messages.dart';
-import '../../features/messaging/domain/usecases/open_conversation.dart';
 import '../../features/messaging/domain/usecases/send_message.dart';
+import '../../features/messaging/domain/usecases/watch_conversation.dart';
 import '../../features/messaging/presentation/bloc/chat_cubit.dart';
 import '../../features/safety/data/datasources/firestore_safety_remote_data_source.dart';
 import '../../features/safety/data/datasources/safety_remote_data_source.dart';
@@ -202,14 +202,14 @@ void _initMessaging() {
   // MatchingCubit/DiscoveryScreen.
   sl.registerFactory(
     () => ChatCubit(
-      openConversation: sl(),
+      watchConversation: sl(),
       sendMessage: sl(),
       dismissFamilyNudge: sl(),
     ),
   );
 
   // Domain
-  sl.registerLazySingleton(() => OpenConversation(sl()));
+  sl.registerLazySingleton(() => WatchConversation(sl()));
   sl.registerLazySingleton(() => SendMessage(sl()));
   sl.registerLazySingleton(() => DismissFamilyNudge(sl()));
   sl.registerLazySingleton(() => GetLastMessages(sl()));

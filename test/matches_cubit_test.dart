@@ -54,14 +54,14 @@ class _FakeMessagingRepository implements MessagingRepository {
   }
 
   @override
-  Future<Result<Conversation>> openConversation({
+  Stream<Result<Conversation>> watchConversation({
     required String matchId,
     required String otherPartyName,
     required int otherPartyAvatarSeed,
   }) => throw UnimplementedError();
 
   @override
-  Future<Result<Conversation>> sendMessage({
+  Future<Result<void>> sendMessage({
     required String matchId,
     required String text,
   }) => throw UnimplementedError();

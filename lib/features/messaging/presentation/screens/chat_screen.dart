@@ -105,7 +105,13 @@ class _ChatViewState extends State<_ChatView> {
 
     return BlocConsumer<ChatCubit, ChatState>(
       listener: (context, state) {
-        if (state is ChatLoaded) _scrollToBottom();
+        if (state is! ChatLoaded) return;
+        _scrollToBottom();
+        if (state.sendError != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.sendError!)));
+        }
       },
       builder: (context, state) {
         final title = state is ChatLoaded

@@ -12,24 +12,29 @@ class MessagingRepositoryImpl implements MessagingRepository {
   final MessagingRemoteDataSource remoteDataSource;
 
   @override
-  Future<Result<Conversation>> openConversation({
+  Stream<Result<Conversation>> watchConversation({
     required String matchId,
     required String otherPartyName,
     required int otherPartyAvatarSeed,
-  }) => _guard(
-    () => remoteDataSource.openConversation(
-      matchId: matchId,
-      otherPartyName: otherPartyName,
-      otherPartyAvatarSeed: otherPartyAvatarSeed,
-    ),
-  );
+  }) async* {
+    try {
+      await for (final conversation in remoteDataSource.watchConversation(
+        matchId: matchId,
+        otherPartyName: otherPartyName,
+        otherPartyAvatarSeed: otherPartyAvatarSeed,
+      )) {
+        yield Ok(conversation);
+      }
+    } on ServerException catch (e) {
+      yield Err(ServerFailure(e.message ?? 'Bir sorun oluştu.'));
+    }
+  }
 
   @override
-  Future<Result<Conversation>> sendMessage({
+  Future<Result<void>> sendMessage({
     required String matchId,
     required String text,
-  }) =>
-      _guard(() => remoteDataSource.sendMessage(matchId: matchId, text: text));
+  }) => _guard(() => remoteDataSource.sendMessage(matchId: matchId, text: text));
 
   @override
   Future<Result<Map<String, ChatMessage>>> getLastMessages(

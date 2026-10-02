@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/result/result.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../entities/conversation.dart';
 import '../repositories/messaging_repository.dart';
 
 class SendMessageParams extends Equatable {
@@ -14,11 +13,11 @@ class SendMessageParams extends Equatable {
   List<Object?> get props => [matchId, text];
 }
 
-class SendMessage implements UseCase<Conversation, SendMessageParams> {
+class SendMessage implements UseCase<void, SendMessageParams> {
   const SendMessage(this._repository);
   final MessagingRepository _repository;
 
   @override
-  Future<Result<Conversation>> call(SendMessageParams params) =>
+  Future<Result<void>> call(SendMessageParams params) =>
       _repository.sendMessage(matchId: params.matchId, text: params.text);
 }
