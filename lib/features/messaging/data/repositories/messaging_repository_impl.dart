@@ -51,6 +51,21 @@ class MessagingRepositoryImpl implements MessagingRepository {
   }
 
   @override
+  Future<Result<void>> markConversationRead(String matchId) =>
+      _guard(() => remoteDataSource.markConversationRead(matchId));
+
+  @override
+  Stream<Result<Map<String, DateTime>>> watchReadTimes() async* {
+    try {
+      await for (final times in remoteDataSource.watchReadTimes()) {
+        yield Ok(times);
+      }
+    } on ServerException catch (e) {
+      yield Err(ServerFailure(e.message ?? 'Bir sorun oluştu.'));
+    }
+  }
+
+  @override
   Future<Result<void>> dismissFamilyNudge(String matchId) =>
       _guard(() => remoteDataSource.dismissFamilyNudge(matchId));
 

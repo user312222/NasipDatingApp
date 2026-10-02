@@ -10,6 +10,7 @@ import '../../../../core/usecase/usecase.dart';
 // `matching`'s domain stays independent of `messaging`.
 import '../../../messaging/domain/entities/chat_message.dart';
 import '../../../messaging/domain/usecases/watch_last_messages.dart';
+import '../../../messaging/domain/usecases/watch_read_times.dart';
 import '../../domain/entities/match.dart';
 import '../../domain/usecases/get_my_matches.dart';
 
@@ -33,71 +34,111 @@ final class MatchesError extends MatchesState {
 }
 
 final class MatchesLoaded extends MatchesState {
-  const MatchesLoaded(this.matches, {this.previews = const {}});
+  const MatchesLoaded(this.matches, {this.previews = const {}, this.readTimes});
 
   final List<Match> matches;
 
   /// Latest message per match id; a match with no messages yet is absent.
   final Map<String, ChatMessage> previews;
 
+  /// When the current user last opened each match (absent = never). Null
+  /// until the first read has loaded, so nothing flashes "unread" while
+  /// it's still on its way.
+  final Map<String, DateTime>? readTimes;
+
+  /// Unread = the other party sent the latest message and it's newer than
+  /// the last time this user opened the conversation.
+  bool isUnread(String matchId) {
+    final times = readTimes;
+    final last = previews[matchId];
+    if (times == null || last == null || last.sender != MessageSender.them) {
+      return false;
+    }
+    final readAt = times[matchId];
+    return readAt == null || last.sentAt.isAfter(readAt);
+  }
+
   @override
-  List<Object?> get props => [matches, previews];
+  List<Object?> get props => [matches, previews, readTimes];
 }
 
-/// Backs the matches list — the only way back into a conversation after
+/// Backs the matches list - the only way back into a conversation after
 /// the match celebration has been dismissed.
 class MatchesCubit extends Cubit<MatchesState> {
   MatchesCubit({
     required GetMyMatches getMyMatches,
     required WatchLastMessages watchLastMessages,
+    required WatchReadTimes watchReadTimes,
   }) : _getMyMatches = getMyMatches,
        _watchLastMessages = watchLastMessages,
+       _watchReadTimes = watchReadTimes,
        super(const MatchesLoading());
 
   final GetMyMatches _getMyMatches;
   final WatchLastMessages _watchLastMessages;
+  final WatchReadTimes _watchReadTimes;
   StreamSubscription<Result<Map<String, ChatMessage>>>? _previewsSub;
+  StreamSubscription<Result<Map<String, DateTime>>>? _readTimesSub;
+
+  List<Match> _matches = const [];
+  Map<String, ChatMessage> _previews = const {};
+  Map<String, DateTime>? _readTimes;
 
   /// Shows the matches straight away (newest first), then keeps message
-  /// previews live — a slow or failed preview stream never blocks or
-  /// breaks the list itself.
+  /// previews and unread state live - a slow or failed stream never blocks
+  /// or breaks the list itself.
   Future<void> load() async {
-    await _previewsSub?.cancel();
-    _previewsSub = null;
+    await _cancelSubscriptions();
     emit(const MatchesLoading());
     final result = await _getMyMatches(const NoParams());
     if (isClosed) return;
     switch (result) {
       case Ok<List<Match>>(:final value):
-        final sorted = [...value]
+        _matches = [...value]
           ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
-        emit(MatchesLoaded(sorted));
-        _watchPreviews(sorted);
+        _previews = const {};
+        _readTimes = null;
+        _publish();
+        if (_matches.isEmpty) return;
+        _previewsSub =
+            _watchLastMessages(
+              WatchLastMessagesParams([for (final m in _matches) m.id]),
+            ).listen((result) {
+              if (result case Ok<Map<String, ChatMessage>>(:final value)) {
+                _previews = value;
+                _publish();
+              }
+            });
+        _readTimesSub = _watchReadTimes().listen((result) {
+          if (result case Ok<Map<String, DateTime>>(:final value)) {
+            _readTimes = value;
+            _publish();
+          }
+        });
       case Err<List<Match>>(:final failure):
         emit(MatchesError(failure.message));
     }
   }
 
-  /// Each emission re-orders the list by most recent activity. A stream
-  /// error leaves the list as it was.
-  void _watchPreviews(List<Match> matches) {
-    if (matches.isEmpty) return;
-    _previewsSub =
-        _watchLastMessages(
-          WatchLastMessagesParams([for (final m in matches) m.id]),
-        ).listen((result) {
-          if (result case Ok<Map<String, ChatMessage>>(:final value)) {
-            DateTime activity(Match m) => value[m.id]?.sentAt ?? m.matchedAt;
-            final ordered = [...matches]
-              ..sort((a, b) => activity(b).compareTo(activity(a)));
-            emit(MatchesLoaded(ordered, previews: value));
-          }
-        });
+  /// Orders by most recent activity; a stream error leaves the list as it
+  /// was.
+  void _publish() {
+    DateTime activity(Match m) => _previews[m.id]?.sentAt ?? m.matchedAt;
+    final ordered = [..._matches]
+      ..sort((a, b) => activity(b).compareTo(activity(a)));
+    emit(MatchesLoaded(ordered, previews: _previews, readTimes: _readTimes));
+  }
+
+  Future<void> _cancelSubscriptions() async {
+    await _previewsSub?.cancel();
+    await _readTimesSub?.cancel();
+    _previewsSub = null;
+    _readTimesSub = null;
   }
 
   @override
   Future<void> close() {
-    unawaited(_previewsSub?.cancel());
+    unawaited(_cancelSubscriptions());
     return super.close();
   }
 }

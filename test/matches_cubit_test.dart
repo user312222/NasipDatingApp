@@ -15,6 +15,7 @@ import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
 import 'package:binasip/features/messaging/domain/entities/conversation.dart';
 import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
 import 'package:binasip/features/messaging/domain/usecases/watch_last_messages.dart';
+import 'package:binasip/features/messaging/domain/usecases/watch_read_times.dart';
 
 class _FakeMatchingRepository implements MatchingRepository {
   _FakeMatchingRepository(this._result);
@@ -49,6 +50,7 @@ class _FakeMessagingRepository implements MessagingRepository {
   }
 
   final controller = StreamController<Result<Map<String, ChatMessage>>>();
+  final readTimesController = StreamController<Result<Map<String, DateTime>>>();
   List<String>? lastRequestedIds;
 
   @override
@@ -58,6 +60,14 @@ class _FakeMessagingRepository implements MessagingRepository {
     lastRequestedIds = matchIds;
     return controller.stream;
   }
+
+  @override
+  Stream<Result<Map<String, DateTime>>> watchReadTimes() =>
+      readTimesController.stream;
+
+  @override
+  Future<Result<void>> markConversationRead(String matchId) =>
+      throw UnimplementedError();
 
   @override
   Stream<Result<Conversation>> watchConversation({
@@ -101,12 +111,14 @@ MatchesCubit _cubitWith(
   Result<List<Match>> matches, {
   Result<Map<String, ChatMessage>> previews = const Ok({}),
   _FakeMessagingRepository? messaging,
-}) => MatchesCubit(
-  getMyMatches: GetMyMatches(_FakeMatchingRepository(matches)),
-  watchLastMessages: WatchLastMessages(
-    messaging ?? _FakeMessagingRepository(previews),
-  ),
-);
+}) {
+  final repo = messaging ?? _FakeMessagingRepository(previews);
+  return MatchesCubit(
+    getMyMatches: GetMyMatches(_FakeMatchingRepository(matches)),
+    watchLastMessages: WatchLastMessages(repo),
+    watchReadTimes: WatchReadTimes(repo),
+  );
+}
 
 void main() {
   test('starts in the loading state', () {
@@ -228,6 +240,92 @@ void main() {
       await cubit.load();
 
       expect(messaging.lastRequestedIds, isNull);
+    });
+  });
+
+  group('unread', () {
+    final theirs = _message('selam', DateTime(2026, 3, 1, 12));
+    final mine = ChatMessage(
+      id: 'mine',
+      text: 'selam',
+      sentAt: DateTime(2026, 3, 1, 12),
+      sender: MessageSender.me,
+    );
+
+    Future<({MatchesCubit cubit, _FakeMessagingRepository repo})> loaded(
+      ChatMessage last,
+    ) async {
+      final repo = _FakeMessagingRepository(Ok({'a': last}));
+      final cubit = _cubitWith(
+        Ok([_match('a', DateTime(2026, 1, 1))]),
+        messaging: repo,
+      );
+      await cubit.load();
+      await pumpEventQueue();
+      return (cubit: cubit, repo: repo);
+    }
+
+    MatchesLoaded stateOf(MatchesCubit cubit) => cubit.state as MatchesLoaded;
+
+    test('is not shown until the read times have loaded', () async {
+      final s = await loaded(theirs);
+
+      expect(stateOf(s.cubit).isUnread('a'), isFalse);
+    });
+
+    test('their latest message in a never-opened chat is unread', () async {
+      final s = await loaded(theirs);
+
+      s.repo.readTimesController.add(const Ok({}));
+      await pumpEventQueue();
+
+      expect(stateOf(s.cubit).isUnread('a'), isTrue);
+    });
+
+    test(
+      'opening the chat clears it, a newer message brings it back',
+      () async {
+        final s = await loaded(theirs);
+
+        s.repo.readTimesController.add(Ok({'a': DateTime(2026, 3, 1, 13)}));
+        await pumpEventQueue();
+        expect(stateOf(s.cubit).isUnread('a'), isFalse);
+
+        s.repo.controller.add(
+          Ok({'a': _message('tekrar', DateTime(2026, 3, 1, 14))}),
+        );
+        await pumpEventQueue();
+        expect(stateOf(s.cubit).isUnread('a'), isTrue);
+      },
+    );
+
+    test('my own latest message is never unread', () async {
+      final s = await loaded(mine);
+
+      s.repo.readTimesController.add(const Ok({}));
+      await pumpEventQueue();
+
+      expect(stateOf(s.cubit).isUnread('a'), isFalse);
+    });
+
+    test('a failed read-times stream leaves nothing flagged', () async {
+      final s = await loaded(theirs);
+
+      s.repo.readTimesController.add(
+        const Err(ServerFailure('Okunma bilgisi yüklenemedi.')),
+      );
+      await pumpEventQueue();
+
+      expect(stateOf(s.cubit).isUnread('a'), isFalse);
+    });
+
+    test('closing the cubit cancels the read-times subscription', () async {
+      final s = await loaded(theirs);
+      expect(s.repo.readTimesController.hasListener, isTrue);
+
+      await s.cubit.close();
+
+      expect(s.repo.readTimesController.hasListener, isFalse);
     });
   });
 }

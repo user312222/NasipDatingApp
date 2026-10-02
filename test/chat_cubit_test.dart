@@ -8,6 +8,7 @@ import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
 import 'package:binasip/features/messaging/domain/entities/conversation.dart';
 import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
 import 'package:binasip/features/messaging/domain/usecases/dismiss_family_nudge.dart';
+import 'package:binasip/features/messaging/domain/usecases/mark_conversation_read.dart';
 import 'package:binasip/features/messaging/domain/usecases/send_message.dart';
 import 'package:binasip/features/messaging/domain/usecases/watch_conversation.dart';
 import 'package:binasip/features/messaging/presentation/bloc/chat_cubit.dart';
@@ -17,6 +18,7 @@ class _FakeMessagingRepository implements MessagingRepository {
   Completer<Result<void>>? pendingSend;
   final sentTexts = <String>[];
   final dismissedMatchIds = <String>[];
+  final markedReadMatchIds = <String>[];
 
   StreamController<Result<Conversation>> get stream => streams.last;
 
@@ -52,6 +54,16 @@ class _FakeMessagingRepository implements MessagingRepository {
   Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
   ) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> markConversationRead(String matchId) async {
+    markedReadMatchIds.add(matchId);
+    return const Ok(null);
+  }
+
+  @override
+  Stream<Result<Map<String, DateTime>>> watchReadTimes() =>
+      throw UnimplementedError();
 }
 
 ChatMessage _msg(String text) => ChatMessage(
@@ -78,6 +90,7 @@ Conversation _conversation(
     watchConversation: WatchConversation(repo),
     sendMessage: SendMessage(repo),
     dismissFamilyNudge: DismissFamilyNudge(repo),
+    markConversationRead: MarkConversationRead(repo),
   );
   return (cubit: cubit, repo: repo);
 }
@@ -214,6 +227,64 @@ void main() {
 
       expect((s.cubit.state as ChatLoaded).sendError, isNull);
     });
+  });
+
+  group('read marker', () {
+    ChatMessage mine(String text) => ChatMessage(
+      id: 'id_$text',
+      text: text,
+      sentAt: DateTime(2026, 1, 1),
+      sender: MessageSender.me,
+    );
+
+    test(
+      'marks the conversation read when the latest message is theirs',
+      () async {
+        final s = _setup();
+        _open(s.cubit);
+
+        s.repo.stream.add(Ok(_conversation([_msg('a')])));
+        await pumpEventQueue();
+
+        expect(s.repo.markedReadMatchIds, ['m1']);
+      },
+    );
+
+    test(
+      'marks again for each new incoming message, not for repeats',
+      () async {
+        final s = _setup();
+        _open(s.cubit);
+
+        s.repo.stream.add(Ok(_conversation([_msg('a')])));
+        await pumpEventQueue();
+        // Same latest message again (e.g. the nudge flag changed).
+        s.repo.stream.add(
+          Ok(_conversation([_msg('a')], familyNudgeShown: true)),
+        );
+        await pumpEventQueue();
+        expect(s.repo.markedReadMatchIds, ['m1']);
+
+        s.repo.stream.add(Ok(_conversation([_msg('a'), _msg('b')])));
+        await pumpEventQueue();
+        expect(s.repo.markedReadMatchIds, ['m1', 'm1']);
+      },
+    );
+
+    test(
+      'does nothing when the latest message is mine or there are none',
+      () async {
+        final s = _setup();
+        _open(s.cubit);
+
+        s.repo.stream.add(Ok(_conversation([])));
+        await pumpEventQueue();
+        s.repo.stream.add(Ok(_conversation([_msg('a'), mine('b')])));
+        await pumpEventQueue();
+
+        expect(s.repo.markedReadMatchIds, isEmpty);
+      },
+    );
   });
 
   group('dismissFamilyNudge', () {

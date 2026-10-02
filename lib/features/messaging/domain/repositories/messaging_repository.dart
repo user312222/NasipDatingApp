@@ -29,6 +29,14 @@ abstract interface class MessagingRepository {
     List<String> matchIds,
   );
 
+  /// Records that the current user has seen everything in [matchId] up to
+  /// now (private to them — the other party never sees it).
+  Future<Result<void>> markConversationRead(String matchId);
+
+  /// Live map of match id -> when the current user last read it. A match
+  /// the user never opened is absent.
+  Stream<Result<Map<String, DateTime>>> watchReadTimes();
+
   /// FR-5.2: mark the one-time nudge as shown so it never appears again
   /// for this conversation.
   Future<Result<void>> dismissFamilyNudge(String matchId);

@@ -4,8 +4,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/result/result.dart';
+import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/usecases/dismiss_family_nudge.dart';
+import '../../domain/usecases/mark_conversation_read.dart';
 import '../../domain/usecases/send_message.dart';
 import '../../domain/usecases/watch_conversation.dart';
 
@@ -16,15 +18,19 @@ class ChatCubit extends Cubit<ChatState> {
     required WatchConversation watchConversation,
     required SendMessage sendMessage,
     required DismissFamilyNudge dismissFamilyNudge,
+    required MarkConversationRead markConversationRead,
   }) : _watchConversation = watchConversation,
        _sendMessage = sendMessage,
        _dismissFamilyNudge = dismissFamilyNudge,
+       _markConversationRead = markConversationRead,
        super(const ChatLoading());
 
   final WatchConversation _watchConversation;
   final SendMessage _sendMessage;
   final DismissFamilyNudge _dismissFamilyNudge;
+  final MarkConversationRead _markConversationRead;
   StreamSubscription<Result<Conversation>>? _subscription;
+  String? _lastMarkedMessageId;
 
   void open({
     required String matchId,
@@ -44,10 +50,25 @@ class ChatCubit extends Cubit<ChatState> {
           switch (result) {
             case Ok<Conversation>(:final value):
               emit(ChatLoaded(value));
+              _markReadIfNeeded(value);
             case Err<Conversation>(:final failure):
               emit(ChatError(failure.message));
           }
         });
+  }
+
+  /// The chat is on screen, so anything the other party has sent counts as
+  /// read - once per incoming message, best-effort (a failed marker just
+  /// leaves the badge on, never breaks the chat).
+  void _markReadIfNeeded(Conversation conversation) {
+    final last = conversation.messages.lastOrNull;
+    if (last == null ||
+        last.sender != MessageSender.them ||
+        last.id == _lastMarkedMessageId) {
+      return;
+    }
+    _lastMarkedMessageId = last.id;
+    unawaited(_markConversationRead(conversation.matchId));
   }
 
   Future<void> send(String text) async {

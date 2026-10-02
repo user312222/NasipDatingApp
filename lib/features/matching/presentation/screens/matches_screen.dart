@@ -57,7 +57,7 @@ class _MatchesView extends StatelessWidget {
                   style: textTheme.bodyLarge?.copyWith(color: colors.rose),
                 ),
               );
-            case MatchesLoaded(:final matches, :final previews):
+            case MatchesLoaded(:final matches, :final previews) && final loaded:
               if (matches.isEmpty) return const _EmptyMatches();
               return ValueListenableBuilder<bool>(
                 valueListenable: prefs.showMatchMessagePreviews,
@@ -69,6 +69,7 @@ class _MatchesView extends StatelessWidget {
                     match: matches[i],
                     preview: previews[matches[i].id],
                     showPreview: showPreviews,
+                    unread: loaded.isUnread(matches[i].id),
                   ),
                 ),
               );
@@ -129,6 +130,7 @@ class _MatchTile extends StatelessWidget {
     required this.match,
     this.preview,
     required this.showPreview,
+    required this.unread,
   });
 
   final Match match;
@@ -140,6 +142,9 @@ class _MatchTile extends StatelessWidget {
   /// permissive as, what a linked guardian can see (FR-8.5 never shows
   /// message content there regardless of this setting).
   final bool showPreview;
+
+  /// The other party's latest message hasn't been opened yet.
+  final bool unread;
 
   @override
   Widget build(BuildContext context) {
@@ -205,10 +210,25 @@ class _MatchTile extends StatelessWidget {
                             '${candidate.name}, ${candidate.age}',
                             style: textTheme.titleSmall?.copyWith(
                               color: colors.plumStrong,
+                              fontWeight: unread ? FontWeight.w800 : null,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (unread) ...[
+                          const SizedBox(width: 8),
+                          Semantics(
+                            label: 'Okunmamış mesaj',
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colors.plumFill,
+                              ),
+                            ),
+                          ),
+                        ],
                         if (showMessageRow) ...[
                           const SizedBox(width: 8),
                           Text(
@@ -232,6 +252,7 @@ class _MatchTile extends StatelessWidget {
                           color: preview!.sender == MessageSender.me
                               ? colors.inkSoft
                               : colors.ink,
+                          fontWeight: unread ? FontWeight.w700 : null,
                         ),
                       )
                     else if (!showPreview)

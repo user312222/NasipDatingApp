@@ -283,6 +283,25 @@ service cloud.firestore {
       allow delete: if signedIn() && request.auth.uid == guardianUserId;
     }
 
+    // Unread badge: matchReads/{matchId}_{uid} -> {matchId, userId, readAt}.
+    // Strictly private — readable only by its own user (a `list` query
+    // filtered to `userId == auth.uid` satisfies this), writable only for
+    // a match the user belongs to. The other party can't see it.
+    match /matchReads/{readId} {
+      allow read: if signedIn() && request.auth.uid == resource.data.userId;
+
+      allow create, update: if signedIn()
+        && request.resource.data.keys().hasOnly(['matchId', 'userId', 'readAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.matchId is string
+        && readId == request.resource.data.matchId + '_' + request.auth.uid
+        && request.resource.data.readAt == request.time
+        && request.auth.uid in
+             get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.users;
+
+      allow delete: if signedIn() && request.auth.uid == resource.data.userId;
+    }
+
     // familyVisible/{matchId}_{singleUserId} -> {singleUserId, matchId,
     // otherUserId, matchedAt, markedAt}: FR-8.4 — existence means
     // `singleUserId` opted to show this match to their own linked

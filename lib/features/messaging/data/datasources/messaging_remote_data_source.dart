@@ -9,5 +9,7 @@ abstract interface class MessagingRemoteDataSource {
   });
   Future<void> sendMessage({required String matchId, required String text});
   Stream<Map<String, ChatMessage>> watchLastMessages(List<String> matchIds);
+  Future<void> markConversationRead(String matchId);
+  Stream<Map<String, DateTime>> watchReadTimes();
   Future<void> dismissFamilyNudge(String matchId);
 }

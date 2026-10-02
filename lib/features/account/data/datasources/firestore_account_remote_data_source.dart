@@ -14,6 +14,7 @@ import 'account_remote_data_source.dart';
 ///   `familyInviteCodeLookup/{code}` entry, and `guardianOf/{uid}` (if it
 ///   was a guardian account)
 /// - Every `familyVisible` doc this account owns (`singleUserId == uid`)
+///   and every `matchReads` doc (`userId == uid`, the unread markers)
 /// - The Firebase Auth user itself — this is what actually ends the
 ///   session for good and frees the phone number for a fresh sign-up.
 ///
@@ -44,11 +45,10 @@ class FirestoreAccountRemoteDataSource implements AccountRemoteDataSource {
     await _bestEffort(
       () => _db.collection('publicProfiles').doc(userId).delete(),
     );
-    await _bestEffort(
-      () => _db.collection('guardianOf').doc(userId).delete(),
-    );
+    await _bestEffort(() => _db.collection('guardianOf').doc(userId).delete());
     await _bestEffort(() => _deleteInviteCode(userId));
     await _bestEffort(() => _deleteOwnFamilyVisible(userId));
+    await _bestEffort(() => _deleteOwnMatchReads(userId));
     // Last: users/{uid} itself, then the Auth account — once the Auth
     // user is gone, this uid can no longer write anything anyway.
     await _bestEffort(() => _db.collection('users').doc(userId).delete());
@@ -89,6 +89,19 @@ class FirestoreAccountRemoteDataSource implements AccountRemoteDataSource {
     final snap = await _db
         .collection('familyVisible')
         .where('singleUserId', isEqualTo: userId)
+        .get();
+    if (snap.docs.isEmpty) return;
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  Future<void> _deleteOwnMatchReads(String userId) async {
+    final snap = await _db
+        .collection('matchReads')
+        .where('userId', isEqualTo: userId)
         .get();
     if (snap.docs.isEmpty) return;
     final batch = _db.batch();

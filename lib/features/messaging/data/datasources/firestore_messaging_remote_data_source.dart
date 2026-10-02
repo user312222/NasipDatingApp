@@ -202,6 +202,44 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
     return controller.stream;
   }
 
+  /// `matchReads/{matchId}_{uid}` -> {matchId, userId, readAt}: private
+  /// per-user "last opened" marker behind the unread badge.
+  @override
+  Future<void> markConversationRead(String matchId) async {
+    try {
+      final me = _uid;
+      await _db.collection('matchReads').doc('${matchId}_$me').set({
+        'matchId': matchId,
+        'userId': me,
+        'readAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw ServerException('İşlem tamamlanamadı (${e.code}).');
+    }
+  }
+
+  @override
+  Stream<Map<String, DateTime>> watchReadTimes() async* {
+    final me = _uid;
+    try {
+      await for (final snap
+          in _db
+              .collection('matchReads')
+              .where('userId', isEqualTo: me)
+              .snapshots()) {
+        yield {
+          for (final doc in snap.docs)
+            doc.data()['matchId'] as String:
+                // Null only while our own write is still pending.
+                (doc.data()['readAt'] as Timestamp?)?.toDate() ??
+                DateTime.now(),
+        };
+      }
+    } on FirebaseException catch (e) {
+      throw ServerException('Okunma bilgisi yüklenemedi (${e.code}).');
+    }
+  }
+
   @override
   Future<void> dismissFamilyNudge(String matchId) async {
     try {
