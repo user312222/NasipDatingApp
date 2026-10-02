@@ -74,11 +74,11 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: colors.brandGradient,
+                  colors: [colors.teal, colors.plumFill],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colors.accent.withValues(alpha: 0.35),
+                    color: colors.teal.withValues(alpha: 0.35),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -519,7 +519,7 @@ class _EmptyDiscovery extends StatelessWidget {
         Positioned(
           bottom: 20,
           left: -70,
-          child: _BackgroundGlow(color: colors.plumFill, size: 260),
+          child: _BackgroundGlow(color: colors.teal, size: 260),
         ),
         Center(
           child: SingleChildScrollView(
@@ -580,7 +580,7 @@ class _EmptyDiscovery extends StatelessWidget {
                     child: Text(
                       'Eşleşmelerine göz at',
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colors.plum,
+                        color: colors.teal,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -863,7 +863,7 @@ class _CandidateCard extends StatelessWidget {
                             Icon(
                               Icons.location_on_rounded,
                               size: 15,
-                              color: colors.rose,
+                              color: colors.teal,
                             ),
                             const SizedBox(width: 3),
                             Text(

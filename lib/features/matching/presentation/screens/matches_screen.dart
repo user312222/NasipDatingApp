@@ -313,7 +313,7 @@ class _MatchTile extends StatelessWidget {
                             Icon(
                               Icons.location_on_rounded,
                               size: 14,
-                              color: colors.rose,
+                              color: colors.teal,
                             ),
                             const SizedBox(width: 3),
                             Flexible(

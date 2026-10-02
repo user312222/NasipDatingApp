@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 /// the `avatarColorSeed` every feature already carries, so the same person
 /// gets the same colors on the discovery card, the match celebration, the
 /// matches list and in chat - without those features importing each other.
-/// No green on purpose (see docs/REQUIREMENTS.md section 6).
+/// Teal and copper come from the logo; no plain green (see
+/// docs/REQUIREMENTS.md section 6).
 abstract final class AvatarPalette {
   static const _pairs = [
     [Color(0xFF7A2C8F), Color(0xFFE84A70)], // plum -> coral
-    [Color(0xFFF0567A), Color(0xFFF5A742)], // coral -> amber
-    [Color(0xFF4B45B5), Color(0xFFB455CC)], // indigo -> orchid
+    [Color(0xFFC27A3E), Color(0xFFF5A742)], // copper -> amber
+    [Color(0xFF2F8399), Color(0xFF4B45B5)], // teal -> indigo
     [Color(0xFFE0457B), Color(0xFF8B3FD1)], // magenta -> violet
-    [Color(0xFFF28A5B), Color(0xFFE84A70)], // peach -> coral
-    [Color(0xFF3F6BD8), Color(0xFF8C5CF0)], // blue -> lavender
+    [Color(0xFF3B93A8), Color(0xFF7A2C8F)], // teal -> plum
+    [Color(0xFFE84A70), Color(0xFFC27A3E)], // coral -> copper
   ];
 
   static int get count => _pairs.length;

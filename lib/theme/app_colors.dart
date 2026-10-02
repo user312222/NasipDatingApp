@@ -18,6 +18,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.plumTint,
     required this.plumFill,
     required this.accent,
+    required this.teal,
+    required this.tealTint,
     required this.brass,
     required this.brassTint,
     required this.rose,
@@ -42,6 +44,12 @@ class AppColors extends ThemeExtension<AppColors> {
   /// one "look here" color: unread dots, live highlights. Carries white
   /// text only at button weight/size.
   final Color accent;
+
+  /// The teal of the logo's heart - the second brand color, used where
+  /// plum would be too heavy: secondary links, location pins, one of the
+  /// backdrop glows. [brass] is the logo's copper.
+  final Color teal;
+  final Color tealTint;
   final Color brass;
   final Color brassTint;
   final Color rose;
@@ -58,8 +66,10 @@ class AppColors extends ThemeExtension<AppColors> {
     plumTint: Color(0xFFF4E6F7),
     plumFill: Color(0xFF7A2C8F),
     accent: Color(0xFFE84A70),
-    brass: Color(0xFFC98A1E),
-    brassTint: Color(0xFFFCEFD2),
+    teal: Color(0xFF257A8F),
+    tealTint: Color(0xFFDDF0F4),
+    brass: Color(0xFFB4703A),
+    brassTint: Color(0xFFF8E7D6),
     rose: Color(0xFFD9506B),
     roseSoft: Color(0xFFFBE1E6),
     line: Color(0xFFEBDFEA),
@@ -75,8 +85,10 @@ class AppColors extends ThemeExtension<AppColors> {
     plumTint: Color(0xFF2E1B33),
     plumFill: Color(0xFF8A3BA0),
     accent: Color(0xFFF0668A),
-    brass: Color(0xFFE0BD7A),
-    brassTint: Color(0xFF372A18),
+    teal: Color(0xFF74C4D6),
+    tealTint: Color(0xFF16313A),
+    brass: Color(0xFFE2A873),
+    brassTint: Color(0xFF3A2616),
     rose: Color(0xFFD9AFA8),
     roseSoft: Color(0xFF3B2422),
     line: Color(0xFF3D2E3B),
@@ -93,6 +105,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? plumTint,
     Color? plumFill,
     Color? accent,
+    Color? teal,
+    Color? tealTint,
     Color? brass,
     Color? brassTint,
     Color? rose,
@@ -109,6 +123,8 @@ class AppColors extends ThemeExtension<AppColors> {
       plumTint: plumTint ?? this.plumTint,
       plumFill: plumFill ?? this.plumFill,
       accent: accent ?? this.accent,
+      teal: teal ?? this.teal,
+      tealTint: tealTint ?? this.tealTint,
       brass: brass ?? this.brass,
       brassTint: brassTint ?? this.brassTint,
       rose: rose ?? this.rose,
@@ -130,6 +146,8 @@ class AppColors extends ThemeExtension<AppColors> {
       plumTint: Color.lerp(plumTint, other.plumTint, t)!,
       plumFill: Color.lerp(plumFill, other.plumFill, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
+      teal: Color.lerp(teal, other.teal, t)!,
+      tealTint: Color.lerp(tealTint, other.tealTint, t)!,
       brass: Color.lerp(brass, other.brass, t)!,
       brassTint: Color.lerp(brassTint, other.brassTint, t)!,
       rose: Color.lerp(rose, other.rose, t)!,

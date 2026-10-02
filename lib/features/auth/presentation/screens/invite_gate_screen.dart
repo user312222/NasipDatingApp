@@ -126,7 +126,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                           child: Text(
                             'Davetiye kodun yok mu? Bekleme listesine katıl',
                             style: textTheme.bodyMedium?.copyWith(
-                              color: colors.plum,
+                              color: colors.teal,
                               fontWeight: FontWeight.w600,
                             ),
                             textAlign: TextAlign.center,

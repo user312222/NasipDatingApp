@@ -58,10 +58,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
         padding: const EdgeInsets.all(20),
         children: [
           _section(textTheme, 'Logo'),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: BrandLogo(),
-          ),
+          const Align(alignment: Alignment.centerLeft, child: BrandLogo()),
           const SizedBox(height: 28),
           _section(textTheme, 'Renkler'),
           Wrap(
@@ -77,6 +74,8 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
               _Swatch('plum-strong', colors.plumStrong),
               _Swatch('plum-tint', colors.plumTint),
               _Swatch('accent', colors.accent),
+              _Swatch('teal', colors.teal),
+              _Swatch('teal-tint', colors.tealTint),
               _Swatch('brass', colors.brass),
               _Swatch('brass-tint', colors.brassTint),
               _Swatch('rose', colors.rose),

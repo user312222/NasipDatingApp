@@ -26,7 +26,7 @@ class WizardBackdrop extends StatelessWidget {
         Positioned(
           bottom: -60,
           left: -80,
-          child: _Glow(color: colors.plumFill, size: 280),
+          child: _Glow(color: colors.teal, size: 280),
         ),
         Positioned.fill(child: child),
       ],
