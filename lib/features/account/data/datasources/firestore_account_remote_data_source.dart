@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import 'account_remote_data_source.dart';
 
@@ -68,7 +69,8 @@ class FirestoreAccountRemoteDataSource implements AccountRemoteDataSource {
       // signed into it, which is worse than the phone number staying
       // taken until they sign in once more and delete again.
       if (e.code != 'requires-recent-login') {
-        throw ServerException('Hesap tam silinemedi (${e.code}).');
+        logFailure('account', e);
+        throw const ServerException('Hesap tam silinemedi.');
       }
       await FirebaseAuth.instance.signOut();
     }

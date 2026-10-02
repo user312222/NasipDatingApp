@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../safety/data/datasources/safety_remote_data_source.dart';
 import '../../domain/entities/candidate.dart';
@@ -87,7 +88,8 @@ class FirestoreMatchingRemoteDataSource implements MatchingRemoteDataSource {
           })
           .toList();
     } on FirebaseException catch (e) {
-      throw ServerException('Adaylar yüklenemedi (${e.code}).');
+      logFailure('matching', e);
+      throw const ServerException('Adaylar yüklenemedi.');
     }
   }
 
@@ -146,10 +148,11 @@ class FirestoreMatchingRemoteDataSource implements MatchingRemoteDataSource {
         ),
       );
     } on FirebaseException catch (e) {
+      logFailure('matching', e);
       throw ServerException(
         e.code == 'permission-denied'
             ? 'Beğeni kaydedilemedi. Günlük hakkın dolmuş olabilir.'
-            : 'Beğeni kaydedilemedi (${e.code}).',
+            : 'Beğeni kaydedilemedi.',
       );
     }
   }
@@ -207,7 +210,8 @@ class FirestoreMatchingRemoteDataSource implements MatchingRemoteDataSource {
       return matches.whereType<Match>().toList()
         ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
     } on FirebaseException catch (e) {
-      throw ServerException('Eşleşmeler yüklenemedi (${e.code}).');
+      logFailure('matching', e);
+      throw const ServerException('Eşleşmeler yüklenemedi.');
     }
   }
 
@@ -239,7 +243,8 @@ class FirestoreMatchingRemoteDataSource implements MatchingRemoteDataSource {
         'markedAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('Ayar kaydedilemedi (${e.code}).');
+      logFailure('matching', e);
+      throw const ServerException('Ayar kaydedilemedi.');
     }
   }
 

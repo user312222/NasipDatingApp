@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/profile_model.dart';
 import 'profile_remote_data_source.dart';
@@ -50,10 +51,11 @@ class FirestoreProfileRemoteDataSource implements ProfileRemoteDataSource {
       });
       await batch.commit();
     } on FirebaseException catch (e) {
+      logFailure('profile', e);
       throw ServerException(
         e.code == 'permission-denied'
             ? 'Profil kaydedilemedi: izin yok.'
-            : 'Profil kaydedilemedi (${e.code}).',
+            : 'Profil kaydedilemedi.',
       );
     }
   }
@@ -64,7 +66,8 @@ class FirestoreProfileRemoteDataSource implements ProfileRemoteDataSource {
       final doc = await _db.collection('profiles').doc(userId).get();
       return doc.exists;
     } on FirebaseException catch (e) {
-      throw ServerException('Profil kontrol edilemedi (${e.code}).');
+      logFailure('profile', e);
+      throw const ServerException('Profil kontrol edilemedi.');
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/waitlist_entry_model.dart';
 
@@ -24,7 +25,8 @@ class FirestoreWaitlistRemoteDataSource implements WaitlistRemoteDataSource {
     try {
       await _db.collection('waitlist').add(entry.toFirestore());
     } on FirebaseException catch (e) {
-      throw ServerException('Kayıt gönderilemedi (${e.code}).');
+      logFailure('waitlist', e);
+      throw const ServerException('Kayıt gönderilemedi.');
     }
   }
 }

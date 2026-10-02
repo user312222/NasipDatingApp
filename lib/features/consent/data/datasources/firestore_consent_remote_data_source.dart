@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import 'consent_remote_data_source.dart';
 
@@ -34,7 +35,8 @@ class FirestoreConsentRemoteDataSource implements ConsentRemoteDataSource {
         if (!existing.exists) 'acceptedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } on FirebaseException catch (e) {
-      throw ServerException('Rıza kaydı tutulamadı (${e.code}).');
+      logFailure('consent', e);
+      throw const ServerException('Rıza kaydı tutulamadı.');
     }
   }
 }

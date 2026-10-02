@@ -26,11 +26,11 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
 
 ## 2. Kullanıcıya görünen hata metinleri
 
-- [ ] **Firebase hata kodlarını kullanıcıdan gizle.** Şu an mesajlara `(${e.code})` ekleniyor
-      (yaklaşık 29 yer, 9 dosya): hesap, auth, consent, family, matching, messaging, profile ve
-      safety `Firestore*RemoteDataSource` sınıfları ile `FirebaseAuthRemoteDataSource._message`.
-      Kodu mesajdan çıkarıp bir log/crash raporlama aracına yönlendir
-      (`grep -rn "e\.code" lib` ile bul).
+- [x] **Firebase hata kodları kullanıcıdan gizlendi.** Kullanıcı sade Türkçe mesaj görüyor,
+      teknik ayrıntı `logFailure` ile (`lib/core/error/error_log.dart`) yalnızca geliştirici
+      konsoluna yazılıyor.
+- [ ] **`logFailure` içini crash raporlamaya bağla** (Crashlytics/Sentry). Şu an sadece
+      `debugPrint`; yayında hataları görmenin tek yolu bu.
 
 ## 3. Hukuki (senin/avukatın işi)
 

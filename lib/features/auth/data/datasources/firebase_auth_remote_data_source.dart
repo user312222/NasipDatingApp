@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/entities/auth_user.dart';
@@ -46,7 +47,8 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
         throw const ServerException('Bu davetiye kodu tanınmıyor.');
       }
     } on FirebaseException catch (e) {
-      throw ServerException('Kod doğrulanamadı (${e.code}).');
+      logFailure('auth', e);
+      throw const ServerException('Kod doğrulanamadı.');
     }
   }
 
@@ -173,7 +175,8 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     try {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
-      throw ServerException('Çıkış yapılamadı (${e.code}).');
+      logFailure('auth', e);
+      throw const ServerException('Çıkış yapılamadı.');
     }
   }
 
@@ -192,13 +195,17 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     return digits.length == 10 ? '+90$digits' : null;
   }
 
-  String _message(FirebaseAuthException e) => switch (e.code) {
-    'invalid-phone-number' => 'Geçerli bir telefon numarası gir.',
-    'invalid-verification-code' => 'Kod hatalı. Tekrar dener misin?',
-    'code-expired' || 'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
-    'too-many-requests' =>
-      'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.',
-    'network-request-failed' => 'Bağlantı sorunu. İnternetini kontrol et.',
-    _ => 'Bir sorun oluştu (${e.code}). Tekrar dener misin?',
-  };
+  String _message(FirebaseAuthException e) {
+    logFailure('auth', e);
+    return switch (e.code) {
+      'invalid-phone-number' => 'Geçerli bir telefon numarası gir.',
+      'invalid-verification-code' => 'Kod hatalı. Tekrar dener misin?',
+      'code-expired' ||
+      'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
+      'too-many-requests' =>
+        'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.',
+      'network-request-failed' => 'Bağlantı sorunu. İnternetini kontrol et.',
+      _ => 'Bir sorun oluştu. Tekrar dener misin?',
+    };
+  }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/conversation.dart';
@@ -64,26 +65,15 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
           unawaited(controller.close());
           return;
         }
-        matchSub = _db
-            .collection('matches')
-            .doc(matchId)
-            .snapshots()
-            .listen(
-              (doc) {
-                latestNudgeShown =
-                    (doc.data()?['familyNudgeShown'] as bool?) ?? false;
-                emitIfReady();
-              },
-              onError: (Object e) {
-                if (e is FirebaseException) {
-                  controller.addError(
-                    ServerException('Sohbet yüklenemedi (${e.code}).'),
-                  );
-                } else {
-                  controller.addError(e);
-                }
-              },
-            );
+        matchSub = _db.collection('matches').doc(matchId).snapshots().listen(
+          (doc) {
+            latestNudgeShown =
+                (doc.data()?['familyNudgeShown'] as bool?) ?? false;
+            emitIfReady();
+          },
+          onError: (Object e) =>
+              controller.addError(_streamError(e, 'Sohbet yüklenemedi.')),
+        );
         messagesSub = _db
             .collection('matches')
             .doc(matchId)
@@ -97,15 +87,8 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
                     .toList();
                 emitIfReady();
               },
-              onError: (Object e) {
-                if (e is FirebaseException) {
-                  controller.addError(
-                    ServerException('Sohbet yüklenemedi (${e.code}).'),
-                  );
-                } else {
-                  controller.addError(e);
-                }
-              },
+              onError: (Object e) =>
+                  controller.addError(_streamError(e, 'Sohbet yüklenemedi.')),
             );
       },
       onCancel: () async {
@@ -128,10 +111,11 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
         'sentAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
+      logFailure('messaging', e);
       throw ServerException(
         e.code == 'permission-denied'
             ? 'Mesaj gönderilemedi: izin yok.'
-            : 'Mesaj gönderilemedi (${e.code}).',
+            : 'Mesaj gönderilemedi.',
       );
     }
   }
@@ -182,13 +166,9 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
                         if (e.value != null) e.key: e.value!,
                     });
                   },
-                  onError: (Object e) {
-                    controller.addError(
-                      e is FirebaseException
-                          ? ServerException('Mesajlar yüklenemedi (${e.code}).')
-                          : e,
-                    );
-                  },
+                  onError: (Object e) => controller.addError(
+                    _streamError(e, 'Mesajlar yüklenemedi.'),
+                  ),
                 ),
           );
         }
@@ -214,7 +194,8 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
         'readAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('İşlem tamamlanamadı (${e.code}).');
+      logFailure('messaging', e);
+      throw const ServerException('İşlem tamamlanamadı.');
     }
   }
 
@@ -236,7 +217,8 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
         };
       }
     } on FirebaseException catch (e) {
-      throw ServerException('Okunma bilgisi yüklenemedi (${e.code}).');
+      logFailure('messaging', e);
+      throw const ServerException('Okunma bilgisi yüklenemedi.');
     }
   }
 
@@ -247,8 +229,17 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
         'familyNudgeShown': true,
       });
     } on FirebaseException catch (e) {
-      throw ServerException('İşlem tamamlanamadı (${e.code}).');
+      logFailure('messaging', e);
+      throw const ServerException('İşlem tamamlanamadı.');
     }
+  }
+
+  /// Maps a Firestore listener error to the plain message shown to the
+  /// user, logging the technical detail separately.
+  Object _streamError(Object e, String message) {
+    if (e is! FirebaseException) return e;
+    logFailure('messaging.stream', e);
+    return ServerException(message);
   }
 
   ChatMessage _toMessage(String id, Map<String, dynamic> data, String me) {

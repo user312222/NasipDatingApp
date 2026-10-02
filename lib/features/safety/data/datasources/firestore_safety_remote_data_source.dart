@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/report_reason.dart';
 import 'safety_remote_data_source.dart';
@@ -47,7 +48,8 @@ class FirestoreSafetyRemoteDataSource implements SafetyRemoteDataSource {
         'createdAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('Şikayet gönderilemedi (${e.code}).');
+      logFailure('safety', e);
+      throw const ServerException('Şikayet gönderilemedi.');
     }
   }
 
@@ -61,7 +63,8 @@ class FirestoreSafetyRemoteDataSource implements SafetyRemoteDataSource {
         'createdAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('Engellenemedi (${e.code}).');
+      logFailure('safety', e);
+      throw const ServerException('Engellenemedi.');
     }
   }
 
@@ -74,7 +77,8 @@ class FirestoreSafetyRemoteDataSource implements SafetyRemoteDataSource {
           .get();
       return snap.docs.map((d) => d.data()['blockedId'] as String).toSet();
     } on FirebaseException catch (e) {
-      throw ServerException('Engellenenler yüklenemedi (${e.code}).');
+      logFailure('safety', e);
+      throw const ServerException('Engellenenler yüklenemedi.');
     }
   }
 

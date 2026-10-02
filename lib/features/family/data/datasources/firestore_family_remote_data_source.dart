@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/family_visible_match.dart';
 import '../../domain/entities/relationship.dart';
@@ -59,7 +60,8 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
       }
       throw const ServerException('Kod oluşturulamadı. Tekrar dener misin?');
     } on FirebaseException catch (e) {
-      throw ServerException('Kod oluşturulamadı (${e.code}).');
+      logFailure('family', e);
+      throw const ServerException('Kod oluşturulamadı.');
     }
   }
 
@@ -90,7 +92,8 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
         'linkedAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('Bağlantı kurulamadı (${e.code}).');
+      logFailure('family', e);
+      throw const ServerException('Bağlantı kurulamadı.');
     }
   }
 
@@ -139,7 +142,8 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
       return matches.whereType<FamilyVisibleMatch>().toList()
         ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
     } on FirebaseException catch (e) {
-      throw ServerException('Eşleşmeler yüklenemedi (${e.code}).');
+      logFailure('family', e);
+      throw const ServerException('Eşleşmeler yüklenemedi.');
     }
   }
 
