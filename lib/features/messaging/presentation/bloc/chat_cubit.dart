@@ -47,6 +47,7 @@ class ChatCubit extends Cubit<ChatState> {
             otherPartyAvatarSeed: otherPartyAvatarSeed,
           ),
         ).listen((result) {
+          if (isClosed) return;
           switch (result) {
             case Ok<Conversation>(:final value):
               emit(ChatLoaded(value));
@@ -85,6 +86,7 @@ class ChatCubit extends Cubit<ChatState> {
     // The live stream may already have delivered the new message and
     // moved `state` on while this awaited — read it fresh rather than
     // reusing `current`.
+    if (isClosed) return;
     final latest = state;
     if (latest is! ChatLoaded) return;
     switch (result) {

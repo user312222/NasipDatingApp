@@ -11,6 +11,7 @@ import '../../../messaging/presentation/screens/chat_screen.dart';
 import '../../domain/entities/match.dart';
 import '../bloc/matches_cubit.dart';
 import '../../../../theme/avatar_palette.dart';
+import '../../../../theme/wizard_widgets.dart';
 
 /// Every mutual match, newest first — the way back into a conversation
 /// once the match celebration has been dismissed.
@@ -40,53 +41,56 @@ class _MatchesView extends StatelessWidget {
         title: Text(
           'Eşleşmeler',
           style: textTheme.displayMedium?.copyWith(
-            fontSize: 26,
+            fontSize: 28,
             color: colors.plumStrong,
           ),
         ),
       ),
-      body: BlocBuilder<MatchesCubit, MatchesState>(
-        builder: (context, state) {
-          switch (state) {
-            case MatchesLoading():
-              return const Center(child: CircularProgressIndicator());
-            case MatchesError(:final message):
-              return Center(
-                child: Text(
-                  message,
-                  style: textTheme.bodyLarge?.copyWith(color: colors.rose),
-                ),
-              );
-            case MatchesLoaded(:final matches, :final previews) && final loaded:
-              if (matches.isEmpty) return const _EmptyMatches();
-              return ValueListenableBuilder<bool>(
-                valueListenable: prefs.showMatchMessagePreviews,
-                builder: (context, showPreviews, _) => ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                  itemCount: matches.length + 1,
-                  separatorBuilder: (_, i) =>
-                      SizedBox(height: i == 0 ? 18 : 12),
-                  itemBuilder: (context, i) {
-                    if (i == 0) {
-                      return _MatchesSummary(
-                        total: matches.length,
-                        unread: matches
-                            .where((m) => loaded.isUnread(m.id))
-                            .length,
+      body: WizardBackdrop(
+        child: BlocBuilder<MatchesCubit, MatchesState>(
+          builder: (context, state) {
+            switch (state) {
+              case MatchesLoading():
+                return const Center(child: CircularProgressIndicator());
+              case MatchesError(:final message):
+                return Center(
+                  child: Text(
+                    message,
+                    style: textTheme.bodyLarge?.copyWith(color: colors.rose),
+                  ),
+                );
+              case MatchesLoaded(:final matches, :final previews) &&
+                  final loaded:
+                if (matches.isEmpty) return const _EmptyMatches();
+                return ValueListenableBuilder<bool>(
+                  valueListenable: prefs.showMatchMessagePreviews,
+                  builder: (context, showPreviews, _) => ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                    itemCount: matches.length + 1,
+                    separatorBuilder: (_, i) =>
+                        SizedBox(height: i == 0 ? 18 : 12),
+                    itemBuilder: (context, i) {
+                      if (i == 0) {
+                        return _MatchesSummary(
+                          total: matches.length,
+                          unread: matches
+                              .where((m) => loaded.isUnread(m.id))
+                              .length,
+                        );
+                      }
+                      final match = matches[i - 1];
+                      return _MatchTile(
+                        match: match,
+                        preview: previews[match.id],
+                        showPreview: showPreviews,
+                        unread: loaded.isUnread(match.id),
                       );
-                    }
-                    final match = matches[i - 1];
-                    return _MatchTile(
-                      match: match,
-                      preview: previews[match.id],
-                      showPreview: showPreviews,
-                      unread: loaded.isUnread(match.id),
-                    );
-                  },
-                ),
-              );
-          }
-        },
+                    },
+                  ),
+                );
+            }
+          },
+        ),
       ),
     );
   }

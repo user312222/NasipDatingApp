@@ -49,6 +49,10 @@ class SafetyMenuButton extends StatelessWidget {
         child: Builder(
           builder: (context) => PopupMenuButton<String>(
             tooltip: 'Şikayet / engelle',
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: ChromeChip(icon: Icons.more_horiz),
+            ),
             onSelected: (value) {
               if (value == 'report') _openReportSheet(context);
               if (value == 'block') _confirmBlock(context);

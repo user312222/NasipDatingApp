@@ -123,17 +123,20 @@ class MatchesCubit extends Cubit<MatchesState> {
   /// Orders by most recent activity; a stream error leaves the list as it
   /// was.
   void _publish() {
+    if (isClosed) return;
     DateTime activity(Match m) => _previews[m.id]?.sentAt ?? m.matchedAt;
     final ordered = [..._matches]
       ..sort((a, b) => activity(b).compareTo(activity(a)));
     emit(MatchesLoaded(ordered, previews: _previews, readTimes: _readTimes));
   }
 
+  /// Cancels both at once - awaiting one before starting the other left
+  /// the second listener alive long enough to emit into a closed cubit.
   Future<void> _cancelSubscriptions() async {
-    await _previewsSub?.cancel();
-    await _readTimesSub?.cancel();
+    final pending = [_previewsSub?.cancel(), _readTimesSub?.cancel()];
     _previewsSub = null;
     _readTimesSub = null;
+    await Future.wait(pending.whereType<Future<void>>());
   }
 
   @override

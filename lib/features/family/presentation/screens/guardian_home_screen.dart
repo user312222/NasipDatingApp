@@ -38,25 +38,11 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         title: const Text('Yakınımın Eşleşmeleri'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Tooltip(
-              message: 'Hesap & veri',
-              child: Material(
-                color: colors.plumTint,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => context.push('/settings'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Icon(
-                      Icons.settings_outlined,
-                      size: 20,
-                      color: colors.plumStrong,
-                    ),
-                  ),
-                ),
-              ),
+            padding: const EdgeInsets.only(right: 8),
+            child: ChromeIconButton(
+              icon: Icons.settings_outlined,
+              tooltip: 'Hesap & veri',
+              onPressed: () => context.push('/settings'),
             ),
           ),
         ],

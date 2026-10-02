@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_text_styles.dart';
+import 'wizard_widgets.dart';
 
 /// Builds the app's light and dark [ThemeData] from the Bi Nasip design
 /// tokens ("Gece Moru" palette + Fraunces/Sora type scale — see
@@ -80,14 +81,22 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: colors.bg,
       textTheme: textTheme,
       extensions: [colors],
+      // Transparent so each screen's backdrop glows run on behind the bar;
+      // the back arrow is the same round chip as the other bar controls.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (context) =>
+            const ChromeChip(icon: Icons.arrow_back_rounded, size: 38),
+      ),
       appBarTheme: AppBarTheme(
-        backgroundColor: colors.bg,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         foregroundColor: colors.ink,
         elevation: 0,
+        centerTitle: false,
+        toolbarHeight: 64,
         titleTextStyle: AppTextStyles.displayHeadline.copyWith(
-          fontSize: 22,
+          fontSize: 24,
           fontWeight: FontWeight.w700,
           color: colors.plumStrong,
         ),
@@ -95,7 +104,8 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: colors.surface,
         surfaceTintColor: Colors.transparent,
-        elevation: 0,
+        elevation: 10,
+        shadowColor: colors.plumFill.withValues(alpha: 0.22),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
           side: BorderSide(color: colors.line),
@@ -114,7 +124,7 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colors.bg,
+        fillColor: Color.lerp(colors.surface, colors.plumTint, 0.6),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 12,
@@ -129,7 +139,7 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.brass),
+          borderSide: BorderSide(color: colors.plum, width: 1.5),
         ),
         labelStyle: AppTextStyles.labelCaption.copyWith(color: colors.inkSoft),
       ),

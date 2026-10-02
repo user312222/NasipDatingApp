@@ -226,5 +226,17 @@ void main() {
 
       expect(s.repo.readTimes.hasListener, isFalse);
     });
+
+    test('an event racing with close is dropped, not emitted', () async {
+      final s = await loaded(theirs);
+
+      // Both streams have something in flight when the screen goes away.
+      s.repo.previews.add(Ok({'a': theirMessage('son', DateTime(2026, 4))}));
+      s.repo.readTimes.add(const Ok({}));
+      await s.cubit.close();
+      await pumpEventQueue();
+
+      expect(s.cubit.isClosed, isTrue);
+    });
   });
 }

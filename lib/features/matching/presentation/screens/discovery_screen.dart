@@ -63,15 +63,45 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Keşfet',
-          style: textTheme.displayMedium?.copyWith(
-            fontSize: 26,
-            color: colors.plumStrong,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: colors.brandGradient,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.accent.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.nightlight_round,
+                size: 19,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Keşfet',
+              style: textTheme.displayMedium?.copyWith(
+                fontSize: 28,
+                color: colors.plumStrong,
+              ),
+            ),
+          ],
         ),
         actions: [
-          _ChromeIconButton(
+          ChromeIconButton(
             icon: Icons.chat_bubble_outline_rounded,
             onPressed: () => context.push('/matches'),
             tooltip: 'Eşleşmeler',
@@ -81,7 +111,7 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
               final filter = state is MatchingLoaded
                   ? state.filter
                   : CandidateFilter.empty;
-              return _ChromeIconButton(
+              return ChromeIconButton(
                 icon: Icons.tune,
                 onPressed: () => _openFilters(filter),
                 tooltip: 'Filtreler',
@@ -147,6 +177,7 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
           final pair = _CandidateCard.paletteFor(candidate);
 
           return Stack(
+            clipBehavior: Clip.none,
             children: [
               Positioned(
                 top: -30,
@@ -382,56 +413,6 @@ class _MatchCelebrationState extends State<_MatchCelebration>
   }
 }
 
-/// An app-bar action wrapped in a circle instead of a flat monochrome
-/// icon — echoes the candidate card's circular action buttons so the page
-/// chrome and the card read as one cohesive, colorful design. [primary]
-/// gives the single most-used action (filters, on this screen) a solid
-/// fill so it doesn't read as identical/interchangeable with the rest —
-/// three same-toned circles in a row was the specific complaint this
-/// fixes (2026-09-22).
-class _ChromeIconButton extends StatelessWidget {
-  const _ChromeIconButton({
-    required this.icon,
-    required this.onPressed,
-    required this.tooltip,
-    this.primary = false,
-  });
-
-  final IconData icon;
-  final VoidCallback onPressed;
-  final String tooltip;
-  final bool primary;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Tooltip(
-        message: tooltip,
-        child: Material(
-          color: primary ? colors.plumFill : colors.plumTint,
-          shape: const CircleBorder(),
-          elevation: primary ? 3 : 0,
-          shadowColor: colors.plumStrong.withValues(alpha: 0.4),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onPressed,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Icon(
-                icon,
-                size: 20,
-                color: primary ? Colors.white : colors.plumStrong,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// A single overflow entry for [_ChromeMenuButton].
 class _ChromeMenuItem {
   const _ChromeMenuItem({
@@ -483,14 +464,7 @@ class _ChromeMenuButton extends StatelessWidget {
               ),
             ),
         ],
-        child: Material(
-          color: colors.plumTint,
-          shape: const CircleBorder(),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Icon(Icons.more_horiz, size: 20, color: colors.plumStrong),
-          ),
-        ),
+        child: const ChromeChip(icon: Icons.more_horiz),
       ),
     );
   }
@@ -518,6 +492,7 @@ class _EmptyDiscovery extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Positioned(
           top: -30,

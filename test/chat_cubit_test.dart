@@ -250,6 +250,19 @@ void main() {
       expect(s.repo.conversations.hasListener, isFalse);
     });
 
+    test('a send that finishes after the chat was left is dropped', () async {
+      final s = _setup();
+      _open(s.cubit);
+      s.repo.conversations.add(Ok(testConversation([])));
+      await pumpEventQueue();
+
+      final future = s.cubit.send('merhaba');
+      await s.cubit.close();
+      s.repo.pendingSend!.complete(const Ok(null));
+
+      await expectLater(future, completes);
+    });
+
     test('re-opening cancels the previous subscription', () async {
       final s = _setup();
       _open(s.cubit);

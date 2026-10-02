@@ -146,6 +146,7 @@ class _ChatViewState extends State<_ChatView> {
             ],
           ),
           body: Stack(
+            clipBehavior: Clip.none,
             children: [
               Positioned(
                 top: -60,

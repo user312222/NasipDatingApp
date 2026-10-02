@@ -13,17 +13,20 @@ class WizardBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // Clip.none lets the top glow keep going behind the (transparent) app
+    // bar instead of being cut off in a hard line at the body's edge.
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Positioned(
           top: -80,
           right: -70,
-          child: _Glow(color: colors.brass, size: 260),
+          child: _Glow(color: colors.accent, size: 280),
         ),
         Positioned(
           bottom: -60,
           left: -80,
-          child: _Glow(color: colors.plum, size: 260),
+          child: _Glow(color: colors.plumFill, size: 280),
         ),
         Positioned.fill(child: child),
       ],
@@ -430,6 +433,13 @@ class SectionCard extends StatelessWidget {
         border: Border.all(
           color: danger ? colors.rose.withValues(alpha: 0.45) : colors.line,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -442,9 +452,20 @@ class SectionCard extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: danger ? colors.roseSoft : colors.plumTint,
+                  color: danger ? colors.roseSoft : null,
+                  gradient: danger
+                      ? null
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: colors.brandGradient,
+                        ),
                 ),
-                child: Icon(icon, size: 20, color: accent),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: danger ? accent : Colors.white,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -466,6 +487,89 @@ class SectionCard extends StatelessWidget {
           ],
           if (child != null) ...[const SizedBox(height: 14), child!],
         ],
+      ),
+    );
+  }
+}
+
+/// The round chip every app-bar control sits in (back arrow, actions,
+/// overflow menus), so the top of each screen reads as one family instead
+/// of bare glyphs. [primary] is the single most important action on a
+/// screen and gets the brand gradient.
+class ChromeChip extends StatelessWidget {
+  const ChromeChip({
+    super.key,
+    required this.icon,
+    this.primary = false,
+    this.size = 40,
+  });
+
+  final IconData icon;
+  final bool primary;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: primary ? null : colors.surface,
+        gradient: primary
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.brandGradient,
+              )
+            : null,
+        border: primary ? null : Border.all(color: colors.line),
+        boxShadow: [
+          BoxShadow(
+            color: (primary ? colors.accent : colors.plumFill).withValues(
+              alpha: primary ? 0.38 : 0.12,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.5,
+        color: primary ? Colors.white : colors.plumStrong,
+      ),
+    );
+  }
+}
+
+/// A tappable [ChromeChip] for app-bar actions.
+class ChromeIconButton extends StatelessWidget {
+  const ChromeIconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    required this.tooltip,
+    this.primary = false,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String tooltip;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Tooltip(
+        message: tooltip,
+        child: InkResponse(
+          onTap: onPressed,
+          radius: 26,
+          child: ChromeChip(icon: icon, primary: primary),
+        ),
       ),
     );
   }
