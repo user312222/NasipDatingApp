@@ -77,49 +77,37 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
                 totalSteps: 5,
               ),
               const SizedBox(height: 20),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: _photos.length < 6 ? _photos.length + 1 : 6,
-                itemBuilder: (context, index) {
-                  if (index == _photos.length) {
-                    return _AddTile(colors: colors, onTap: _pickPhotos);
-                  }
-                  return Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.memory(
-                          _photos[index],
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
+              _PhotoGrid(
+                tiles: [
+                  for (var i = 0; i < _photos.length; i++)
+                    Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.memory(_photos[i], fit: BoxFit.cover),
                         ),
-                      ),
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: GestureDetector(
-                          onTap: () => _removeAt(index),
-                          child: CircleAvatar(
-                            radius: 12,
-                            backgroundColor: colors.plumStrong,
-                            child: const Icon(
-                              Icons.close,
-                              size: 14,
-                              color: Colors.white,
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            onTap: () => _removeAt(i),
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: colors.plumStrong,
+                              child: const Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  );
-                },
+                      ],
+                    ),
+                  if (_photos.length < 6)
+                    _AddTile(colors: colors, onTap: _pickPhotos),
+                ],
               ),
               const Spacer(),
               if (_error != null) ...[
@@ -144,6 +132,43 @@ class _ProfilePhotosScreenState extends State<ProfilePhotosScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Three square tiles per row, built from plain rows instead of a
+/// shrink-wrapped `GridView`: `WizardBody` measures its child's intrinsic
+/// height, which a viewport cannot report (it threw and the whole step
+/// rendered blank).
+class _PhotoGrid extends StatelessWidget {
+  const _PhotoGrid({required this.tiles});
+
+  static const _perRow = 3;
+  static const _gap = 10.0;
+
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var row = 0; row < tiles.length; row += _perRow)
+          Padding(
+            padding: EdgeInsets.only(top: row == 0 ? 0 : _gap),
+            child: Row(
+              children: [
+                for (var col = 0; col < _perRow; col++) ...[
+                  if (col > 0) const SizedBox(width: _gap),
+                  Expanded(
+                    child: row + col < tiles.length
+                        ? AspectRatio(aspectRatio: 1, child: tiles[row + col])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
