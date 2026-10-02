@@ -44,7 +44,7 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 
 ## 4. Fonksiyonel Gereksinimler
 
-### FR-1 — Onboarding & Kimlik Doğrulama *(kuruldu — `lib/features/auth/`; telefon + SMS OTP gerçek (Firebase Phone Auth; oturum geri yükleme ve çıkış dahil). Davetiye kodu doğrulaması ve selfie doğrulaması hâlâ mock — bkz. FR-1.2 notu)*
+### FR-1 — Onboarding & Kimlik Doğrulama *(kuruldu — `lib/features/auth/`; telefon + SMS OTP gerçek (Firebase Phone Auth; oturum geri yükleme ve çıkış dahil). Davetiye kodu doğrulaması Firestore'da (`inviteCodes/{KOD}`); selfie doğrulaması hâlâ mock — bkz. FR-1.2 notu)*
 - FR-1.1 Kullanıcı telefon numarası ile kayıt olur, SMS OTP ile doğrular.
 - FR-1.2 Kullanıcı, hesap açılışında **zorunlu** selfie-liveness doğrulamasından geçer (kimlik belgesi/T.C. kimlik istenmez — sadece "bu fotoğrafı gerçek/canlı bir insan mı çekti" kontrolü). Doğrulama 3. parti sağlayıcı (Veriff/Yoti/Didit vb.) üzerinden yapılır; ham selfie/biyometrik veri Bi Nasip'in kendi altyapısında hiçbir zaman saklanmaz — sadece sağlayıcıdan dönen `verified: true/false` + zaman damgası tutulur. Mümkünse aynı akışta sağlayıcının yaş tahmini (facial age estimation) özelliği de kullanılır, görüntü işlem sonrası saklanmaz.
 - FR-1.3 Davetiye kodu olmayan kullanıcı bekleme listesine yönlendirilir (Faz 1: closed beta).

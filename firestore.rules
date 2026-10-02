@@ -283,6 +283,16 @@ service cloud.firestore {
       allow delete: if signedIn() && request.auth.uid == guardianUserId;
     }
 
+    // FR-1.3 invite codes: inviteCodes/{CODE} -> {active: true, ...}.
+    // Checked before login, so a single-doc `get` is open to anyone, but
+    // there is no `list` (codes can't be enumerated) and no client write -
+    // codes are created in the Console / Admin SDK. Codes are reusable, so
+    // a returning user can pass the gate again.
+    match /inviteCodes/{code} {
+      allow get: if code.matches('[A-Z0-9]{4,32}');
+      allow list, write: if false;
+    }
+
     // FR-1.3 waitlist: waitlist/{autoId} -> {name, contact, city?,
     // createdAt}. Sign-ups happen before login, so anyone may CREATE a
     // validated entry; no client can read, edit or delete one (review in

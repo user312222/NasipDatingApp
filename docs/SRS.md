@@ -309,7 +309,7 @@ Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
 |---|---|
 | Telefon + SMS OTP ile giriş, oturum geri yükleme, çıkış | **Gerçek** (Firebase Auth) |
 | Profiller, beğeniler, eşleşmeler, mesajlar, şikayetler, engellemeler, aile bağlantıları, rıza kayıtları, hesap silme | **Gerçek** (Cloud Firestore, kurallar `firestore.rules`'ta) |
-| Davetiye kodu kontrolü | **Mock** — tek, sabit kodlu bir beta kodu |
+| Davetiye kodu kontrolü | **Firestore** — Console'da elle oluşturulan `inviteCodes/{KOD}` dokümanları (`active: true`); kodlar yeniden kullanılabilir, sayaç/tek kullanımlık takip yok |
 | Selfie / liveness doğrulaması | **Mock** — her zaman başarılı sayılır, kamera açılmaz; üçüncü taraf sağlayıcı entegrasyonu planlı |
 | Fotoğraf yükleme/depolama | **Yok** — fotoğraflar yerel olarak seçilip gösterilir ama saklanmaz; kişiler baş harf avatarıyla temsil edilir |
 | Fotoğraf moderasyonu | **Mock** — yalnızca dosya adı sezgisel kontrolü |

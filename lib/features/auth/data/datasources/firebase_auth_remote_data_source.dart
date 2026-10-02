@@ -6,10 +6,15 @@ import '../../domain/entities/account_type.dart';
 import '../../domain/entities/auth_user.dart';
 import 'auth_remote_data_source.dart';
 
-/// FR-1.1 on real Firebase Phone Auth. Invite codes (FR-1.3) and selfie
-/// liveness (FR-1.2) are still handled by [fallback] until their own
-/// backends exist — only the OTP step and session persistence are real
-/// here.
+/// FR-1.1 on real Firebase Phone Auth, and FR-1.3 invite codes on
+/// Firestore. Selfie liveness (FR-1.2) is still handled by [fallback]
+/// until a real provider exists.
+///
+/// Invite codes are `inviteCodes/{CODE}` docs (`active: true`), created by
+/// hand in the Firebase Console - the check runs before login, so rules
+/// allow a single-doc `get` for anyone but no listing and no client
+/// writes. Codes are reusable on purpose: a returning user logs back in
+/// through the same gate, and per-use tracking would need Cloud Functions.
 ///
 /// Session state lives in one small `users/{uid}` doc — `accountType`
 /// (written the moment OTP succeeds, FR-8.1) and `verifiedAt` (added once
@@ -30,7 +35,20 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   ConfirmationResult? _confirmation;
 
   @override
-  Future<void> checkInviteCode(String code) => fallback.checkInviteCode(code);
+  Future<void> checkInviteCode(String code) async {
+    final id = code.trim().toUpperCase();
+    if (!RegExp(r'^[A-Z0-9]{4,32}$').hasMatch(id)) {
+      throw const ServerException('Bu davetiye kodu tanınmıyor.');
+    }
+    try {
+      final doc = await _db.collection('inviteCodes').doc(id).get();
+      if (doc.data()?['active'] != true) {
+        throw const ServerException('Bu davetiye kodu tanınmıyor.');
+      }
+    } on FirebaseException catch (e) {
+      throw ServerException('Kod doğrulanamadı (${e.code}).');
+    }
+  }
 
   @override
   Future<void> requestOtp(String phone) async {
@@ -177,8 +195,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   String _message(FirebaseAuthException e) => switch (e.code) {
     'invalid-phone-number' => 'Geçerli bir telefon numarası gir.',
     'invalid-verification-code' => 'Kod hatalı. Tekrar dener misin?',
-    'code-expired' ||
-    'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
+    'code-expired' || 'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
     'too-many-requests' =>
       'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.',
     'network-request-failed' => 'Bağlantı sorunu. İnternetini kontrol et.',

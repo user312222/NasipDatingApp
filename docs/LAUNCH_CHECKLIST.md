@@ -14,9 +14,11 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
       (+90 555 000 00 00 … 03, kod 123456). Silinmezse bu numaralarla herkes giriş yapabilir.
 - [ ] **App Check** aç (web için reCAPTCHA Enterprise/v3 sağlayıcısı) ve
       `firebase_options.dart`'taki API anahtarını HTTP referrer ile kısıtla.
-- [ ] **Davetiye kodu mock.** `lib/features/auth/data/datasources/auth_remote_data_source.dart`
-      içinde tek sabit kod (`NASIP2026`) var, herkes biliyor. Kodlar Firestore'da tutulmalı
-      ve bekleme listesinden ilk 500 kişiye verilmeli (FR-1.3).
+- [ ] **Davetiye kodlarını dağıt ve test kodunu kapat.** Kodlar artık Firestore'da
+      (`inviteCodes/{KOD}`, `active: true`); `NASIP2026` Console'da `active: false` yapılmalı veya
+      silinmeli. Kodlar yeniden kullanılabilir (geri dönen kullanıcı aynı kapıdan geçiyor); tek
+      kullanımlık/sayaçlı kod ve bekleme listesinden ilk 500 kişiye otomatik dağıtım (FR-1.3)
+      Cloud Functions gerektirir.
 - [ ] **Bekleme listesi herkese açık yazma.** Kayıtlar artık Firestore'da (`waitlist`),
       ama giriş yapmamış biri yazabildiği için App Check olmadan spam'e açık.
 - [ ] **Selfie doğrulaması mock** (`FirebaseAuthRemoteDataSource` selfie için

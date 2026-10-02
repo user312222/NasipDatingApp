@@ -47,7 +47,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | --- | --- |
 | Phone + SMS OTP sign-in, session restore, log out | **Real** (Firebase Auth) |
 | Profiles, likes, matches, messages, reports, blocks, family links, consent records, account deletion | **Real** (Cloud Firestore, rules in [`firestore.rules`](firestore.rules)) |
-| Invite code check | **Mock** — a single hard-coded beta code |
+| Invite code check | **Firestore** — `inviteCodes/{CODE}` docs created by hand in the Console |
 | Selfie / liveness verification | **Mock** — always succeeds; no camera is opened. A third-party provider is planned |
 | Photo upload | **Not implemented** — photos are picked and shown locally but not stored; people are shown as initial-letter avatars |
 | Photo moderation | **Mock** — filename heuristic only |
@@ -106,7 +106,7 @@ flutter run -d chrome        # or any connected device
 firebase deploy --only firestore:rules --project <your-project-id>
 ```
 
-Sign-in uses SMS. For development, add **test phone numbers** in *Firebase Console → Authentication → Sign-in method → Phone → Phone numbers for testing* (e.g. `+90 555 000 00 00` with code `123456`) so no real SMS is sent. The beta invite code is defined in `MockAuthRemoteDataSource` (`lib/features/auth/data/datasources/auth_remote_data_source.dart`).
+Sign-in uses SMS. For development, add **test phone numbers** in *Firebase Console → Authentication → Sign-in method → Phone → Phone numbers for testing* (e.g. `+90 555 000 00 00` with code `123456`) so no real SMS is sent. Invite codes live in Firestore: create a document `inviteCodes/<CODE>` (upper-case letters/digits, 4-32 chars) with the boolean field `active: true` in the Console; set `active` to `false` to revoke it.
 
 ### Serving a production web build
 
