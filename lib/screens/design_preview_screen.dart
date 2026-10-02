@@ -68,6 +68,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
               _Swatch('plum-fill', colors.plumFill),
               _Swatch('plum-strong', colors.plumStrong),
               _Swatch('plum-tint', colors.plumTint),
+              _Swatch('accent', colors.accent),
               _Swatch('brass', colors.brass),
               _Swatch('brass-tint', colors.brassTint),
               _Swatch('rose', colors.rose),

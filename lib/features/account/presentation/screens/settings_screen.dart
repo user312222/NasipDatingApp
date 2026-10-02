@@ -118,7 +118,7 @@ class _SettingsView extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [colors.plumFill, const Color(0xFFC17B72)],
+                        colors: [colors.plumFill, colors.accent],
                       ),
                       boxShadow: [
                         BoxShadow(

@@ -166,6 +166,25 @@ class _ChatViewState extends State<_ChatView> {
                   ),
                 ),
               ),
+              Positioned(
+                bottom: 60,
+                left: -80,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 260,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          pair.last.withValues(alpha: 0.22),
+                          pair.last.withValues(alpha: 0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               switch (state) {
                 ChatLoading() => const Center(
                   child: CircularProgressIndicator(),
@@ -230,6 +249,17 @@ class _Avatar extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: colors,
         ),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.surface,
+          width: size > 50 ? 3 : 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.last.withValues(alpha: 0.35),
+            blurRadius: size > 50 ? 22 : 10,
+            offset: Offset(0, size > 50 ? 10 : 4),
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: Text(
@@ -320,7 +350,10 @@ class _MessageBubble extends StatelessWidget {
                 ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [colors.plumFill, const Color(0xFF9C4590)],
+                    colors: [
+                      colors.plumFill,
+                      Color.lerp(colors.plumFill, colors.accent, 0.55)!,
+                    ],
                   )
                 : null,
             color: isMe ? null : colors.surface,
@@ -440,7 +473,7 @@ class _Composer extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [colors.plumFill, const Color(0xFFC17B72)],
+                    colors: [colors.plumFill, colors.accent],
                   ),
                   boxShadow: [
                     BoxShadow(

@@ -205,12 +205,19 @@ void main() {
   group('AvatarPalette', () {
     test('is stable for a seed and wraps around', () {
       expect(AvatarPalette.forSeed(1), AvatarPalette.forSeed(1));
-      expect(AvatarPalette.forSeed(0), AvatarPalette.forSeed(4));
+      expect(
+        AvatarPalette.forSeed(0),
+        AvatarPalette.forSeed(AvatarPalette.count),
+      );
       expect(AvatarPalette.forSeed(2), hasLength(2));
     });
 
     test('different seeds within a cycle give different pairs', () {
-      expect(AvatarPalette.forSeed(0), isNot(AvatarPalette.forSeed(1)));
+      final pairs = {
+        for (var i = 0; i < AvatarPalette.count; i++)
+          AvatarPalette.forSeed(i).join(),
+      };
+      expect(pairs, hasLength(AvatarPalette.count));
     });
   });
 }

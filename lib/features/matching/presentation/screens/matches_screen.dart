@@ -62,15 +62,27 @@ class _MatchesView extends StatelessWidget {
               return ValueListenableBuilder<bool>(
                 valueListenable: prefs.showMatchMessagePreviews,
                 builder: (context, showPreviews, _) => ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                  itemCount: matches.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _MatchTile(
-                    match: matches[i],
-                    preview: previews[matches[i].id],
-                    showPreview: showPreviews,
-                    unread: loaded.isUnread(matches[i].id),
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  itemCount: matches.length + 1,
+                  separatorBuilder: (_, i) =>
+                      SizedBox(height: i == 0 ? 18 : 12),
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return _MatchesSummary(
+                        total: matches.length,
+                        unread: matches
+                            .where((m) => loaded.isUnread(m.id))
+                            .length,
+                      );
+                    }
+                    final match = matches[i - 1];
+                    return _MatchTile(
+                      match: match,
+                      preview: previews[match.id],
+                      showPreview: showPreviews,
+                      unread: loaded.isUnread(match.id),
+                    );
+                  },
                 ),
               );
           }
@@ -98,12 +110,23 @@ class _EmptyMatches extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: colors.plumTint,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: colors.brandGradient,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.accent.withValues(alpha: 0.35),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.favorite_border_rounded,
+              child: const Icon(
+                Icons.favorite_rounded,
                 size: 32,
-                color: colors.plum,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
@@ -154,158 +177,260 @@ class _MatchTile extends StatelessWidget {
     final pair = AvatarPalette.forSeed(candidate.avatarColorSeed);
     final showMessageRow = showPreview && preview != null;
 
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 0,
-      child: InkWell(
+    return DecoratedBox(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        onTap: () => context.push(
-          '/chat',
-          extra: ChatRouteArgs(
-            matchId: match.id,
-            otherPartyUserId: candidate.id,
-            otherPartyName: candidate.name,
-            otherPartyAvatarSeed: candidate.avatarColorSeed,
+        boxShadow: [
+          BoxShadow(
+            color: (unread ? colors.accent : colors.plumFill).withValues(
+              alpha: unread ? 0.18 : 0.07,
+            ),
+            blurRadius: unread ? 22 : 16,
+            offset: const Offset(0, 8),
           ),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: colors.line),
+        ],
+      ),
+      child: Material(
+        color: unread ? colors.plumTint : colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        elevation: 0,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () => context.push(
+            '/chat',
+            extra: ChatRouteArgs(
+              matchId: match.id,
+              otherPartyUserId: candidate.id,
+              otherPartyName: candidate.name,
+              otherPartyAvatarSeed: candidate.avatarColorSeed,
+            ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: pair,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  candidate.name.characters.first,
-                  style: textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: unread
+                    ? colors.accent.withValues(alpha: 0.45)
+                    : colors.line,
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${candidate.name}, ${candidate.age}',
-                            style: textTheme.titleSmall?.copyWith(
-                              color: colors.plumStrong,
-                              fontWeight: unread ? FontWeight.w800 : null,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (unread) ...[
-                          const SizedBox(width: 8),
-                          Semantics(
-                            label: 'Okunmamış mesaj',
-                            child: Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: colors.plumFill,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (showMessageRow) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            formatChatTimestamp(preview!.sentAt),
-                            style: textTheme.labelSmall?.copyWith(
-                              color: colors.inkSoft,
-                            ),
-                          ),
-                        ],
-                      ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: pair,
                     ),
-                    const SizedBox(height: 3),
-                    if (showMessageRow)
-                      Text(
-                        preview!.sender == MessageSender.me
-                            ? 'Sen: ${preview!.text}'
-                            : preview!.text,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: preview!.sender == MessageSender.me
-                              ? colors.inkSoft
-                              : colors.ink,
-                          fontWeight: unread ? FontWeight.w700 : null,
-                        ),
-                      )
-                    else if (!showPreview)
+                    border: Border.all(color: colors.surface, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: pair.last.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    candidate.name.characters.first,
+                    style: textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.location_on_rounded,
-                            size: 14,
-                            color: colors.rose,
-                          ),
-                          const SizedBox(width: 3),
-                          Flexible(
+                          Expanded(
                             child: Text(
-                              candidate.city,
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colors.inkSoft,
+                              '${candidate.name}, ${candidate.age}',
+                              style: textTheme.titleSmall?.copyWith(
+                                color: colors.plumStrong,
+                                fontWeight: unread ? FontWeight.w800 : null,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (unread) ...[
+                            const SizedBox(width: 8),
+                            Semantics(
+                              label: 'Okunmamış mesaj',
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: colors.accent,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (showMessageRow) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              formatChatTimestamp(preview!.sentAt),
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colors.inkSoft,
+                              ),
+                            ),
+                          ],
                         ],
-                      )
-                    else
-                      Text(
-                        'İlk mesajı sen yaz',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.brass,
-                          fontWeight: FontWeight.w600,
-                        ),
                       ),
-                  ],
-                ),
-              ),
-              if (!showMessageRow) ...[
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colors.plumTint,
+                      const SizedBox(height: 3),
+                      if (showMessageRow)
+                        Text(
+                          preview!.sender == MessageSender.me
+                              ? 'Sen: ${preview!.text}'
+                              : preview!.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: preview!.sender == MessageSender.me
+                                ? colors.inkSoft
+                                : colors.ink,
+                            fontWeight: unread ? FontWeight.w700 : null,
+                          ),
+                        )
+                      else if (!showPreview)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: colors.rose,
+                            ),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                candidate.city,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colors.inkSoft,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          'İlk mesajı sen yaz',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.brass,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    size: 18,
-                    color: colors.plumStrong,
+                ),
+                if (!showMessageRow) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colors.plumTint,
+                    ),
+                    child: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 18,
+                      color: colors.plumStrong,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The band above the list: how many matches there are and whether any of
+/// them is waiting on a reply - the one thing worth knowing at a glance.
+class _MatchesSummary extends StatelessWidget {
+  const _MatchesSummary({required this.total, required this.unread});
+
+  final int total;
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors.brandGradient,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.accent.withValues(alpha: 0.32),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.2),
+            ),
+            child: const Icon(
+              Icons.nightlight_round,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$total eşleşmen var',
+                  style: textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  unread > 0
+                      ? '$unread sohbette yeni mesaj seni bekliyor'
+                      : 'Yeni mesaj yok, sıra sende olabilir',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

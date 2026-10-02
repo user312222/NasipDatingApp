@@ -138,39 +138,9 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
           final candidate = loaded.current;
 
           if (candidate == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.explore_off_outlined,
-                      size: 40,
-                      color: colors.inkSoft,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Şu an gösterilecek aday kalmadı.',
-                      style: textTheme.titleSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Filtreleri genişletmeyi deneyebilirsin.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colors.inkSoft,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton(
-                      onPressed: () => _openFilters(loaded.filter),
-                      child: const Text('Filtreleri değiştir'),
-                    ),
-                  ],
-                ),
-              ),
+            return _EmptyDiscovery(
+              onChangeFilters: () => _openFilters(loaded.filter),
+              onOpenMatches: () => context.push('/matches'),
             );
           }
 
@@ -530,6 +500,109 @@ class _ChromeMenuButton extends StatelessWidget {
 /// background to the candidate's own illustration palette so the screen
 /// feels like one continuous, colorful composition instead of a flat
 /// cream backdrop with a colorful card dropped on top of it.
+/// Shown when the feed runs out: the same glow-and-gradient language as a
+/// candidate card instead of a grey icon, with a way forward either side
+/// (widen the filters, or go talk to the matches already made).
+class _EmptyDiscovery extends StatelessWidget {
+  const _EmptyDiscovery({
+    required this.onChangeFilters,
+    required this.onOpenMatches,
+  });
+
+  final VoidCallback onChangeFilters;
+  final VoidCallback onOpenMatches;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Stack(
+      children: [
+        Positioned(
+          top: -30,
+          right: -50,
+          child: _BackgroundGlow(color: colors.accent, size: 240),
+        ),
+        Positioned(
+          bottom: 20,
+          left: -70,
+          child: _BackgroundGlow(color: colors.plumFill, size: 260),
+        ),
+        Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 132,
+                    height: 132,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: colors.brandGradient,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.accent.withValues(alpha: 0.38),
+                          blurRadius: 34,
+                          offset: const Offset(0, 16),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.nightlight_round,
+                      size: 58,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  Text(
+                    'Bugünlük herkesi gördün.',
+                    style: textTheme.displayMedium?.copyWith(
+                      fontSize: 27,
+                      color: colors.plumStrong,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Yeni adaylar geldikçe burada görünecek. Filtreleri '
+                    'genişletirsen daha fazla kişiyle tanışabilirsin.',
+                    style: textTheme.bodyLarge?.copyWith(color: colors.inkSoft),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  GradientButton(
+                    label: 'Filtreleri değiştir',
+                    onPressed: onChangeFilters,
+                  ),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: onOpenMatches,
+                    child: Text(
+                      'Eşleşmelerine göz at',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.plum,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _BackgroundGlow extends StatelessWidget {
   const _BackgroundGlow({required this.color, required this.size});
 
@@ -886,7 +959,7 @@ class _CandidateCard extends StatelessWidget {
               _CircleActionButton(
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.white,
-                gradient: [colors.plumFill, const Color(0xFFC17B72)],
+                gradient: [colors.plumFill, colors.accent],
                 onTap: isSwiping ? null : onLike,
                 tooltip: 'Beğen',
                 large: true,
@@ -1181,7 +1254,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
-                    colors: [colors.plumFill, const Color(0xFFC17B72)],
+                    colors: [colors.plumFill, colors.accent],
                   ),
                 ),
                 child: const Icon(Icons.tune, color: Colors.white, size: 22),

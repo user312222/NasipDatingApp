@@ -81,7 +81,7 @@ Calls that can fail return a `Result<T>` (`Ok` / `Err` with a typed `Failure`) i
 
 ### Design system
 
-"Gece Moru" palette (plum / brass / rose on warm cream) with light and dark themes. Tokens are in `lib/theme/app_colors.dart`; shared widgets (`WizardBackdrop`, `WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard`) are in `lib/theme/wizard_widgets.dart`. Run the app and open **`/design-preview`** for a live gallery with a light/dark switch.
+"Gece Moru" palette (vivid plum with a coral `accent`, gold and rose on warm cream; the plum -> accent pair is the shared brand gradient) with light and dark themes. Tokens are in `lib/theme/app_colors.dart`; shared widgets (`WizardBackdrop`, `WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard`) are in `lib/theme/wizard_widgets.dart`. Run the app and open **`/design-preview`** for a live gallery with a light/dark switch.
 
 ---
 

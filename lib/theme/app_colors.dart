@@ -17,6 +17,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.plumStrong,
     required this.plumTint,
     required this.plumFill,
+    required this.accent,
     required this.brass,
     required this.brassTint,
     required this.rose,
@@ -36,6 +37,11 @@ class AppColors extends ThemeExtension<AppColors> {
   /// (`plum` itself turns light pink in dark mode) — use for filled
   /// buttons, badges and gradients with white content on top.
   final Color plumFill;
+
+  /// The warm end of the brand gradient (plumFill -> accent) and the
+  /// one "look here" color: unread dots, live highlights. Carries white
+  /// text only at button weight/size.
+  final Color accent;
   final Color brass;
   final Color brassTint;
   final Color rose;
@@ -43,19 +49,20 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color line;
 
   static const light = AppColors(
-    bg: Color(0xFFF6F1EA),
-    surface: Color(0xFFFCF9F5),
-    ink: Color(0xFF2A1B2A),
-    inkSoft: Color(0xFF6E5B6C),
-    plum: Color(0xFF5B2C55),
-    plumStrong: Color(0xFF331A38),
-    plumTint: Color(0xFFEFE1EA),
-    plumFill: Color(0xFF5B2C55),
-    brass: Color(0xFFB8863F),
-    brassTint: Color(0xFFF1E3C4),
-    rose: Color(0xFFA9726B),
-    roseSoft: Color(0xFFEAD7D2),
-    line: Color(0xFFE4D9DD),
+    bg: Color(0xFFFBF6F1),
+    surface: Color(0xFFFFFFFF),
+    ink: Color(0xFF24122B),
+    inkSoft: Color(0xFF6B5670),
+    plum: Color(0xFF7A2C8F),
+    plumStrong: Color(0xFF2E1238),
+    plumTint: Color(0xFFF4E6F7),
+    plumFill: Color(0xFF7A2C8F),
+    accent: Color(0xFFE84A70),
+    brass: Color(0xFFC98A1E),
+    brassTint: Color(0xFFFCEFD2),
+    rose: Color(0xFFD9506B),
+    roseSoft: Color(0xFFFBE1E6),
+    line: Color(0xFFEBDFEA),
   );
 
   static const dark = AppColors(
@@ -66,7 +73,8 @@ class AppColors extends ThemeExtension<AppColors> {
     plum: Color(0xFFC495BC),
     plumStrong: Color(0xFFE3C3DC),
     plumTint: Color(0xFF2E1B33),
-    plumFill: Color(0xFF7A3B71),
+    plumFill: Color(0xFF8A3BA0),
+    accent: Color(0xFFF0668A),
     brass: Color(0xFFE0BD7A),
     brassTint: Color(0xFF372A18),
     rose: Color(0xFFD9AFA8),
@@ -84,6 +92,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? plumStrong,
     Color? plumTint,
     Color? plumFill,
+    Color? accent,
     Color? brass,
     Color? brassTint,
     Color? rose,
@@ -99,6 +108,7 @@ class AppColors extends ThemeExtension<AppColors> {
       plumStrong: plumStrong ?? this.plumStrong,
       plumTint: plumTint ?? this.plumTint,
       plumFill: plumFill ?? this.plumFill,
+      accent: accent ?? this.accent,
       brass: brass ?? this.brass,
       brassTint: brassTint ?? this.brassTint,
       rose: rose ?? this.rose,
@@ -119,6 +129,7 @@ class AppColors extends ThemeExtension<AppColors> {
       plumStrong: Color.lerp(plumStrong, other.plumStrong, t)!,
       plumTint: Color.lerp(plumTint, other.plumTint, t)!,
       plumFill: Color.lerp(plumFill, other.plumFill, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
       brass: Color.lerp(brass, other.brass, t)!,
       brassTint: Color.lerp(brassTint, other.brassTint, t)!,
       rose: Color.lerp(rose, other.rose, t)!,
@@ -126,6 +137,12 @@ class AppColors extends ThemeExtension<AppColors> {
       line: Color.lerp(line, other.line, t)!,
     );
   }
+}
+
+/// The brand gradient every primary surface shares (buttons, own chat
+/// bubbles, badges): `colors.brandGradient`.
+extension AppColorsGradients on AppColors {
+  List<Color> get brandGradient => [plumFill, accent];
 }
 
 /// Shorthand: `context.colors.plum`.

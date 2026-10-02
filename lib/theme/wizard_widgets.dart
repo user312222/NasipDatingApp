@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-const _roseAccent = Color(0xFFC17B72);
-
 /// Soft, blurred color blobs behind a wizard screen so registration steps
 /// share the same "alive" backdrop as the discovery screen instead of a
 /// flat cream page.
@@ -76,7 +74,7 @@ class WizardProgress extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
                 gradient: i <= current
-                    ? LinearGradient(colors: [colors.plumFill, _roseAccent])
+                    ? LinearGradient(colors: [colors.plumFill, colors.accent])
                     : null,
                 color: i <= current ? null : colors.line,
               ),
@@ -140,7 +138,7 @@ class WizardHeader extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [colors.plumFill, _roseAccent],
+                colors: [colors.plumFill, colors.accent],
               ),
               boxShadow: [
                 BoxShadow(
@@ -221,7 +219,7 @@ class _GradientButtonState extends State<GradientButton> {
                 ? LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
-                    colors: [colors.plumFill, _roseAccent],
+                    colors: [colors.plumFill, colors.accent],
                   )
                 : null,
             color: enabled || widget.loading ? null : colors.line,
