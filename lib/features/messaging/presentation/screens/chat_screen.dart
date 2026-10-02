@@ -138,10 +138,13 @@ class _ChatViewState extends State<_ChatView> {
               ],
             ),
             actions: [
-              SafetyMenuButton(
-                targetUserId: widget.otherPartyUserId,
-                targetName: widget.otherPartyName,
-                onBlocked: () => context.pop(),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: SafetyMenuButton(
+                  targetUserId: widget.otherPartyUserId,
+                  targetName: widget.otherPartyName,
+                  onBlocked: () => context.pop(),
+                ),
               ),
             ],
           ),

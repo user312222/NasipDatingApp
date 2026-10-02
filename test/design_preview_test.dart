@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:binasip/core/di/injection_container.dart';
 import 'package:binasip/features/family/presentation/screens/guardian_home_screen.dart';
+import 'package:binasip/features/safety/domain/usecases/block_user.dart';
+import 'package:binasip/features/safety/domain/usecases/report_user.dart';
+import 'package:binasip/features/safety/presentation/bloc/safety_cubit.dart';
 import 'package:binasip/screens/design_preview_screen.dart';
 import 'package:binasip/theme/app_theme.dart';
 import 'package:binasip/theme/wizard_widgets.dart';
+
+import 'support/fakes.dart';
 
 // The gallery shows a loading button (endless spinner), so
 // `pumpAndSettle` would never return — advance a fixed time instead.
@@ -12,6 +18,23 @@ Future<void> _settle(WidgetTester tester) =>
     tester.pump(const Duration(milliseconds: 700));
 
 void main() {
+  // The gallery's discovery card carries the report/block menu, which
+  // resolves its cubit from the service locator.
+  setUp(() async {
+    await sl.reset();
+    final safety = FakeSafetyRepository();
+    sl.registerFactory(
+      () => SafetyCubit(
+        reportUser: ReportUser(safety),
+        blockUser: BlockUser(safety),
+      ),
+    );
+  });
+
+  tearDown(() async {
+    await sl.reset();
+  });
+
   Future<void> pump(WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 6000);
     tester.view.devicePixelRatio = 1;

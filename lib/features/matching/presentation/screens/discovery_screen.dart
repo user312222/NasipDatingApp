@@ -474,6 +474,23 @@ class _ChromeMenuButton extends StatelessWidget {
 /// background to the candidate's own illustration palette so the screen
 /// feels like one continuous, colorful composition instead of a flat
 /// cream backdrop with a colorful card dropped on top of it.
+/// The discovery card on its own with inert buttons - for the design
+/// gallery (`/design-preview`), where it can be checked without needing a
+/// real candidate in the feed.
+class CandidateCardPreview extends StatelessWidget {
+  const CandidateCardPreview({super.key, required this.candidate});
+
+  final Candidate candidate;
+
+  @override
+  Widget build(BuildContext context) => _CandidateCard(
+    candidate: candidate,
+    onLike: () {},
+    onPass: () {},
+    isSwiping: false,
+  );
+}
+
 /// Shown when the feed runs out: the same glow-and-gradient language as a
 /// candidate card instead of a grey icon, with a way forward either side
 /// (widen the filters, or go talk to the matches already made).
@@ -758,19 +775,26 @@ class _CandidateCard extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
+        // The shadow sits outside the clip - inside it, it was clipped away
+        // and the white card had no edge against the cream page.
+        Positioned.fill(
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.surface,
+              borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: colors.plumStrong.withValues(alpha: 0.18),
-                  blurRadius: 28,
-                  offset: const Offset(0, 14),
+                  color: pair.last.withValues(alpha: 0.30),
+                  blurRadius: 34,
+                  offset: const Offset(0, 16),
                 ),
               ],
             ),
+          ),
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            decoration: BoxDecoration(color: colors.surface),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -902,18 +926,12 @@ class _CandidateCard extends StatelessWidget {
         Positioned(
           top: 12,
           right: 12,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.85),
-              shape: BoxShape.circle,
-            ),
-            child: SafetyMenuButton(
-              key: ValueKey(candidate.id),
-              targetUserId: candidate.id,
-              targetName: candidate.name,
-              onBlocked: () =>
-                  context.read<MatchingCubit>().removeCandidate(candidate.id),
-            ),
+          child: SafetyMenuButton(
+            key: ValueKey(candidate.id),
+            targetUserId: candidate.id,
+            targetName: candidate.name,
+            onBlocked: () =>
+                context.read<MatchingCubit>().removeCandidate(candidate.id),
           ),
         ),
         Positioned(

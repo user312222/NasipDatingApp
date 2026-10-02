@@ -74,6 +74,7 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                         ),
                         const SizedBox(height: 18),
                         const WizardHeader(
+                          leading: BrandLogo(),
                           icon: Icons.favorite_rounded,
                           title: 'Bi Nasip’e hoş geldin.',
                           subtitle: 'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',

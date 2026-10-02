@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../features/family/domain/entities/family_visible_match.dart';
 import '../features/family/presentation/screens/guardian_home_screen.dart';
+import '../features/matching/domain/entities/candidate.dart';
+import '../features/matching/presentation/screens/discovery_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
@@ -55,6 +57,12 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          _section(textTheme, 'Logo'),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: BrandLogo(),
+          ),
+          const SizedBox(height: 28),
           _section(textTheme, 'Renkler'),
           Wrap(
             spacing: 12,
@@ -228,6 +236,35 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
             ).showSnackBar(const SnackBar(content: Text('Snackbar örneği.'))),
             child: const Text('Snackbar göster'),
           ),
+          const SizedBox(height: 28),
+          _section(textTheme, 'Keşfet kartı'),
+          for (final candidate in const [
+            Candidate(
+              id: 'preview_1',
+              name: 'Zeynep',
+              age: 27,
+              city: 'İstanbul',
+              intent: CandidateIntent.marriage,
+              avatarColorSeed: 0,
+              bio:
+                  'Mimarım, hafta sonları yürüyüşe çıkmayı ve yeni kahveciler '
+                  'keşfetmeyi severim. Ailemle yakınım.',
+            ),
+            Candidate(
+              id: 'preview_2',
+              name: 'Ömer Faruk',
+              age: 31,
+              city: 'Eskişehir',
+              intent: CandidateIntent.notSureYet,
+              avatarColorSeed: 2,
+            ),
+          ]) ...[
+            SizedBox(
+              height: 620,
+              child: CandidateCardPreview(candidate: candidate),
+            ),
+            const SizedBox(height: 20),
+          ],
           const SizedBox(height: 32),
         ],
       ),

@@ -101,7 +101,12 @@ class WizardHeader extends StatelessWidget {
     this.step,
     this.totalSteps,
     this.centered = false,
+    this.leading,
   });
+
+  /// Shown instead of the gradient icon badge when set (e.g. [BrandLogo]
+  /// on the welcome screen).
+  final Widget? leading;
 
   final IconData icon;
   final String title;
@@ -133,26 +138,28 @@ class WizardHeader extends StatelessWidget {
             scale: t,
             child: Opacity(opacity: t.clamp(0, 1), child: child),
           ),
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [colors.plumFill, colors.accent],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.plumFill.withValues(alpha: 0.30),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
+          child:
+              leading ??
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [colors.plumFill, colors.accent],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.plumFill.withValues(alpha: 0.30),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
+                child: Icon(icon, color: Colors.white, size: 28),
+              ),
         ),
         const SizedBox(height: 18),
         Text(
@@ -570,6 +577,43 @@ class ChromeIconButton extends StatelessWidget {
           radius: 26,
           child: ChromeChip(icon: icon, primary: primary),
         ),
+      ),
+    );
+  }
+}
+
+/// The Bi Nasip logo on a white rounded tile. The artwork has an opaque
+/// white background, so it always sits on white rather than directly on the
+/// cream (or dark) page.
+class BrandLogo extends StatelessWidget {
+  const BrandLogo({super.key, this.size = 150});
+
+  static const assetPath = 'assets/images/logo.png';
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(size * 0.06),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(size * 0.24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.plumFill.withValues(alpha: 0.18),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        semanticLabel: 'Bi Nasip logosu',
       ),
     );
   }
