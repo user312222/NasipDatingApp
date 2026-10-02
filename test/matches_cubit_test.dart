@@ -1,120 +1,24 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:binasip/core/error/failures.dart';
 import 'package:binasip/core/result/result.dart';
-import 'package:binasip/features/matching/domain/entities/candidate.dart';
-import 'package:binasip/features/matching/domain/entities/candidate_filter.dart';
 import 'package:binasip/features/matching/domain/entities/match.dart';
-import 'package:binasip/features/matching/domain/entities/swipe_outcome.dart';
-import 'package:binasip/features/matching/domain/repositories/matching_repository.dart';
 import 'package:binasip/features/matching/domain/usecases/get_my_matches.dart';
 import 'package:binasip/features/matching/presentation/bloc/matches_cubit.dart';
 import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
-import 'package:binasip/features/messaging/domain/entities/conversation.dart';
-import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
 import 'package:binasip/features/messaging/domain/usecases/watch_last_messages.dart';
 import 'package:binasip/features/messaging/domain/usecases/watch_read_times.dart';
 
-class _FakeMatchingRepository implements MatchingRepository {
-  _FakeMatchingRepository(this._result);
-
-  final Result<List<Match>> _result;
-
-  @override
-  Future<Result<List<Match>>> getMyMatches() async => _result;
-
-  @override
-  Future<Result<List<Candidate>>> getCandidates(CandidateFilter filter) =>
-      throw UnimplementedError();
-
-  @override
-  Future<Result<SwipeOutcome>> swipe({
-    required Candidate candidate,
-    required SwipeAction action,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<Result<void>> setMatchVisibleToFamily({
-    required String matchId,
-    required bool visible,
-  }) => throw UnimplementedError();
-}
-
-class _FakeMessagingRepository implements MessagingRepository {
-  /// Optionally seeds the first emission, like a Firestore listener that
-  /// reports right after subscribing.
-  _FakeMessagingRepository([Result<Map<String, ChatMessage>>? first]) {
-    if (first != null) controller.add(first);
-  }
-
-  final controller = StreamController<Result<Map<String, ChatMessage>>>();
-  final readTimesController = StreamController<Result<Map<String, DateTime>>>();
-  List<String>? lastRequestedIds;
-
-  @override
-  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
-    List<String> matchIds,
-  ) {
-    lastRequestedIds = matchIds;
-    return controller.stream;
-  }
-
-  @override
-  Stream<Result<Map<String, DateTime>>> watchReadTimes() =>
-      readTimesController.stream;
-
-  @override
-  Future<Result<void>> markConversationRead(String matchId) =>
-      throw UnimplementedError();
-
-  @override
-  Stream<Result<Conversation>> watchConversation({
-    required String matchId,
-    required String otherPartyName,
-    required int otherPartyAvatarSeed,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<Result<void>> sendMessage({
-    required String matchId,
-    required String text,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<Result<void>> dismissFamilyNudge(String matchId) =>
-      throw UnimplementedError();
-}
-
-Match _match(String id, DateTime matchedAt) => Match(
-  id: id,
-  matchedAt: matchedAt,
-  candidate: Candidate(
-    id: 'user_$id',
-    name: 'Aday $id',
-    age: 27,
-    city: 'İstanbul',
-    intent: CandidateIntent.marriage,
-    avatarColorSeed: 1,
-  ),
-);
-
-ChatMessage _message(String text, DateTime sentAt) => ChatMessage(
-  id: 'msg_$text',
-  text: text,
-  sentAt: sentAt,
-  sender: MessageSender.them,
-);
+import 'support/fakes.dart';
 
 MatchesCubit _cubitWith(
   Result<List<Match>> matches, {
   Result<Map<String, ChatMessage>> previews = const Ok({}),
-  _FakeMessagingRepository? messaging,
+  FakeMessagingRepository? messaging,
 }) {
-  final repo = messaging ?? _FakeMessagingRepository(previews);
+  final repo = messaging ?? FakeMessagingRepository(previews);
   return MatchesCubit(
-    getMyMatches: GetMyMatches(_FakeMatchingRepository(matches)),
+    getMyMatches: GetMyMatches(FakeMatchingRepository(matches)),
     watchLastMessages: WatchLastMessages(repo),
     watchReadTimes: WatchReadTimes(repo),
   );
@@ -127,9 +31,9 @@ void main() {
   });
 
   test('load emits matches sorted newest first', () async {
-    final older = _match('a', DateTime(2026, 1, 1));
-    final newest = _match('c', DateTime(2026, 3, 1));
-    final middle = _match('b', DateTime(2026, 2, 1));
+    final older = testMatch('a', DateTime(2026, 1, 1));
+    final newest = testMatch('c', DateTime(2026, 3, 1));
+    final middle = testMatch('b', DateTime(2026, 2, 1));
     final cubit = _cubitWith(Ok([older, newest, middle]));
 
     await cubit.load();
@@ -159,10 +63,10 @@ void main() {
 
   group('previews', () {
     test('are attached and matches re-ordered by latest activity', () async {
-      final a = _match('a', DateTime(2026, 1, 1));
-      final b = _match('b', DateTime(2026, 2, 1));
+      final a = testMatch('a', DateTime(2026, 1, 1));
+      final b = testMatch('b', DateTime(2026, 2, 1));
       // `a` is the older match but has the most recent message.
-      final lastA = _message('selam', DateTime(2026, 3, 1));
+      final lastA = theirMessage('selam', DateTime(2026, 3, 1));
       final cubit = _cubitWith(Ok([a, b]), previews: Ok({'a': lastA}));
 
       await cubit.load();
@@ -174,11 +78,11 @@ void main() {
     });
 
     test('are requested for every match id', () async {
-      final messaging = _FakeMessagingRepository(const Ok({}));
+      final messaging = FakeMessagingRepository(const Ok({}));
       final cubit = _cubitWith(
         Ok([
-          _match('a', DateTime(2026, 1, 1)),
-          _match('b', DateTime(2026, 2, 1)),
+          testMatch('a', DateTime(2026, 1, 1)),
+          testMatch('b', DateTime(2026, 2, 1)),
         ]),
         messaging: messaging,
       );
@@ -189,16 +93,16 @@ void main() {
     });
 
     test('update live and re-order the list without reloading', () async {
-      final a = _match('a', DateTime(2026, 1, 1));
-      final b = _match('b', DateTime(2026, 2, 1));
-      final messaging = _FakeMessagingRepository(const Ok({}));
+      final a = testMatch('a', DateTime(2026, 1, 1));
+      final b = testMatch('b', DateTime(2026, 2, 1));
+      final messaging = FakeMessagingRepository(const Ok({}));
       final cubit = _cubitWith(Ok([a, b]), messaging: messaging);
       await cubit.load();
       await pumpEventQueue();
       expect((cubit.state as MatchesLoaded).matches, [b, a]);
 
-      final lastA = _message('yeni', DateTime(2026, 3, 1));
-      messaging.controller.add(Ok({'a': lastA}));
+      final lastA = theirMessage('yeni', DateTime(2026, 3, 1));
+      messaging.previews.add(Ok({'a': lastA}));
       await pumpEventQueue();
 
       final state = cubit.state as MatchesLoaded;
@@ -207,21 +111,21 @@ void main() {
     });
 
     test('closing the cubit cancels the preview subscription', () async {
-      final messaging = _FakeMessagingRepository(const Ok({}));
+      final messaging = FakeMessagingRepository(const Ok({}));
       final cubit = _cubitWith(
-        Ok([_match('a', DateTime(2026, 1, 1))]),
+        Ok([testMatch('a', DateTime(2026, 1, 1))]),
         messaging: messaging,
       );
       await cubit.load();
-      expect(messaging.controller.hasListener, isTrue);
+      expect(messaging.previews.hasListener, isTrue);
 
       await cubit.close();
 
-      expect(messaging.controller.hasListener, isFalse);
+      expect(messaging.previews.hasListener, isFalse);
     });
 
     test('a failed preview fetch keeps the list as it was', () async {
-      final a = _match('a', DateTime(2026, 1, 1));
+      final a = testMatch('a', DateTime(2026, 1, 1));
       final cubit = _cubitWith(
         Ok([a]),
         previews: const Err(ServerFailure('Mesajlar yüklenemedi.')),
@@ -234,7 +138,7 @@ void main() {
     });
 
     test('no preview request is made when there are no matches', () async {
-      final messaging = _FakeMessagingRepository(const Ok({}));
+      final messaging = FakeMessagingRepository(const Ok({}));
       final cubit = _cubitWith(const Ok(<Match>[]), messaging: messaging);
 
       await cubit.load();
@@ -244,20 +148,15 @@ void main() {
   });
 
   group('unread', () {
-    final theirs = _message('selam', DateTime(2026, 3, 1, 12));
-    final mine = ChatMessage(
-      id: 'mine',
-      text: 'selam',
-      sentAt: DateTime(2026, 3, 1, 12),
-      sender: MessageSender.me,
-    );
+    final theirs = theirMessage('selam', DateTime(2026, 3, 1, 12));
+    final mine = myMessage('selam', DateTime(2026, 3, 1, 12));
 
-    Future<({MatchesCubit cubit, _FakeMessagingRepository repo})> loaded(
+    Future<({MatchesCubit cubit, FakeMessagingRepository repo})> loaded(
       ChatMessage last,
     ) async {
-      final repo = _FakeMessagingRepository(Ok({'a': last}));
+      final repo = FakeMessagingRepository(Ok({'a': last}));
       final cubit = _cubitWith(
-        Ok([_match('a', DateTime(2026, 1, 1))]),
+        Ok([testMatch('a', DateTime(2026, 1, 1))]),
         messaging: repo,
       );
       await cubit.load();
@@ -276,7 +175,7 @@ void main() {
     test('their latest message in a never-opened chat is unread', () async {
       final s = await loaded(theirs);
 
-      s.repo.readTimesController.add(const Ok({}));
+      s.repo.readTimes.add(const Ok({}));
       await pumpEventQueue();
 
       expect(stateOf(s.cubit).isUnread('a'), isTrue);
@@ -287,12 +186,12 @@ void main() {
       () async {
         final s = await loaded(theirs);
 
-        s.repo.readTimesController.add(Ok({'a': DateTime(2026, 3, 1, 13)}));
+        s.repo.readTimes.add(Ok({'a': DateTime(2026, 3, 1, 13)}));
         await pumpEventQueue();
         expect(stateOf(s.cubit).isUnread('a'), isFalse);
 
-        s.repo.controller.add(
-          Ok({'a': _message('tekrar', DateTime(2026, 3, 1, 14))}),
+        s.repo.previews.add(
+          Ok({'a': theirMessage('tekrar', DateTime(2026, 3, 1, 14))}),
         );
         await pumpEventQueue();
         expect(stateOf(s.cubit).isUnread('a'), isTrue);
@@ -302,7 +201,7 @@ void main() {
     test('my own latest message is never unread', () async {
       final s = await loaded(mine);
 
-      s.repo.readTimesController.add(const Ok({}));
+      s.repo.readTimes.add(const Ok({}));
       await pumpEventQueue();
 
       expect(stateOf(s.cubit).isUnread('a'), isFalse);
@@ -311,7 +210,7 @@ void main() {
     test('a failed read-times stream leaves nothing flagged', () async {
       final s = await loaded(theirs);
 
-      s.repo.readTimesController.add(
+      s.repo.readTimes.add(
         const Err(ServerFailure('Okunma bilgisi yüklenemedi.')),
       );
       await pumpEventQueue();
@@ -321,11 +220,11 @@ void main() {
 
     test('closing the cubit cancels the read-times subscription', () async {
       final s = await loaded(theirs);
-      expect(s.repo.readTimesController.hasListener, isTrue);
+      expect(s.repo.readTimes.hasListener, isTrue);
 
       await s.cubit.close();
 
-      expect(s.repo.readTimesController.hasListener, isFalse);
+      expect(s.repo.readTimes.hasListener, isFalse);
     });
   });
 }

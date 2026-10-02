@@ -1,91 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:binasip/core/error/failures.dart';
 import 'package:binasip/core/result/result.dart';
 import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
-import 'package:binasip/features/messaging/domain/entities/conversation.dart';
-import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
 import 'package:binasip/features/messaging/domain/usecases/dismiss_family_nudge.dart';
 import 'package:binasip/features/messaging/domain/usecases/mark_conversation_read.dart';
 import 'package:binasip/features/messaging/domain/usecases/send_message.dart';
 import 'package:binasip/features/messaging/domain/usecases/watch_conversation.dart';
 import 'package:binasip/features/messaging/presentation/bloc/chat_cubit.dart';
 
-class _FakeMessagingRepository implements MessagingRepository {
-  final streams = <StreamController<Result<Conversation>>>[];
-  Completer<Result<void>>? pendingSend;
-  final sentTexts = <String>[];
-  final dismissedMatchIds = <String>[];
-  final markedReadMatchIds = <String>[];
+import 'support/fakes.dart';
 
-  StreamController<Result<Conversation>> get stream => streams.last;
+final _t0 = DateTime(2026, 1, 1);
 
-  @override
-  Stream<Result<Conversation>> watchConversation({
-    required String matchId,
-    required String otherPartyName,
-    required int otherPartyAvatarSeed,
-  }) {
-    final controller = StreamController<Result<Conversation>>();
-    streams.add(controller);
-    return controller.stream;
-  }
+ChatMessage _msg(String text) => theirMessage(text, _t0);
 
-  @override
-  Future<Result<void>> sendMessage({
-    required String matchId,
-    required String text,
-  }) {
-    sentTexts.add(text);
-    final completer = Completer<Result<void>>();
-    pendingSend = completer;
-    return completer.future;
-  }
-
-  @override
-  Future<Result<void>> dismissFamilyNudge(String matchId) async {
-    dismissedMatchIds.add(matchId);
-    return const Ok(null);
-  }
-
-  @override
-  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
-    List<String> matchIds,
-  ) => throw UnimplementedError();
-
-  @override
-  Future<Result<void>> markConversationRead(String matchId) async {
-    markedReadMatchIds.add(matchId);
-    return const Ok(null);
-  }
-
-  @override
-  Stream<Result<Map<String, DateTime>>> watchReadTimes() =>
-      throw UnimplementedError();
-}
-
-ChatMessage _msg(String text) => ChatMessage(
-  id: 'id_$text',
-  text: text,
-  sentAt: DateTime(2026, 1, 1),
-  sender: MessageSender.them,
-);
-
-Conversation _conversation(
-  List<ChatMessage> messages, {
-  bool familyNudgeShown = false,
-}) => Conversation(
-  matchId: 'm1',
-  otherPartyName: 'Deniz',
-  otherPartyAvatarSeed: 3,
-  messages: messages,
-  familyNudgeShown: familyNudgeShown,
-);
-
-({ChatCubit cubit, _FakeMessagingRepository repo}) _setup() {
-  final repo = _FakeMessagingRepository();
+({ChatCubit cubit, FakeMessagingRepository repo}) _setup() {
+  final repo = FakeMessagingRepository();
   final cubit = ChatCubit(
     watchConversation: WatchConversation(repo),
     sendMessage: SendMessage(repo),
@@ -113,11 +44,11 @@ void main() {
     final s = _setup();
     _open(s.cubit);
 
-    s.repo.stream.add(Ok(_conversation([_msg('a')])));
+    s.repo.conversations.add(Ok(testConversation([_msg('a')])));
     await pumpEventQueue();
     expect((s.cubit.state as ChatLoaded).conversation.messages, [_msg('a')]);
 
-    s.repo.stream.add(Ok(_conversation([_msg('a'), _msg('b')])));
+    s.repo.conversations.add(Ok(testConversation([_msg('a'), _msg('b')])));
     await pumpEventQueue();
     expect((s.cubit.state as ChatLoaded).conversation.messages, [
       _msg('a'),
@@ -129,7 +60,7 @@ void main() {
     final s = _setup();
     _open(s.cubit);
 
-    s.repo.stream.add(const Err(ServerFailure('Sohbet yüklenemedi.')));
+    s.repo.conversations.add(const Err(ServerFailure('Sohbet yüklenemedi.')));
     await pumpEventQueue();
 
     expect(s.cubit.state, const ChatError('Sohbet yüklenemedi.'));
@@ -149,7 +80,7 @@ void main() {
     test('is ignored for blank text', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([])));
+      s.repo.conversations.add(Ok(testConversation([])));
       await pumpEventQueue();
 
       await s.cubit.send('   ');
@@ -160,7 +91,7 @@ void main() {
     test('sends trimmed text, flags isSending, then clears it', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([])));
+      s.repo.conversations.add(Ok(testConversation([])));
       await pumpEventQueue();
 
       final future = s.cubit.send('  merhaba  ');
@@ -178,13 +109,13 @@ void main() {
     test('keeps a message the stream delivered while sending', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([])));
+      s.repo.conversations.add(Ok(testConversation([])));
       await pumpEventQueue();
 
       final future = s.cubit.send('merhaba');
       // The live stream already echoes the new message before the write's
       // own future resolves.
-      s.repo.stream.add(Ok(_conversation([_msg('merhaba')])));
+      s.repo.conversations.add(Ok(testConversation([_msg('merhaba')])));
       await pumpEventQueue();
       s.repo.pendingSend!.complete(const Ok(null));
       await future;
@@ -197,7 +128,7 @@ void main() {
     test('a failure sets sendError and keeps the message list', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([_msg('a')])));
+      s.repo.conversations.add(Ok(testConversation([_msg('a')])));
       await pumpEventQueue();
 
       final future = s.cubit.send('merhaba');
@@ -215,14 +146,14 @@ void main() {
     test('sendError is cleared by the next stream update', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([])));
+      s.repo.conversations.add(Ok(testConversation([])));
       await pumpEventQueue();
       final future = s.cubit.send('merhaba');
       s.repo.pendingSend!.complete(const Err(ServerFailure('Hata')));
       await future;
       expect((s.cubit.state as ChatLoaded).sendError, 'Hata');
 
-      s.repo.stream.add(Ok(_conversation([_msg('x')])));
+      s.repo.conversations.add(Ok(testConversation([_msg('x')])));
       await pumpEventQueue();
 
       expect((s.cubit.state as ChatLoaded).sendError, isNull);
@@ -230,20 +161,13 @@ void main() {
   });
 
   group('read marker', () {
-    ChatMessage mine(String text) => ChatMessage(
-      id: 'id_$text',
-      text: text,
-      sentAt: DateTime(2026, 1, 1),
-      sender: MessageSender.me,
-    );
-
     test(
       'marks the conversation read when the latest message is theirs',
       () async {
         final s = _setup();
         _open(s.cubit);
 
-        s.repo.stream.add(Ok(_conversation([_msg('a')])));
+        s.repo.conversations.add(Ok(testConversation([_msg('a')])));
         await pumpEventQueue();
 
         expect(s.repo.markedReadMatchIds, ['m1']);
@@ -256,16 +180,16 @@ void main() {
         final s = _setup();
         _open(s.cubit);
 
-        s.repo.stream.add(Ok(_conversation([_msg('a')])));
+        s.repo.conversations.add(Ok(testConversation([_msg('a')])));
         await pumpEventQueue();
         // Same latest message again (e.g. the nudge flag changed).
-        s.repo.stream.add(
-          Ok(_conversation([_msg('a')], familyNudgeShown: true)),
+        s.repo.conversations.add(
+          Ok(testConversation([_msg('a')], familyNudgeShown: true)),
         );
         await pumpEventQueue();
         expect(s.repo.markedReadMatchIds, ['m1']);
 
-        s.repo.stream.add(Ok(_conversation([_msg('a'), _msg('b')])));
+        s.repo.conversations.add(Ok(testConversation([_msg('a'), _msg('b')])));
         await pumpEventQueue();
         expect(s.repo.markedReadMatchIds, ['m1', 'm1']);
       },
@@ -277,9 +201,11 @@ void main() {
         final s = _setup();
         _open(s.cubit);
 
-        s.repo.stream.add(Ok(_conversation([])));
+        s.repo.conversations.add(Ok(testConversation([])));
         await pumpEventQueue();
-        s.repo.stream.add(Ok(_conversation([_msg('a'), mine('b')])));
+        s.repo.conversations.add(
+          Ok(testConversation([_msg('a'), myMessage('b', _t0)])),
+        );
         await pumpEventQueue();
 
         expect(s.repo.markedReadMatchIds, isEmpty);
@@ -291,7 +217,7 @@ void main() {
     test('flips the flag optimistically and persists it', () async {
       final s = _setup();
       _open(s.cubit);
-      s.repo.stream.add(Ok(_conversation([_msg('a')])));
+      s.repo.conversations.add(Ok(testConversation([_msg('a')])));
       await pumpEventQueue();
 
       await s.cubit.dismissFamilyNudge();
@@ -317,23 +243,23 @@ void main() {
     test('closing the cubit cancels the stream subscription', () async {
       final s = _setup();
       _open(s.cubit);
-      expect(s.repo.stream.hasListener, isTrue);
+      expect(s.repo.conversations.hasListener, isTrue);
 
       await s.cubit.close();
 
-      expect(s.repo.stream.hasListener, isFalse);
+      expect(s.repo.conversations.hasListener, isFalse);
     });
 
     test('re-opening cancels the previous subscription', () async {
       final s = _setup();
       _open(s.cubit);
-      final first = s.repo.stream;
+      final first = s.repo.conversations;
 
       _open(s.cubit);
       await pumpEventQueue();
 
       expect(first.hasListener, isFalse);
-      expect(s.repo.stream.hasListener, isTrue);
+      expect(s.repo.conversations.hasListener, isTrue);
     });
   });
 }

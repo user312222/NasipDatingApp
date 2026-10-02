@@ -42,9 +42,35 @@ class FakeMatchingRepository implements MatchingRepository {
 }
 
 class FakeMessagingRepository implements MessagingRepository {
+  /// Optionally seeds the first previews emission, like a Firestore
+  /// listener that reports right after subscribing.
+  FakeMessagingRepository([Result<Map<String, ChatMessage>>? firstPreviews]) {
+    if (firstPreviews != null) previews.add(firstPreviews);
+  }
+
   final previews = StreamController<Result<Map<String, ChatMessage>>>();
   final readTimes = StreamController<Result<Map<String, DateTime>>>();
-  final conversations = StreamController<Result<Conversation>>();
+
+  /// The ids [watchLastMessages] was last asked about; null if never.
+  List<String>? lastRequestedIds;
+
+  /// One controller per [watchConversation] call (a re-open gets a fresh
+  /// one). [conversations] is the latest; reading it before the first call
+  /// creates it, so a test can seed data before the screen subscribes.
+  final conversationStreams = <StreamController<Result<Conversation>>>[];
+  var _lastConversationHandedOut = false;
+
+  StreamController<Result<Conversation>> get conversations =>
+      conversationStreams.isEmpty
+      ? _newConversation()
+      : conversationStreams.last;
+
+  StreamController<Result<Conversation>> _newConversation() {
+    final controller = StreamController<Result<Conversation>>();
+    conversationStreams.add(controller);
+    _lastConversationHandedOut = false;
+    return controller;
+  }
 
   /// Completes the in-flight [sendMessage]; null when nothing is sending.
   Completer<Result<void>>? pendingSend;
@@ -55,7 +81,10 @@ class FakeMessagingRepository implements MessagingRepository {
   @override
   Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
-  ) => previews.stream;
+  ) {
+    lastRequestedIds = matchIds;
+    return previews.stream;
+  }
 
   @override
   Stream<Result<Map<String, DateTime>>> watchReadTimes() => readTimes.stream;
@@ -65,7 +94,13 @@ class FakeMessagingRepository implements MessagingRepository {
     required String matchId,
     required String otherPartyName,
     required int otherPartyAvatarSeed,
-  }) => conversations.stream;
+  }) {
+    final controller = conversationStreams.isEmpty || _lastConversationHandedOut
+        ? _newConversation()
+        : conversationStreams.last;
+    _lastConversationHandedOut = true;
+    return controller.stream;
+  }
 
   @override
   Future<Result<void>> sendMessage({
