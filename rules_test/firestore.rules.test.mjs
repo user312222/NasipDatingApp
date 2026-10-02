@@ -15,6 +15,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   query,
   serverTimestamp,
   setDoc,
@@ -458,5 +459,218 @@ describe('account docs', () => {
   test('anything not listed is closed', async () => {
     await assertFails(setDoc(doc(as('alice'), 'surprise', 'x'), { a: 1 }));
     await assertFails(getDoc(doc(as('alice'), 'surprise', 'x')));
+  });
+});
+
+describe('feed (günün sorusu)', () => {
+  const now = new Date();
+  const dayKey = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
+  const postId = (uid) => `${uid}_${dayKey}`;
+  const answer = (uid, over = {}) => ({
+    authorId: uid,
+    dayKey,
+    text: 'Kahvaltı ve uzun bir yürüyüş.',
+    createdAt: serverTimestamp(),
+    likeCount: 0,
+    ...over,
+  });
+
+  const seedMembers = () =>
+    seed(async (db) => {
+      for (const uid of ['alice', 'bob', 'carol']) {
+        await setDoc(doc(db, 'users', uid), { accountType: 'single' });
+        await setDoc(doc(db, 'publicProfiles', uid), { userId: uid });
+      }
+      await setDoc(doc(db, 'users', 'gina'), { accountType: 'guardian' });
+    });
+  const seedPost = (uid, likeCount = 0) =>
+    seed((db) =>
+      setDoc(doc(db, 'feedPosts', postId(uid)), {
+        authorId: uid,
+        dayKey,
+        text: 'cevap',
+        createdAt: Timestamp.now(),
+        likeCount,
+      }),
+    );
+
+  const like = (db, uid, target, delta = 1) => {
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'feedLikes', `${postId(target)}_${uid}`), {
+      postId: postId(target),
+      userId: uid,
+      dayKey,
+      createdAt: serverTimestamp(),
+    });
+    batch.update(doc(db, 'feedPosts', postId(target)), { likeCount: increment(delta) });
+    return batch.commit();
+  };
+  const unlike = (db, uid, target, delta = -1) => {
+    const batch = writeBatch(db);
+    batch.delete(doc(db, 'feedLikes', `${postId(target)}_${uid}`));
+    batch.update(doc(db, 'feedPosts', postId(target)), { likeCount: increment(delta) });
+    return batch.commit();
+  };
+
+  describe('answers', () => {
+    test('a member can answer the question of the day once', async () => {
+      await seedMembers();
+      await assertSucceeds(setDoc(doc(as('alice'), 'feedPosts', postId('alice')), answer('alice')));
+    });
+
+    test('the doc id pins it to the author and to today', async () => {
+      await seedMembers();
+      await assertFails(setDoc(doc(as('alice'), 'feedPosts', postId('bob')), answer('alice')));
+      await assertFails(setDoc(doc(as('alice'), 'feedPosts', 'alice_2020-1-1'), answer('alice', { dayKey: '2020-1-1' })));
+      await assertFails(setDoc(doc(as('alice'), 'feedPosts', 'alice_extra'), answer('alice')));
+    });
+
+    test('cannot answer as someone else', async () => {
+      await seedMembers();
+      await assertFails(setDoc(doc(as('alice'), 'feedPosts', postId('alice')), answer('bob')));
+    });
+
+    test('validates text, counter, timestamp and fields', async () => {
+      await seedMembers();
+      const ref = doc(as('alice'), 'feedPosts', postId('alice'));
+      await assertFails(setDoc(ref, answer('alice', { text: '' })));
+      await assertFails(setDoc(ref, answer('alice', { text: 'x'.repeat(281) })));
+      await assertFails(setDoc(ref, answer('alice', { likeCount: 99 })));
+      await assertFails(setDoc(ref, answer('alice', { createdAt: Timestamp.fromDate(new Date('2020-01-01')) })));
+      await assertFails(setDoc(ref, answer('alice', { pinned: true })));
+    });
+
+    test('needs a public profile', async () => {
+      await seed((db) => setDoc(doc(db, 'users', 'dave'), { accountType: 'single' }));
+      await assertFails(setDoc(doc(as('dave'), 'feedPosts', postId('dave')), answer('dave')));
+    });
+
+    test('an answer cannot be edited, by its author or anyone else', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(updateDoc(doc(as('alice'), 'feedPosts', postId('alice')), { text: 'changed' }));
+      await assertFails(updateDoc(doc(as('bob'), 'feedPosts', postId('alice')), { text: 'changed' }));
+    });
+
+    test('only the author can delete it', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(deleteDoc(doc(as('bob'), 'feedPosts', postId('alice'))));
+      await assertSucceeds(deleteDoc(doc(as('alice'), 'feedPosts', postId('alice'))));
+    });
+
+    test('members can read the feed; guardians and signed-out visitors cannot', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      const today = (db) => query(collection(db, 'feedPosts'), where('dayKey', '==', dayKey));
+      await assertSucceeds(getDocs(today(as('bob'))));
+      await assertFails(getDocs(today(as('gina'))));
+      await assertFails(getDocs(today(anon())));
+    });
+
+    test('a guardian cannot answer', async () => {
+      await seedMembers();
+      await seed((db) => setDoc(doc(db, 'publicProfiles', 'gina'), { userId: 'gina' }));
+      await assertFails(setDoc(doc(as('gina'), 'feedPosts', postId('gina')), answer('gina')));
+    });
+  });
+
+  describe('likes', () => {
+    test('liking adds the like doc and bumps the counter by one', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertSucceeds(like(as('bob'), 'bob', 'alice'));
+    });
+
+    test('the counter cannot be bumped without a like, or by more than one', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(updateDoc(doc(as('bob'), 'feedPosts', postId('alice')), { likeCount: increment(1) }));
+      await assertFails(like(as('bob'), 'bob', 'alice', 5));
+    });
+
+    test('a like doc cannot be created without bumping the counter', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(
+        setDoc(doc(as('bob'), 'feedLikes', `${postId('alice')}_bob`), {
+          postId: postId('alice'),
+          userId: 'bob',
+          dayKey,
+          createdAt: serverTimestamp(),
+        }),
+      );
+    });
+
+    test('cannot like twice', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertSucceeds(like(as('bob'), 'bob', 'alice'));
+      await assertFails(like(as('bob'), 'bob', 'alice'));
+    });
+
+    test('cannot like your own answer', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(like(as('alice'), 'alice', 'alice'));
+    });
+
+    test('cannot like in the name of someone else', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      const db = as('bob');
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'feedLikes', `${postId('alice')}_carol`), {
+        postId: postId('alice'),
+        userId: 'carol',
+        dayKey,
+        createdAt: serverTimestamp(),
+      });
+      batch.update(doc(db, 'feedPosts', postId('alice')), { likeCount: increment(1) });
+      await assertFails(batch.commit());
+    });
+
+    test('un-liking removes the like and decrements by one', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertSucceeds(like(as('bob'), 'bob', 'alice'));
+      await assertSucceeds(unlike(as('bob'), 'bob', 'alice'));
+    });
+
+    test('the counter cannot be decremented without having liked', async () => {
+      await seedMembers();
+      await seedPost('alice', 3);
+      await assertFails(updateDoc(doc(as('bob'), 'feedPosts', postId('alice')), { likeCount: increment(-1) }));
+      await assertFails(unlike(as('bob'), 'bob', 'alice'));
+    });
+
+    test('likes are private to whoever gave them', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await like(as('bob'), 'bob', 'alice');
+      const mine = (db, uid) => query(collection(db, 'feedLikes'), where('userId', '==', uid), where('dayKey', '==', dayKey));
+      await assertSucceeds(getDocs(mine(as('bob'), 'bob')));
+      await assertFails(getDocs(mine(as('alice'), 'bob')));
+      await assertFails(getDoc(doc(as('alice'), 'feedLikes', `${postId('alice')}_bob`)));
+    });
+
+    test('a like left behind by a deleted answer can be removed', async () => {
+      await seedMembers();
+      await seed((db) =>
+        setDoc(doc(db, 'feedLikes', `${postId('alice')}_bob`), {
+          postId: postId('alice'),
+          userId: 'bob',
+          dayKey,
+          createdAt: Timestamp.now(),
+        }),
+      );
+      await assertSucceeds(deleteDoc(doc(as('bob'), 'feedLikes', `${postId('alice')}_bob`)));
+    });
+
+    test('a guardian cannot like', async () => {
+      await seedMembers();
+      await seedPost('alice');
+      await assertFails(like(as('gina'), 'gina', 'alice'));
+    });
   });
 });

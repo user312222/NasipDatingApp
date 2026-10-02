@@ -102,6 +102,11 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
         ),
         actions: [
           ChromeIconButton(
+            icon: Icons.forum_outlined,
+            onPressed: () => context.push('/feed'),
+            tooltip: 'Günün sorusu',
+          ),
+          ChromeIconButton(
             icon: Icons.chat_bubble_outline_rounded,
             onPressed: () => context.push('/matches'),
             tooltip: 'Eşleşmeler',
@@ -169,6 +174,7 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
 
           if (candidate == null) {
             return _EmptyDiscovery(
+              onOpenFeed: () => context.push('/feed'),
               onChangeFilters: () => _openFilters(loaded.filter),
               onOpenMatches: () => context.push('/matches'),
             );
@@ -496,10 +502,12 @@ class CandidateCardPreview extends StatelessWidget {
 /// (widen the filters, or go talk to the matches already made).
 class _EmptyDiscovery extends StatelessWidget {
   const _EmptyDiscovery({
+    required this.onOpenFeed,
     required this.onChangeFilters,
     required this.onOpenMatches,
   });
 
+  final VoidCallback onOpenFeed;
   final VoidCallback onChangeFilters;
   final VoidCallback onOpenMatches;
 
@@ -564,17 +572,22 @@ class _EmptyDiscovery extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Yeni adaylar geldikçe burada görünecek. Filtreleri '
-                    'genişletirsen daha fazla kişiyle tanışabilirsin.',
+                    'Yeni adaylar geldikçe burada görünecek. O zamana kadar '
+                    'günün sorusuna verilen cevaplara göz atabilirsin.',
                     style: textTheme.bodyLarge?.copyWith(color: colors.inkSoft),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   GradientButton(
-                    label: 'Filtreleri değiştir',
-                    onPressed: onChangeFilters,
+                    label: 'Günün sorusuna göz at',
+                    onPressed: onOpenFeed,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: onChangeFilters,
+                    child: const Text('Filtreleri değiştir'),
+                  ),
+                  const SizedBox(height: 4),
                   TextButton(
                     onPressed: onOpenMatches,
                     child: Text(

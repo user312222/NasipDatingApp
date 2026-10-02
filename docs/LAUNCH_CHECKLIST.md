@@ -60,6 +60,11 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
       (`FirestoreSafetyRemoteDataSource.moderatePhoto`); gerçek görüntü analizi gerekir.
 - [ ] **Push bildirimleri** (yeni mesaj/eşleşme): FCM + sunucu tarafı tetikleyici.
 
+- [ ] **Akış (günün sorusu) metin moderasyonu.** Cevaplar otomatik denetlenmiyor; uygunsuz
+      içerik yalnızca şikayetle fark edilir ve şikayetleri okuyan bir panel yok (`reports`
+      istemciden okunamıyor). Lansmandan önce şikayetleri inceleyecek bir süreç ve tercihen
+      sunucu tarafı metin filtresi gerekir.
+
 ## 5. Son kontroller
 
 - [ ] `firestore.rules` son halini deploy et ve gerekli bileşik indeksleri doğrula

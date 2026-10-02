@@ -37,6 +37,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | **Privacy** | Per-user photo visibility (hidden / on request / on match), optional religious details behind a separate KVKK m.6 consent |
 | **Family** | Invite code for a relative, per-match "show my family" switch, read-only guardian view |
 | **Safety** | Report and block from the card menu and the chat, account deletion, log out |
+| **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — where Discovery sends people once the candidates run out |
 | **Waitlist** | Public waitlist page for people without an invite code |
 
 ---
@@ -53,6 +54,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Photo moderation | **Mock** — filename heuristic only |
 | Waitlist submissions | **Firestore** — create-only `waitlist` collection, reviewed in the Console |
 | Real-time chat, previews and unread dot | **Real** — Firestore listeners keep open chats and the matches list live while the app is open |
+| Question-of-the-day feed | **Real** (Firestore `feedPosts` / `feedLikes`); text is not moderated automatically — report/block only |
 | Push notifications | **No** — nothing reaches a closed app; needs Cloud Functions + FCM |
 | KVKK consent text | **Draft** — needs a lawyer's review before real users see it (see `docs/REQUIREMENTS.md` §7) |
 

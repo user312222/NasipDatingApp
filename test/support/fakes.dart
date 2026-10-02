@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:binasip/core/result/result.dart';
+import 'package:binasip/features/feed/domain/entities/daily_question.dart';
+import 'package:binasip/features/feed/domain/entities/feed.dart';
+import 'package:binasip/features/feed/domain/entities/feed_post.dart';
+import 'package:binasip/features/feed/domain/repositories/feed_repository.dart';
 import 'package:binasip/features/matching/domain/entities/candidate.dart';
 import 'package:binasip/features/matching/domain/entities/candidate_filter.dart';
 import 'package:binasip/features/matching/domain/entities/match.dart';
@@ -181,3 +185,70 @@ Conversation testConversation(
   messages: messages,
   familyNudgeShown: familyNudgeShown,
 );
+
+class FakeFeedRepository implements FeedRepository {
+  final feeds = StreamController<Result<Feed>>();
+
+  /// Completes the in-flight [submitAnswer]; null when nothing is pending.
+  Completer<Result<void>>? pendingSubmit;
+  final submitted = <String>[];
+  final likeCalls = <({String postId, bool liked})>[];
+  var deleteCalls = 0;
+  Result<void> likeResult = const Ok(null);
+  Result<void> deleteResult = const Ok(null);
+
+  @override
+  Stream<Result<Feed>> watchToday() => feeds.stream;
+
+  @override
+  Future<Result<void>> submitAnswer(String text) {
+    submitted.add(text);
+    final completer = Completer<Result<void>>();
+    pendingSubmit = completer;
+    return completer.future;
+  }
+
+  @override
+  Future<Result<void>> deleteMyAnswer() async {
+    deleteCalls++;
+    return deleteResult;
+  }
+
+  @override
+  Future<Result<void>> setLiked({
+    required String postId,
+    required bool liked,
+  }) async {
+    likeCalls.add((postId: postId, liked: liked));
+    return likeResult;
+  }
+}
+
+const testQuestion = DailyQuestion(
+  dayKey: '2026-3-6',
+  text: 'İdeal bir pazar günün nasıl geçer?',
+);
+
+FeedPost testPost(
+  String author, {
+  String? text,
+  bool isMine = false,
+  bool likedByMe = false,
+  int likeCount = 0,
+  DateTime? createdAt,
+}) => FeedPost(
+  id: '${author}_2026-3-6',
+  authorId: author,
+  authorName: 'Üye $author',
+  authorAge: 28,
+  authorCity: 'Ankara',
+  avatarColorSeed: 2,
+  text: text ?? 'cevap $author',
+  createdAt: createdAt ?? DateTime(2026, 3, 6, 10),
+  likeCount: likeCount,
+  likedByMe: likedByMe,
+  isMine: isMine,
+);
+
+Feed testFeed(List<FeedPost> posts) =>
+    Feed(question: testQuestion, posts: posts);

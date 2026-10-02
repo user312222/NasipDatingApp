@@ -34,6 +34,15 @@ import '../../features/family/domain/usecases/get_visible_matches.dart';
 import '../../features/family/domain/usecases/link_guardian.dart';
 import '../../features/family/presentation/bloc/family_link_cubit.dart';
 import '../../features/family/presentation/bloc/guardian_cubit.dart';
+import '../../features/feed/data/datasources/feed_remote_data_source.dart';
+import '../../features/feed/data/datasources/firestore_feed_remote_data_source.dart';
+import '../../features/feed/data/repositories/feed_repository_impl.dart';
+import '../../features/feed/domain/repositories/feed_repository.dart';
+import '../../features/feed/domain/usecases/delete_my_answer.dart';
+import '../../features/feed/domain/usecases/set_post_liked.dart';
+import '../../features/feed/domain/usecases/submit_answer.dart';
+import '../../features/feed/domain/usecases/watch_feed.dart';
+import '../../features/feed/presentation/bloc/feed_cubit.dart';
 import '../../features/matching/data/datasources/firestore_matching_remote_data_source.dart';
 import '../../features/matching/data/datasources/matching_remote_data_source.dart';
 import '../../features/matching/domain/usecases/get_my_matches.dart';
@@ -93,6 +102,7 @@ Future<void> initDependencies() async {
   _initProfile();
   _initMatching();
   _initMessaging();
+  _initFeed();
   _initFamily();
   _initSafety();
   _initAccount();
@@ -200,6 +210,32 @@ void _initMatching() {
   );
   sl.registerLazySingleton<MatchingRemoteDataSource>(
     () => FirestoreMatchingRemoteDataSource(sl()),
+  );
+}
+
+void _initFeed() {
+  // Presentation - provided locally by FeedScreen.
+  sl.registerFactory(
+    () => FeedCubit(
+      watchFeed: sl(),
+      submitAnswer: sl(),
+      deleteMyAnswer: sl(),
+      setPostLiked: sl(),
+    ),
+  );
+
+  // Domain
+  sl.registerLazySingleton(() => WatchFeed(sl()));
+  sl.registerLazySingleton(() => SubmitAnswer(sl()));
+  sl.registerLazySingleton(() => DeleteMyAnswer(sl()));
+  sl.registerLazySingleton(() => SetPostLiked(sl()));
+
+  // Data
+  sl.registerLazySingleton<FeedRepository>(
+    () => FeedRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<FeedRemoteDataSource>(
+    () => FirestoreFeedRemoteDataSource(),
   );
 }
 

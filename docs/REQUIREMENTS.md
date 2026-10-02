@@ -89,6 +89,15 @@ Senaryo: kullanıcı zaten evli, kendisi için eş aramıyor — bir yakınını
 - FR-8.5 Bağlı veli hesabı, SADECE bağlı olduğu kullanıcının "aileme göster" işaretli eşleşmelerini **salt-okunur** görür: aday adı/yaş/şehir/niyet + sohbetin minimal bir durum etiketi (örn. "yeni eşleşme" / "aktif yazışıyorlar"). Mesaj içeriğini **birebir okuyamaz** — bu mahremiyet ilkesiyle doğrudan çelişir. *(Bu durum-etiketi kapsamı kendi kararımdır — isterseniz genişletebilir/daraltabiliriz.)*
 - FR-8.6 Veli hesabı **hiçbir koşulda**: (a) başka bir kullanıcının keşif/eşleştirme akışında aday olarak önerilmez, (b) beğeni/geçme yapamaz, (c) mesaj gönderemez, (d) eşleştirme filtrelerine tabi tutulmaz. Bu, hesap tipi seviyesinde garanti altına alınır — mimari olarak veli hesapları `MatchingRepository`/`MessagingRepository`'ye hiç erişemez (sadece salt-okunur bir `FamilyViewRepository` üzerinden).
 
+### FR-9 — Günün Sorusu Akışı *(kuruldu — `lib/features/feed/`, Firestore'a bağlı (`feedPosts`, `feedLikes`); `/feed` rotası, Keşfet üst çubuğundan ve adaylar bittiğinde gösterilen boş durumdan açılıyor)*
+- FR-9.1 Her gün (UTC günü) tüm üyelere aynı tek soru gösterilir; sorular istemcideki sabit bir listeden sırayla gelir.
+- FR-9.2 Bir üye günde **en fazla bir** cevap paylaşır (en fazla 280 karakter). Cevap adı, yaşı ve şehriyle birlikte tüm bekâr üyelere görünür; fotoğraf gösterilmez (FR-3). Cevap düzenlenemez, sahibi silebilir.
+- FR-9.3 Etkileşim yalnızca beğenidir: yorum yoktur ve akıştaki beğeni bir eşleşme beğenisi **değildir** — eşleşme oluşturmaz, sohbet açmaz. Mesajlaşma yalnızca eşleşenler arasında kalır (FR-5). Kimin beğendiği görünmez, yalnızca sayı görünür; kişi kendi cevabını beğenemez.
+- FR-9.4 Her cevapta şikayet/engelle menüsü bulunur (FR-6.1/6.2); engellenen kişinin cevapları gösterilmez.
+- FR-9.5 Veli hesapları akışı göremez ve cevap/beğeni veremez (FR-8.2).
+- FR-9.6 Keşfet'te aday kalmadığında ana eylem kullanıcıyı akışa yönlendirir.
+- Kapsam notu: Metin için otomatik moderasyon yoktur (sunucu gerektirir); güvenlik ağı karakter sınırı, günde bir cevap ve şikayet/engelle menüsüdür.
+
 ## 5. Veri Modeli (taslak)
 
 ```

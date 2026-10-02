@@ -16,6 +16,7 @@ import 'account_remote_data_source.dart';
 ///   was a guardian account)
 /// - Every `familyVisible` doc this account owns (`singleUserId == uid`)
 ///   and every `matchReads` doc (`userId == uid`, the unread markers)
+/// - Own "günün sorusu" answers (`feedPosts`) and likes (`feedLikes`)
 /// - The Firebase Auth user itself — this is what actually ends the
 ///   session for good and frees the phone number for a fresh sign-up.
 ///
@@ -50,6 +51,7 @@ class FirestoreAccountRemoteDataSource implements AccountRemoteDataSource {
     await _bestEffort(() => _deleteInviteCode(userId));
     await _bestEffort(() => _deleteOwnFamilyVisible(userId));
     await _bestEffort(() => _deleteOwnMatchReads(userId));
+    await _bestEffort(() => _deleteOwnFeedData(userId));
     // Last: users/{uid} itself, then the Auth account — once the Auth
     // user is gone, this uid can no longer write anything anyway.
     await _bestEffort(() => _db.collection('users').doc(userId).delete());
@@ -95,6 +97,37 @@ class FirestoreAccountRemoteDataSource implements AccountRemoteDataSource {
     if (snap.docs.isEmpty) return;
     final batch = _db.batch();
     for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  /// Own "günün sorusu" answers, and own likes - each like goes together
+  /// with the matching decrement on a still-existing answer, which is the
+  /// only way the rules let a like be removed.
+  Future<void> _deleteOwnFeedData(String userId) async {
+    final likes = await _db
+        .collection('feedLikes')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (final like in likes.docs) {
+      final post = _db
+          .collection('feedPosts')
+          .doc(like.data()['postId'] as String);
+      final batch = _db.batch()..delete(like.reference);
+      if ((await post.get()).exists) {
+        batch.update(post, {'likeCount': FieldValue.increment(-1)});
+      }
+      await _bestEffort(batch.commit);
+    }
+
+    final posts = await _db
+        .collection('feedPosts')
+        .where('authorId', isEqualTo: userId)
+        .get();
+    if (posts.docs.isEmpty) return;
+    final batch = _db.batch();
+    for (final doc in posts.docs) {
       batch.delete(doc.reference);
     }
     await batch.commit();
