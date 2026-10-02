@@ -59,6 +59,7 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 - [ ] `firestore.rules` son halini deploy et ve gerekli bileşik indeksleri doğrula
       (`firebase deploy --only firestore:rules --project binasip`).
-- [ ] Firestore emülatörüyle kural testleri yaz (şu an tüm Firestore davranışı elle doğrulandı).
+- [x] Firestore kural testleri hazır (`rules_test/`, `npm test`; Java gerekir). Kuralları her
+      değiştirdiğinde deploy etmeden önce çalıştır. Uygulama katmanı (veri kaynakları) hâlâ elle doğrulanıyor.
 - [ ] Gizlilik sınırlarını kurallarda bir kez daha doğrula: veli mesaj içeriğini göremez
       (FR-8.5) ve `matchReads` yalnızca sahibine okunur.

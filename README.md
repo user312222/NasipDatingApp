@@ -122,7 +122,19 @@ flutter analyze
 flutter test
 ```
 
-The tests cover the matches cubit, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are verified manually against a real project — there is no emulator-based suite yet.
+The Flutter tests cover the chat and matches cubits, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+
+#### Firestore security-rules tests
+
+`rules_test/` runs `firestore.rules` against the local Firestore emulator (project `demo-binasip`, never production). It needs **Java (JDK 11+)**, Node and the Firebase CLI:
+
+```bash
+cd rules_test
+npm install      # first time only
+npm test
+```
+
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, reports/blocks and the account docs. Run it after every `firestore.rules` change, before deploying.
 
 ---
 
