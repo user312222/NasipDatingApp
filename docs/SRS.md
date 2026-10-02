@@ -230,7 +230,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 
 ### 5.1 Performans
 
-Şu an için resmi bir gecikme/throughput hedefi (SLA) **tanımlanmamıştır**. Uygulama tekil kullanıcı etkileşimlerine (bir seferde bir kullanıcının işlemi) göre tasarlanmıştır; yüksek eşzamanlılık/ölçek testleri yapılmamıştır. Mesajlaşma şu an canlı (real-time) değildir — yeni bir mesaj, sohbet yeniden açıldığında görünür (bkz. §8); bu bilinçli bir kapsam kararıdır, performans kısıtı değildir.
+Şu an için resmi bir gecikme/throughput hedefi (SLA) **tanımlanmamıştır**. Uygulama tekil kullanıcı etkileşimlerine (bir seferde bir kullanıcının işlemi) göre tasarlanmıştır; yüksek eşzamanlılık/ölçek testleri yapılmamıştır. Mesajlaşma ve eşleşme listesi Firestore dinleyicileriyle canlıdır (sohbet mesajları, son mesaj önizlemesi, sıralama ve okunmamış işareti); bu yalnızca uygulama açıkken geçerlidir (bkz. §7.2).
 
 ### 5.2 Güvenlik
 
@@ -297,7 +297,7 @@ Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
 ## 7. Bilinen Mimari Sınırlamalar
 
 1. **Cloud Functions yok (Spark plan).** Atomik, çok taraflı işlemler (örn. iki tarafa da ait bir eşleşmenin tamamen silinmesi) istemci tarafından güvenle yapılamaz; bu işlemler ya yapılmaz ya da en iyi çaba (best-effort) prensibiyle kısmi olarak yapılır.
-2. **Gerçek zamanlı güncelleme yok.** Mesajlaşma ve eşleşme listeleri canlı dinleyici (`Stream`) kullanmaz; tek seferlik okuma yapılır. Bir ekranın yeniden açılması gerekir.
+2. **Push bildirimi yok.** Sohbet ve eşleşme listesi Firestore dinleyicileriyle canlıdır, ama yalnızca uygulama açıkken; kapalı bir uygulamaya bildirim gitmez (Cloud Functions + FCM gerekir).
 3. **İstemci tarafında zorlanan kurallar.** Günlük beğeni limiti ve bazı erişim kısıtları Firestore kurallarıyla desteklense de, bazı uç durumlar (örn. "kim beni beğendi" bilgisinin teoride okunabilmesi) yalnızca Cloud Functions ile tam olarak kapatılabilir; bu, Blaze plana geçişe bağlıdır.
 4. **Silinen hesapların kalıntıları.** FR-7.1 kapsamında silinemeyen paylaşımlı kayıtlar (beğeniler, eşleşmeler, mesajlar), karşı taraf arayüzünde eksik profille yer tutucu olarak gösterilecek şekilde ele alınmıştır.
 
@@ -314,7 +314,7 @@ Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
 | Fotoğraf yükleme/depolama | **Yok** — fotoğraflar yerel olarak seçilip gösterilir ama saklanmaz; kişiler baş harf avatarıyla temsil edilir |
 | Fotoğraf moderasyonu | **Mock** — yalnızca dosya adı sezgisel kontrolü |
 | Bekleme listesi kayıtları | **Firestore** — yalnızca oluşturulabilir `waitlist` koleksiyonu; istemci okuyamaz, Console'dan incelenir |
-| Gerçek zamanlı sohbet | **Yok** — bkz. §7.2 |
+| Gerçek zamanlı sohbet ve okunmamış işareti | **Firestore dinleyicileri** — uygulama açıkken canlı; arka plan bildirimi yok (bkz. §7.2) |
 | Push bildirimleri | **Yok** |
 | KVKK rıza metni | **Taslak** — hukuki incelemeden geçmedi (bkz. §9) |
 

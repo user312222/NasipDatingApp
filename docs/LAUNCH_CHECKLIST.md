@@ -23,6 +23,11 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
       ama giriş yapmamış biri yazabildiği için App Check olmadan spam'e açık.
 - [ ] **Selfie doğrulaması mock** (`FirebaseAuthRemoteDataSource` selfie için
       `MockAuthRemoteDataSource`'a düşüyor). Gerçek sağlayıcı (Veriff/Yoti/Didit) seç ve bağla.
+      **Sunucu şart:** oturum açmak ve sonucu (webhook) almak için gizli API anahtarı gerekir,
+      istemcide tutulamaz; yani Cloud Functions/Blaze olmadan güvenli entegrasyon yok. Bugün
+      `users/{uid}.verifiedAt` istemci tarafından yazılabiliyor, yani doğrulama atlanabilir;
+      gerçek sağlayıcıyla `verifiedAt` yalnızca sunucudan yazılmalı (kural `write: false`).
+      Selfie/yüz verisi KVKK m.6 kapsamında özel nitelikli veridir: ayrı açık rıza + avukat onayı.
 
 ## 2. Kullanıcıya görünen hata metinleri
 

@@ -52,8 +52,8 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Photo upload | **Not implemented** — photos are picked and shown locally but not stored; people are shown as initial-letter avatars |
 | Photo moderation | **Mock** — filename heuristic only |
 | Waitlist submissions | **Firestore** — create-only `waitlist` collection, reviewed in the Console |
-| Real-time chat | **No** — messages are fetched when a conversation is opened (no live listener) |
-| Push notifications | **No** |
+| Real-time chat, previews and unread dot | **Real** — Firestore listeners keep open chats and the matches list live while the app is open |
+| Push notifications | **No** — nothing reaches a closed app; needs Cloud Functions + FCM |
 | KVKK consent text | **Draft** — needs a lawyer's review before real users see it (see `docs/REQUIREMENTS.md` §7) |
 
 The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Functions. A few rules are therefore enforced client-side or by Firestore rules alone; the known gaps are documented next to the code in `firestore.rules` and the `Firestore*RemoteDataSource` classes.
@@ -156,4 +156,4 @@ firestore.rules  security rules (default deny)
 
 ## Roadmap / known gaps
 
-See [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) §7 for open decisions. The main gaps are real photo upload and storage, a real selfie-verification provider, unread indicators and live updates in chat, and legal review of the consent text.
+See [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) §7 for open decisions. The main gaps are real photo upload and storage, a real selfie-verification provider (both need a server, i.e. the Blaze plan), push notifications, and legal review of the consent text. See [`docs/LAUNCH_CHECKLIST.md`](docs/LAUNCH_CHECKLIST.md) for the pre-launch list.
