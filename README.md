@@ -122,7 +122,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the chat and matches cubits, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the chat and matches cubits, the chat and matches screens (unread dot, live updates, send errors, family nudge) against fake repositories in `test/support/fakes.dart`, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 
