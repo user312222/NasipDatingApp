@@ -17,8 +17,8 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
 - [ ] **Davetiye kodu mock.** `lib/features/auth/data/datasources/auth_remote_data_source.dart`
       içinde tek sabit kod (`NASIP2026`) var, herkes biliyor. Kodlar Firestore'da tutulmalı
       ve bekleme listesinden ilk 500 kişiye verilmeli (FR-1.3).
-- [ ] **Bekleme listesi kaydı kalıcı değil.** `WaitlistLocalDataSourceImpl` girdileri
-      bellekte tutuyor, sayfa yenilenince kayboluyor. Firestore'a bağla.
+- [ ] **Bekleme listesi herkese açık yazma.** Kayıtlar artık Firestore'da (`waitlist`),
+      ama giriş yapmamış biri yazabildiği için App Check olmadan spam'e açık.
 - [ ] **Selfie doğrulaması mock** (`FirebaseAuthRemoteDataSource` selfie için
       `MockAuthRemoteDataSource`'a düşüyor). Gerçek sağlayıcı (Veriff/Yoti/Didit) seç ve bağla.
 

@@ -70,7 +70,7 @@ import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/has_profile.dart';
 import '../../features/profile/domain/usecases/save_profile.dart';
 import '../../features/profile/presentation/bloc/profile_cubit.dart';
-import '../../features/waitlist/data/datasources/waitlist_local_data_source.dart';
+import '../../features/waitlist/data/datasources/waitlist_remote_data_source.dart';
 import '../../features/waitlist/data/repositories/waitlist_repository_impl.dart';
 import '../../features/waitlist/domain/repositories/waitlist_repository.dart';
 import '../../features/waitlist/domain/usecases/submit_waitlist_entry.dart';
@@ -107,10 +107,10 @@ void _initWaitlist() {
 
   // Data
   sl.registerLazySingleton<WaitlistRepository>(
-    () => WaitlistRepositoryImpl(localDataSource: sl()),
+    () => WaitlistRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton<WaitlistLocalDataSource>(
-    () => WaitlistLocalDataSourceImpl(),
+  sl.registerLazySingleton<WaitlistRemoteDataSource>(
+    () => FirestoreWaitlistRemoteDataSource(),
   );
 }
 

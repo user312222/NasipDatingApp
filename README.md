@@ -51,7 +51,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Selfie / liveness verification | **Mock** — always succeeds; no camera is opened. A third-party provider is planned |
 | Photo upload | **Not implemented** — photos are picked and shown locally but not stored; people are shown as initial-letter avatars |
 | Photo moderation | **Mock** — filename heuristic only |
-| Waitlist submissions | **Local only** — not sent to a backend |
+| Waitlist submissions | **Firestore** — create-only `waitlist` collection, reviewed in the Console |
 | Real-time chat | **No** — messages are fetched when a conversation is opened (no live listener) |
 | Push notifications | **No** |
 | KVKK consent text | **Draft** — needs a lawyer's review before real users see it (see `docs/REQUIREMENTS.md` §7) |

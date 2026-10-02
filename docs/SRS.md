@@ -313,7 +313,7 @@ Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
 | Selfie / liveness doğrulaması | **Mock** — her zaman başarılı sayılır, kamera açılmaz; üçüncü taraf sağlayıcı entegrasyonu planlı |
 | Fotoğraf yükleme/depolama | **Yok** — fotoğraflar yerel olarak seçilip gösterilir ama saklanmaz; kişiler baş harf avatarıyla temsil edilir |
 | Fotoğraf moderasyonu | **Mock** — yalnızca dosya adı sezgisel kontrolü |
-| Bekleme listesi kayıtları | **Yalnızca yerel** — bir backend'e gönderilmez |
+| Bekleme listesi kayıtları | **Firestore** — yalnızca oluşturulabilir `waitlist` koleksiyonu; istemci okuyamaz, Console'dan incelenir |
 | Gerçek zamanlı sohbet | **Yok** — bkz. §7.2 |
 | Push bildirimleri | **Yok** |
 | KVKK rıza metni | **Taslak** — hukuki incelemeden geçmedi (bkz. §9) |
