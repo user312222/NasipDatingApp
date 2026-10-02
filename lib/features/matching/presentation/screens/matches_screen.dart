@@ -155,19 +155,15 @@ class _MatchTile extends StatelessWidget {
       elevation: 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: () async {
-          final cubit = context.read<MatchesCubit>();
-          await context.push(
-            '/chat',
-            extra: ChatRouteArgs(
-              matchId: match.id,
-              otherPartyUserId: candidate.id,
-              otherPartyName: candidate.name,
-              otherPartyAvatarSeed: candidate.avatarColorSeed,
-            ),
-          );
-          cubit.refreshPreviews();
-        },
+        onTap: () => context.push(
+          '/chat',
+          extra: ChatRouteArgs(
+            matchId: match.id,
+            otherPartyUserId: candidate.id,
+            otherPartyName: candidate.name,
+            otherPartyAvatarSeed: candidate.avatarColorSeed,
+          ),
+        ),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(

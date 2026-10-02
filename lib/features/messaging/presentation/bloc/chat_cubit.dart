@@ -33,20 +33,21 @@ class ChatCubit extends Cubit<ChatState> {
   }) {
     emit(const ChatLoading());
     unawaited(_subscription?.cancel());
-    _subscription = _watchConversation(
-      WatchConversationParams(
-        matchId: matchId,
-        otherPartyName: otherPartyName,
-        otherPartyAvatarSeed: otherPartyAvatarSeed,
-      ),
-    ).listen((result) {
-      switch (result) {
-        case Ok<Conversation>(:final value):
-          emit(ChatLoaded(value));
-        case Err<Conversation>(:final failure):
-          emit(ChatError(failure.message));
-      }
-    });
+    _subscription =
+        _watchConversation(
+          WatchConversationParams(
+            matchId: matchId,
+            otherPartyName: otherPartyName,
+            otherPartyAvatarSeed: otherPartyAvatarSeed,
+          ),
+        ).listen((result) {
+          switch (result) {
+            case Ok<Conversation>(:final value):
+              emit(ChatLoaded(value));
+            case Err<Conversation>(:final failure):
+              emit(ChatError(failure.message));
+          }
+        });
   }
 
   Future<void> send(String text) async {

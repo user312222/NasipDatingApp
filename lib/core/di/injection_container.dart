@@ -49,9 +49,9 @@ import '../../features/messaging/data/datasources/messaging_remote_data_source.d
 import '../../features/messaging/data/repositories/messaging_repository_impl.dart';
 import '../../features/messaging/domain/repositories/messaging_repository.dart';
 import '../../features/messaging/domain/usecases/dismiss_family_nudge.dart';
-import '../../features/messaging/domain/usecases/get_last_messages.dart';
 import '../../features/messaging/domain/usecases/send_message.dart';
 import '../../features/messaging/domain/usecases/watch_conversation.dart';
+import '../../features/messaging/domain/usecases/watch_last_messages.dart';
 import '../../features/messaging/presentation/bloc/chat_cubit.dart';
 import '../../features/safety/data/datasources/firestore_safety_remote_data_source.dart';
 import '../../features/safety/data/datasources/safety_remote_data_source.dart';
@@ -179,7 +179,7 @@ void _initMatching() {
     () => MatchingCubit(getCandidates: sl(), swipeCandidate: sl()),
   );
   sl.registerFactory(
-    () => MatchesCubit(getMyMatches: sl(), getLastMessages: sl()),
+    () => MatchesCubit(getMyMatches: sl(), watchLastMessages: sl()),
   );
 
   // Domain
@@ -212,7 +212,7 @@ void _initMessaging() {
   sl.registerLazySingleton(() => WatchConversation(sl()));
   sl.registerLazySingleton(() => SendMessage(sl()));
   sl.registerLazySingleton(() => DismissFamilyNudge(sl()));
-  sl.registerLazySingleton(() => GetLastMessages(sl()));
+  sl.registerLazySingleton(() => WatchLastMessages(sl()));
 
   // Data
   sl.registerLazySingleton<MessagingRepository>(

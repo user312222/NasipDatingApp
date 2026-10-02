@@ -8,6 +8,6 @@ abstract interface class MessagingRemoteDataSource {
     required int otherPartyAvatarSeed,
   });
   Future<void> sendMessage({required String matchId, required String text});
-  Future<Map<String, ChatMessage>> getLastMessages(List<String> matchIds);
+  Stream<Map<String, ChatMessage>> watchLastMessages(List<String> matchIds);
   Future<void> dismissFamilyNudge(String matchId);
 }

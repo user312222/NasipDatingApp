@@ -64,22 +64,26 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
           unawaited(controller.close());
           return;
         }
-        matchSub = _db.collection('matches').doc(matchId).snapshots().listen(
-          (doc) {
-            latestNudgeShown =
-                (doc.data()?['familyNudgeShown'] as bool?) ?? false;
-            emitIfReady();
-          },
-          onError: (Object e) {
-            if (e is FirebaseException) {
-              controller.addError(
-                ServerException('Sohbet yüklenemedi (${e.code}).'),
-              );
-            } else {
-              controller.addError(e);
-            }
-          },
-        );
+        matchSub = _db
+            .collection('matches')
+            .doc(matchId)
+            .snapshots()
+            .listen(
+              (doc) {
+                latestNudgeShown =
+                    (doc.data()?['familyNudgeShown'] as bool?) ?? false;
+                emitIfReady();
+              },
+              onError: (Object e) {
+                if (e is FirebaseException) {
+                  controller.addError(
+                    ServerException('Sohbet yüklenemedi (${e.code}).'),
+                  );
+                } else {
+                  controller.addError(e);
+                }
+              },
+            );
         messagesSub = _db
             .collection('matches')
             .doc(matchId)
@@ -132,38 +136,70 @@ class FirestoreMessagingRemoteDataSource implements MessagingRemoteDataSource {
     }
   }
 
-  /// One `limit(1)` query per match, run in parallel — cheap enough at
-  /// list scale and needs no schema/rules change (participants can already
-  /// read a match's messages).
+  /// One live `limit(1)` listener per match (participants can already read
+  /// a match's messages, so no rules change). Emits once every match has
+  /// reported, so the list doesn't flicker or reorder on partial data.
   @override
-  Future<Map<String, ChatMessage>> getLastMessages(
-    List<String> matchIds,
-  ) async {
-    try {
-      final me = _uid;
-      final snaps = await Future.wait(
-        matchIds.map(
-          (id) => _db
-              .collection('matches')
-              .doc(id)
-              .collection('messages')
-              .orderBy('sentAt', descending: true)
-              .limit(1)
-              .get(),
-        ),
-      );
-      return {
-        for (var i = 0; i < matchIds.length; i++)
-          if (snaps[i].docs.isNotEmpty)
-            matchIds[i]: _toMessage(
-              snaps[i].docs.first.id,
-              snaps[i].docs.first.data(),
-              me,
-            ),
-      };
-    } on FirebaseException catch (e) {
-      throw ServerException('Mesajlar yüklenemedi (${e.code}).');
-    }
+  Stream<Map<String, ChatMessage>> watchLastMessages(List<String> matchIds) {
+    if (matchIds.isEmpty) return Stream.value(const {});
+
+    late final StreamController<Map<String, ChatMessage>> controller;
+    final subs = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+    // A key is present once that match has reported; null = no messages.
+    final latest = <String, ChatMessage?>{};
+
+    controller = StreamController<Map<String, ChatMessage>>(
+      onListen: () {
+        final String me;
+        try {
+          me = _uid;
+        } on ServerException catch (e) {
+          controller.addError(e);
+          unawaited(controller.close());
+          return;
+        }
+        for (final id in matchIds) {
+          subs.add(
+            _db
+                .collection('matches')
+                .doc(id)
+                .collection('messages')
+                .orderBy('sentAt', descending: true)
+                .limit(1)
+                .snapshots()
+                .listen(
+                  (snap) {
+                    latest[id] = snap.docs.isEmpty
+                        ? null
+                        : _toMessage(
+                            snap.docs.first.id,
+                            snap.docs.first.data(),
+                            me,
+                          );
+                    if (latest.length < matchIds.length) return;
+                    controller.add({
+                      for (final e in latest.entries)
+                        if (e.value != null) e.key: e.value!,
+                    });
+                  },
+                  onError: (Object e) {
+                    controller.addError(
+                      e is FirebaseException
+                          ? ServerException('Mesajlar yüklenemedi (${e.code}).')
+                          : e,
+                    );
+                  },
+                ),
+          );
+        }
+      },
+      onCancel: () async {
+        for (final sub in subs) {
+          await sub.cancel();
+        }
+      },
+    );
+    return controller.stream;
   }
 
   @override

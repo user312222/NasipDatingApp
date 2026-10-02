@@ -49,7 +49,7 @@ class _FakeMessagingRepository implements MessagingRepository {
   }
 
   @override
-  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
   ) => throw UnimplementedError();
 }

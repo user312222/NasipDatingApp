@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:binasip/core/error/failures.dart';
@@ -12,7 +14,7 @@ import 'package:binasip/features/matching/presentation/bloc/matches_cubit.dart';
 import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
 import 'package:binasip/features/messaging/domain/entities/conversation.dart';
 import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
-import 'package:binasip/features/messaging/domain/usecases/get_last_messages.dart';
+import 'package:binasip/features/messaging/domain/usecases/watch_last_messages.dart';
 
 class _FakeMatchingRepository implements MatchingRepository {
   _FakeMatchingRepository(this._result);
@@ -40,17 +42,21 @@ class _FakeMatchingRepository implements MatchingRepository {
 }
 
 class _FakeMessagingRepository implements MessagingRepository {
-  _FakeMessagingRepository(this._result);
+  /// Optionally seeds the first emission, like a Firestore listener that
+  /// reports right after subscribing.
+  _FakeMessagingRepository([Result<Map<String, ChatMessage>>? first]) {
+    if (first != null) controller.add(first);
+  }
 
-  final Result<Map<String, ChatMessage>> _result;
+  final controller = StreamController<Result<Map<String, ChatMessage>>>();
   List<String>? lastRequestedIds;
 
   @override
-  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
-  ) async {
+  ) {
     lastRequestedIds = matchIds;
-    return _result;
+    return controller.stream;
   }
 
   @override
@@ -97,7 +103,7 @@ MatchesCubit _cubitWith(
   _FakeMessagingRepository? messaging,
 }) => MatchesCubit(
   getMyMatches: GetMyMatches(_FakeMatchingRepository(matches)),
-  getLastMessages: GetLastMessages(
+  watchLastMessages: WatchLastMessages(
     messaging ?? _FakeMessagingRepository(previews),
   ),
 );
@@ -148,6 +154,7 @@ void main() {
       final cubit = _cubitWith(Ok([a, b]), previews: Ok({'a': lastA}));
 
       await cubit.load();
+      await pumpEventQueue();
 
       final state = cubit.state as MatchesLoaded;
       expect(state.matches, [a, b]);
@@ -157,13 +164,48 @@ void main() {
     test('are requested for every match id', () async {
       final messaging = _FakeMessagingRepository(const Ok({}));
       final cubit = _cubitWith(
-        Ok([_match('a', DateTime(2026, 1, 1)), _match('b', DateTime(2026, 2, 1))]),
+        Ok([
+          _match('a', DateTime(2026, 1, 1)),
+          _match('b', DateTime(2026, 2, 1)),
+        ]),
         messaging: messaging,
       );
 
       await cubit.load();
 
       expect(messaging.lastRequestedIds, unorderedEquals(['a', 'b']));
+    });
+
+    test('update live and re-order the list without reloading', () async {
+      final a = _match('a', DateTime(2026, 1, 1));
+      final b = _match('b', DateTime(2026, 2, 1));
+      final messaging = _FakeMessagingRepository(const Ok({}));
+      final cubit = _cubitWith(Ok([a, b]), messaging: messaging);
+      await cubit.load();
+      await pumpEventQueue();
+      expect((cubit.state as MatchesLoaded).matches, [b, a]);
+
+      final lastA = _message('yeni', DateTime(2026, 3, 1));
+      messaging.controller.add(Ok({'a': lastA}));
+      await pumpEventQueue();
+
+      final state = cubit.state as MatchesLoaded;
+      expect(state.matches, [a, b]);
+      expect(state.previews, {'a': lastA});
+    });
+
+    test('closing the cubit cancels the preview subscription', () async {
+      final messaging = _FakeMessagingRepository(const Ok({}));
+      final cubit = _cubitWith(
+        Ok([_match('a', DateTime(2026, 1, 1))]),
+        messaging: messaging,
+      );
+      await cubit.load();
+      expect(messaging.controller.hasListener, isTrue);
+
+      await cubit.close();
+
+      expect(messaging.controller.hasListener, isFalse);
     });
 
     test('a failed preview fetch keeps the list as it was', () async {
@@ -174,6 +216,7 @@ void main() {
       );
 
       await cubit.load();
+      await pumpEventQueue();
 
       expect(cubit.state, MatchesLoaded([a]));
     });

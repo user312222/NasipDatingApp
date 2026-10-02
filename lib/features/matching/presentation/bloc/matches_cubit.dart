@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,7 +9,7 @@ import '../../../../core/usecase/usecase.dart';
 // opening Chat): the list shows each match's latest message, but
 // `matching`'s domain stays independent of `messaging`.
 import '../../../messaging/domain/entities/chat_message.dart';
-import '../../../messaging/domain/usecases/get_last_messages.dart';
+import '../../../messaging/domain/usecases/watch_last_messages.dart';
 import '../../domain/entities/match.dart';
 import '../../domain/usecases/get_my_matches.dart';
 
@@ -47,46 +49,55 @@ final class MatchesLoaded extends MatchesState {
 class MatchesCubit extends Cubit<MatchesState> {
   MatchesCubit({
     required GetMyMatches getMyMatches,
-    required GetLastMessages getLastMessages,
+    required WatchLastMessages watchLastMessages,
   }) : _getMyMatches = getMyMatches,
-       _getLastMessages = getLastMessages,
+       _watchLastMessages = watchLastMessages,
        super(const MatchesLoading());
 
   final GetMyMatches _getMyMatches;
-  final GetLastMessages _getLastMessages;
+  final WatchLastMessages _watchLastMessages;
+  StreamSubscription<Result<Map<String, ChatMessage>>>? _previewsSub;
 
-  /// Shows the matches straight away (newest first), then fills in message
-  /// previews once they arrive — a slow or failed preview fetch never
-  /// blocks or breaks the list itself.
+  /// Shows the matches straight away (newest first), then keeps message
+  /// previews live — a slow or failed preview stream never blocks or
+  /// breaks the list itself.
   Future<void> load() async {
+    await _previewsSub?.cancel();
+    _previewsSub = null;
     emit(const MatchesLoading());
     final result = await _getMyMatches(const NoParams());
+    if (isClosed) return;
     switch (result) {
       case Ok<List<Match>>(:final value):
         final sorted = [...value]
           ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
         emit(MatchesLoaded(sorted));
-        await refreshPreviews();
+        _watchPreviews(sorted);
       case Err<List<Match>>(:final failure):
         emit(MatchesError(failure.message));
     }
   }
 
-  /// Re-fetches previews silently (no loading state) and re-orders by most
-  /// recent activity — used after returning from a chat.
-  Future<void> refreshPreviews() async {
-    final current = state;
-    if (current is! MatchesLoaded || current.matches.isEmpty) return;
+  /// Each emission re-orders the list by most recent activity. A stream
+  /// error leaves the list as it was.
+  void _watchPreviews(List<Match> matches) {
+    if (matches.isEmpty) return;
+    _previewsSub =
+        _watchLastMessages(
+          WatchLastMessagesParams([for (final m in matches) m.id]),
+        ).listen((result) {
+          if (result case Ok<Map<String, ChatMessage>>(:final value)) {
+            DateTime activity(Match m) => value[m.id]?.sentAt ?? m.matchedAt;
+            final ordered = [...matches]
+              ..sort((a, b) => activity(b).compareTo(activity(a)));
+            emit(MatchesLoaded(ordered, previews: value));
+          }
+        });
+  }
 
-    final result = await _getLastMessages(
-      GetLastMessagesParams([for (final m in current.matches) m.id]),
-    );
-    if (isClosed) return;
-    if (result case Ok<Map<String, ChatMessage>>(:final value)) {
-      DateTime activity(Match m) => value[m.id]?.sentAt ?? m.matchedAt;
-      final ordered = [...current.matches]
-        ..sort((a, b) => activity(b).compareTo(activity(a)));
-      emit(MatchesLoaded(ordered, previews: value));
-    }
+  @override
+  Future<void> close() {
+    unawaited(_previewsSub?.cancel());
+    return super.close();
   }
 }

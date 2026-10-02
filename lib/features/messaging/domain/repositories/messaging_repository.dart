@@ -22,9 +22,10 @@ abstract interface class MessagingRepository {
     required String text,
   });
 
-  /// The most recent message of each given match (for list previews).
+  /// Live view of the most recent message of each given match (for list
+  /// previews). Emits once every match has reported, then on every change.
   /// Matches with no messages yet are simply absent from the map.
-  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
   );
 

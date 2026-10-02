@@ -108,9 +108,8 @@ class _ChatViewState extends State<_ChatView> {
         if (state is! ChatLoaded) return;
         _scrollToBottom();
         if (state.sendError != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.sendError!)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.sendError!)));
         }
       },
       builder: (context, state) {

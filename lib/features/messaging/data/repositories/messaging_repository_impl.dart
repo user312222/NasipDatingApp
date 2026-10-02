@@ -34,12 +34,21 @@ class MessagingRepositoryImpl implements MessagingRepository {
   Future<Result<void>> sendMessage({
     required String matchId,
     required String text,
-  }) => _guard(() => remoteDataSource.sendMessage(matchId: matchId, text: text));
+  }) =>
+      _guard(() => remoteDataSource.sendMessage(matchId: matchId, text: text));
 
   @override
-  Future<Result<Map<String, ChatMessage>>> getLastMessages(
+  Stream<Result<Map<String, ChatMessage>>> watchLastMessages(
     List<String> matchIds,
-  ) => _guard(() => remoteDataSource.getLastMessages(matchIds));
+  ) async* {
+    try {
+      await for (final latest in remoteDataSource.watchLastMessages(matchIds)) {
+        yield Ok(latest);
+      }
+    } on ServerException catch (e) {
+      yield Err(ServerFailure(e.message ?? 'Bir sorun oluştu.'));
+    }
+  }
 
   @override
   Future<Result<void>> dismissFamilyNudge(String matchId) =>
