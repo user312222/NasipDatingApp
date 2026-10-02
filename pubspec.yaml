@@ -55,6 +55,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  image: ^4.10.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -100,3 +102,17 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# App icons and web favicon, generated from the logo:
+#   dart run tools/make_square_logo.dart
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/branding/logo_square.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: assets/branding/logo_square.png
+    background_color: "#FFFFFF"
+    theme_color: "#7A2C8F"
