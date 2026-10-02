@@ -17,7 +17,12 @@ class SafetyMenuButton extends StatelessWidget {
     required this.targetUserId,
     required this.targetName,
     required this.onBlocked,
+    this.trigger,
   });
+
+  /// What opens the menu. Defaults to the round app-bar chip; flat lists
+  /// (the feed) pass a bare icon instead.
+  final Widget? trigger;
 
   final String targetUserId;
   final String targetName;
@@ -49,7 +54,7 @@ class SafetyMenuButton extends StatelessWidget {
         child: Builder(
           builder: (context) => PopupMenuButton<String>(
             tooltip: 'Şikayet / engelle',
-            child: const ChromeChip(icon: Icons.more_horiz),
+            child: trigger ?? const ChromeChip(icon: Icons.more_horiz),
             onSelected: (value) {
               if (value == 'report') _openReportSheet(context);
               if (value == 'block') _confirmBlock(context);

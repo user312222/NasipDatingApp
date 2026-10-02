@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/format/chat_time.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/avatar_palette.dart';
 import '../../../../theme/wizard_widgets.dart';
@@ -13,6 +14,11 @@ import '../bloc/feed_cubit.dart';
 /// "Günün sorusu": one prompt a day, one short answer per member, likes
 /// only. Somewhere to go once the discovery feed runs out - it never opens
 /// a conversation, so messaging stays match-only.
+///
+/// Laid out as a flat timeline (avatar on the left, hairline dividers, no
+/// boxed cards) rather than the card style of the wizard screens, so many
+/// answers read quickly - but on the same cream page and backdrop glows as
+/// every other screen.
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
 
@@ -61,7 +67,7 @@ class _FeedViewState extends State<_FeedView> {
         title: Text(
           'Günün Sorusu',
           style: textTheme.displayMedium?.copyWith(
-            fontSize: 28,
+            fontSize: 26,
             color: colors.plumStrong,
           ),
         ),
@@ -95,45 +101,43 @@ class _FeedViewState extends State<_FeedView> {
                 final mine = feed.mine;
                 final others = feed.others;
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  padding: const EdgeInsets.only(bottom: 32),
                   children: [
-                    _QuestionCard(question: feed.question),
-                    const SizedBox(height: 16),
+                    _QuestionHeader(question: feed.question),
                     if (mine == null)
-                      _AnswerComposer(
+                      _Composer(
                         controller: _answerController,
                         isSubmitting: isSubmitting,
                         onSubmit: _submit,
                       )
                     else
-                      _MyAnswerCard(
+                      _PostRow(
                         post: mine,
                         onDelete: () => context.read<FeedCubit>().deleteMine(),
                       ),
-                    const SizedBox(height: 26),
-                    Text(
-                      others.isEmpty
+                    _SectionBand(
+                      label: others.isEmpty
                           ? 'Diğer cevaplar'
                           : 'Diğer cevaplar (${others.length})',
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colors.plumStrong,
-                      ),
                     ),
-                    const SizedBox(height: 12),
                     if (others.isEmpty)
-                      Text(
-                        mine == null
-                            ? 'Henüz kimse cevap vermedi. İlk cevabı sen yaz.'
-                            : 'Şimdilik başka cevap yok. Yeni cevaplar geldikçe '
-                                  'burada görünecek.',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.inkSoft,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        child: Text(
+                          mine == null
+                              ? 'Henüz kimse cevap vermedi. İlk cevabı sen yaz.'
+                              : 'Şimdilik başka cevap yok. Yeni cevaplar geldikçe '
+                                    'burada görünecek.',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.inkSoft,
+                          ),
                         ),
                       )
                     else
-                      for (final post in others) ...[
-                        _PostCard(post: post),
-                        const SizedBox(height: 12),
+                      for (var i = 0; i < others.length; i++) ...[
+                        if (i > 0)
+                          Divider(height: 1, indent: 72, color: colors.line),
+                        _PostRow(post: others[i]),
                       ],
                   ],
                 );
@@ -145,8 +149,10 @@ class _FeedViewState extends State<_FeedView> {
   }
 }
 
-class _QuestionCard extends StatelessWidget {
-  const _QuestionCard({required this.question});
+/// The day's prompt: a quiet label and the question in the display face,
+/// with a short gradient rule as the only decoration.
+class _QuestionHeader extends StatelessWidget {
+  const _QuestionHeader({required this.question});
 
   final DailyQuestion question;
 
@@ -155,45 +161,37 @@ class _QuestionCard extends StatelessWidget {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.teal, colors.plumFill],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.plumFill.withValues(alpha: 0.30),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.nightlight_round, color: Colors.white, size: 16),
-              const SizedBox(width: 8),
+              Icon(Icons.nightlight_round, size: 14, color: colors.teal),
+              const SizedBox(width: 6),
               Text(
                 'BUGÜN',
-                style: textTheme.labelSmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
+                style: textTheme.labelSmall?.copyWith(color: colors.teal),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             question.text,
             style: textTheme.displayMedium?.copyWith(
               fontSize: 25,
               height: 1.25,
-              color: Colors.white,
+              color: colors.plumStrong,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: 48,
+            height: 4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              gradient: LinearGradient(colors: colors.brandGradient),
             ),
           ),
         ],
@@ -202,8 +200,10 @@ class _QuestionCard extends StatelessWidget {
   }
 }
 
-class _AnswerComposer extends StatelessWidget {
-  const _AnswerComposer({
+/// Inline "write your answer" row - an avatar-sized badge, a borderless
+/// field and a small share pill, instead of a boxed form.
+class _Composer extends StatelessWidget {
+  const _Composer({
     required this.controller,
     required this.isSubmitting,
     required this.onSubmit,
@@ -218,215 +218,347 @@ class _AnswerComposer extends StatelessWidget {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: controller,
-              minLines: 2,
-              maxLines: 5,
-              maxLength: DailyQuestion.maxAnswerLength,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(hintText: 'Cevabını yaz…'),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.brandGradient,
+              ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Cevabın adın, yaşın ve şehrinle birlikte tüm üyelere görünür. '
-              'Günde bir cevap paylaşabilirsin.',
-              style: textTheme.bodySmall?.copyWith(color: colors.inkSoft),
+            child: const Icon(
+              Icons.edit_rounded,
+              color: Colors.white,
+              size: 20,
             ),
-            const SizedBox(height: 14),
-            GradientButton(
-              label: 'Paylaş',
-              loading: isSubmitting,
-              onPressed: onSubmit,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller,
+                  minLines: 1,
+                  maxLines: 6,
+                  maxLength: DailyQuestion.maxAnswerLength,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: textTheme.bodyLarge,
+                  decoration: InputDecoration(
+                    hintText: 'Cevabını yaz…',
+                    hintStyle: textTheme.bodyLarge?.copyWith(
+                      color: colors.inkSoft,
+                    ),
+                    filled: false,
+                    isDense: true,
+                    counterText: '',
+                    contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
+                ),
+                Text(
+                  'Adın, yaşın ve şehrinle tüm üyelere görünür. Günde bir cevap.',
+                  style: textTheme.bodySmall?.copyWith(color: colors.inkSoft),
+                ),
+                const SizedBox(height: 10),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) {
+                    final length = value.text.characters.length;
+                    final hasText = value.text.trim().isNotEmpty;
+                    return Row(
+                      children: [
+                        Text(
+                          '$length/${DailyQuestion.maxAnswerLength}',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.inkSoft,
+                          ),
+                        ),
+                        const Spacer(),
+                        _SharePill(
+                          enabled: hasText && !isSubmitting,
+                          loading: isSubmitting,
+                          onTap: onSubmit,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SharePill extends StatelessWidget {
+  const _SharePill({
+    required this.enabled,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    final active = enabled || loading;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: enabled ? onTap : null,
+        child: Ink(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: active ? null : colors.plumTint,
+            gradient: active
+                ? LinearGradient(colors: colors.brandGradient)
+                : null,
+          ),
+          child: Center(
+            widthFactor: 1,
+            child: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    'Paylaş',
+                    style: textTheme.labelLarge?.copyWith(
+                      fontSize: 14,
+                      color: active ? Colors.white : colors.inkSoft,
+                    ),
+                  ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _MyAnswerCard extends StatelessWidget {
-  const _MyAnswerCard({required this.post, required this.onDelete});
+/// A full-width band that separates "my side" (question + my answer) from
+/// everybody else's answers, like the section breaks in a timeline.
+class _SectionBand extends StatelessWidget {
+  const _SectionBand({required this.label});
 
-  final FeedPost post;
-  final VoidCallback onDelete;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
-      decoration: BoxDecoration(
-        color: colors.plumTint,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.plum.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'SENİN CEVABIN',
-            style: textTheme.labelSmall?.copyWith(color: colors.plum),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text(post.text, style: textTheme.bodyLarge),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(Icons.favorite_rounded, size: 16, color: colors.accent),
-              const SizedBox(width: 6),
-              Text(
-                '${post.likeCount} beğeni',
-                style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: onDelete,
-                style: TextButton.styleFrom(foregroundColor: colors.rose),
-                child: const Text('Sil'),
-              ),
-            ],
-          ),
-        ],
+      width: double.infinity,
+      color: colors.plumTint.withValues(alpha: 0.6),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.titleSmall
+            ?.copyWith(color: colors.plumStrong),
       ),
     );
   }
 }
 
-class _PostCard extends StatelessWidget {
-  const _PostCard({required this.post});
+/// One answer as a timeline row. With [onDelete] set it is the current
+/// user's own answer: tinted, labelled, deletable and not likeable.
+class _PostRow extends StatelessWidget {
+  const _PostRow({required this.post, this.onDelete});
 
   final FeedPost post;
+  final VoidCallback? onDelete;
+
+  bool get _mine => onDelete != null;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
     final pair = AvatarPalette.forSeed(post.avatarColorSeed);
+    final meta = _mine
+        ? formatRelativeShort(post.createdAt)
+        : '${post.authorCity} · ${formatRelativeShort(post.createdAt)}';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 6, 8),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.line),
-        boxShadow: [
-          BoxShadow(
-            color: colors.plumFill.withValues(alpha: 0.07),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
+      color: _mine ? colors.plumTint.withValues(alpha: 0.55) : null,
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: pair,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  post.authorName.isEmpty
-                      ? '?'
-                      : post.authorName.characters.first,
-                  style: textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: pair,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${post.authorName}, ${post.authorAge}',
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colors.plumStrong,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_rounded,
-                          size: 14,
-                          color: colors.teal,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              post.authorName.isEmpty ? '?' : post.authorName.characters.first,
+              style: textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 32,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              flex: 3,
+                              child: Text(
+                                _mine
+                                    ? 'Senin cevabın'
+                                    : '${post.authorName}, ${post.authorAge}',
+                                style: textTheme.titleSmall?.copyWith(
+                                  color: colors.plumStrong,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              flex: 2,
+                              child: Text(
+                                meta,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colors.inkSoft,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          child: Text(
-                            post.authorCity,
-                            style: textTheme.bodyMedium?.copyWith(
+                      ),
+                      if (!_mine)
+                        SafetyMenuButton(
+                          key: ValueKey('menu_${post.id}'),
+                          targetUserId: post.authorId,
+                          targetName: post.authorName,
+                          onBlocked: () => context.read<FeedCubit>().hideAuthor(
+                            post.authorId,
+                          ),
+                          trigger: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            child: Icon(
+                              Icons.more_horiz,
+                              size: 22,
                               color: colors.inkSoft,
                             ),
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Text(
+                    post.text,
+                    style: textTheme.bodyLarge?.copyWith(height: 1.4),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                if (_mine)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.favorite_rounded,
+                        size: 18,
+                        color: colors.accent,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.likeCount} beğeni',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.inkSoft,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: onDelete,
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.rose,
+                        ),
+                        child: const Text('Sil'),
+                      ),
+                    ],
+                  )
+                else
+                  Transform.translate(
+                    offset: const Offset(-10, 0),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          tooltip: post.likedByMe
+                              ? 'Beğeniyi geri al'
+                              : 'Beğen',
+                          onPressed: () =>
+                              context.read<FeedCubit>().toggleLike(post),
+                          icon: Icon(
+                            post.likedByMe
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 21,
+                            color: post.likedByMe
+                                ? colors.accent
+                                : colors.inkSoft,
+                          ),
+                        ),
+                        Text(
+                          '${post.likeCount}',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: post.likedByMe
+                                ? colors.accent
+                                : colors.inkSoft,
+                            fontWeight: post.likedByMe ? FontWeight.w700 : null,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              SafetyMenuButton(
-                key: ValueKey('menu_${post.id}'),
-                targetUserId: post.authorId,
-                targetName: post.authorName,
-                onBlocked: () =>
-                    context.read<FeedCubit>().hideAuthor(post.authorId),
-              ),
-              const SizedBox(width: 6),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text(post.text, style: textTheme.bodyLarge),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              IconButton(
-                tooltip: post.likedByMe ? 'Beğeniyi geri al' : 'Beğen',
-                onPressed: () => context.read<FeedCubit>().toggleLike(post),
-                icon: Icon(
-                  post.likedByMe
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: post.likedByMe ? colors.accent : colors.inkSoft,
-                ),
-              ),
-              Text(
-                '${post.likeCount}',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: post.likedByMe ? colors.accent : colors.inkSoft,
-                  fontWeight: post.likedByMe ? FontWeight.w700 : null,
-                ),
-              ),
-            ],
+                  ),
+              ],
+            ),
           ),
         ],
       ),

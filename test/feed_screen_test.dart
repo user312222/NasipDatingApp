@@ -15,7 +15,6 @@ import 'package:binasip/features/safety/domain/usecases/block_user.dart';
 import 'package:binasip/features/safety/domain/usecases/report_user.dart';
 import 'package:binasip/features/safety/presentation/bloc/safety_cubit.dart';
 import 'package:binasip/theme/app_theme.dart';
-import 'package:binasip/theme/wizard_widgets.dart';
 
 import 'support/fakes.dart';
 
@@ -91,7 +90,7 @@ void main() {
     expect(find.text('Üye a, 28'), findsOneWidget);
     expect(find.text('Uzun bir kahvaltı.'), findsOneWidget);
     expect(find.text('Kitap ve çay.'), findsOneWidget);
-    expect(find.text('Ankara'), findsNWidgets(2));
+    expect(find.textContaining('Ankara'), findsNWidgets(2));
     expect(find.text('3'), findsOneWidget);
   });
 
@@ -99,7 +98,8 @@ void main() {
     await pumpFeed(tester, []);
 
     await tester.enterText(find.byType(TextField), '  Yürüyüş ve çay.  ');
-    await tester.tap(find.byType(GradientButton));
+    await tester.pump();
+    await tester.tap(find.text('Paylaş'));
     await tester.pump();
     expect(repo.submitted, ['Yürüyüş ve çay.']);
 
@@ -113,13 +113,28 @@ void main() {
     );
   });
 
+  testWidgets('the share button stays inactive until something is typed', (
+    tester,
+  ) async {
+    await pumpFeed(tester, []);
+
+    await tester.tap(find.text('Paylaş'));
+    await tester.pump();
+    expect(repo.submitted, isEmpty);
+
+    await tester.enterText(find.byType(TextField), 'Merhaba');
+    await tester.pump();
+    expect(find.text('7/280'), findsOneWidget);
+  });
+
   testWidgets('a failed share shows a SnackBar and keeps what was typed', (
     tester,
   ) async {
     await pumpFeed(tester, []);
 
     await tester.enterText(find.byType(TextField), 'Yürüyüş ve çay.');
-    await tester.tap(find.byType(GradientButton));
+    await tester.pump();
+    await tester.tap(find.text('Paylaş'));
     await tester.pump();
     repo.pendingSubmit!.complete(
       const Err(ServerFailure('Cevabın paylaşılamadı.')),
@@ -140,7 +155,7 @@ void main() {
     ]);
 
     expect(find.byType(TextField), findsNothing);
-    expect(find.text('SENİN CEVABIN'), findsOneWidget);
+    expect(find.text('Senin cevabın'), findsOneWidget);
     expect(find.text('Benim cevabım.'), findsOneWidget);
     expect(find.text('2 beğeni'), findsOneWidget);
     expect(find.text('Diğer cevaplar (1)'), findsOneWidget);

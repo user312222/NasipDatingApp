@@ -39,4 +39,34 @@ void main() {
   test('a timestamp slightly in the future still shows the time', () {
     expect(formatChatTimestamp(DateTime(2026, 9, 23, 14, 31), now: now), '14:31');
   });
+
+  group('formatRelativeShort', () {
+    final now = DateTime(2026, 3, 6, 12);
+
+    test('under a minute is "şimdi"', () {
+      expect(
+        formatRelativeShort(
+          now.subtract(const Duration(seconds: 40)),
+          now: now,
+        ),
+        'şimdi',
+      );
+    });
+
+    test('minutes, hours and days', () {
+      String ago(Duration d) => formatRelativeShort(now.subtract(d), now: now);
+
+      expect(ago(const Duration(minutes: 5)), '5 dk');
+      expect(ago(const Duration(minutes: 59)), '59 dk');
+      expect(ago(const Duration(hours: 3)), '3 sa');
+      expect(ago(const Duration(hours: 49)), '2 g');
+    });
+
+    test('a timestamp slightly in the future still reads "şimdi"', () {
+      expect(
+        formatRelativeShort(now.add(const Duration(seconds: 5)), now: now),
+        'şimdi',
+      );
+    });
+  });
 }

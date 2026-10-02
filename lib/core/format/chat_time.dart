@@ -18,3 +18,13 @@ String formatChatTimestamp(DateTime when, {DateTime? now}) {
   return '${when.day.toString().padLeft(2, '0')}.'
       '${when.month.toString().padLeft(2, '0')}.${when.year}';
 }
+
+/// Compact "how long ago" for feed rows: "şimdi", "5 dk", "3 sa", "2 g".
+/// [now] is injectable so it can be tested without a clock.
+String formatRelativeShort(DateTime when, {DateTime? now}) {
+  final elapsed = (now ?? DateTime.now()).difference(when);
+  if (elapsed.inMinutes < 1) return 'şimdi';
+  if (elapsed.inMinutes < 60) return '${elapsed.inMinutes} dk';
+  if (elapsed.inHours < 24) return '${elapsed.inHours} sa';
+  return '${elapsed.inDays} g';
+}
