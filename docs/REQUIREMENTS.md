@@ -60,12 +60,12 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-3.1 Kullanıcı (özellikle kadın kullanıcı) fotoğraf görünürlüğünü kademeli açabilir: "eşleşince otomatik", "ben açana kadar gizli", "sadece istek üzerine".
 - FR-3.2 Varsayılan görünürlük seviyesi en kısıtlı seçenektir (opt-in genişletme, opt-out değil).
 
-### FR-4 — Eşleştirme *(kuruldu — `lib/features/matching/`, Firestore'a bağlı (`likes`, `likeCounters`, `matches`; günlük 12 sınırı ve karşılıklı-beğeni koşulu `firestore.rules`'ta zorlanıyor); kart hem sürükle-bırak hem buton ile beğenilir/geçilir, eşleşme kutlaması ve `/matches` listesi var)*
+### FR-4 — Eşleştirme *(kuruldu — `lib/features/matching/`, Firestore'a bağlı (`likes`, `likeCounters`, `matches`; günlük 12 sınırı ve karşılıklı-beğeni koşulu `firestore.rules`'ta zorlanıyor); kart hem sürükle-bırak hem buton ile beğenilir/geçilir, eşleşme kutlaması ve alt çubukta Eşleşmeler sekmesi (`/matches`) var)*
 - FR-4.1 Sistem şehir, yaş aralığı, niyet zaman çizelgesi ve dil filtrelerine göre aday listesi sunar.
 - FR-4.2 Karşılıklı beğeni (mutual like) eşleşme oluşturur ve sohbeti açar.
 - FR-4.3 Tek taraflı beğeni günlük **12 ile sınırlı** (spam/düşük-niyet kullanımını azaltmak için; Tinder'ın ~100/gün hacim modelinin tam tersi — "quality over quantity" pozisyonlamasını destekler).
 
-### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, Firestore'a bağlı ve canlı (dinleyicilerle): yeni mesajlar açık sohbette anında görünür; eşleşme listesi son mesajı önizler, etkinliğe göre sıralanır ve okunmamış mesajı nokta ile işaretler (`matchReads`); push bildirimi yok; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile veya Keşfet'teki "Eşleşmeler" listesinden (`/matches`) ulaşılıyor)*
+### FR-5 — Mesajlaşma *(kuruldu — `lib/features/messaging/`, Firestore'a bağlı ve canlı (dinleyicilerle): yeni mesajlar açık sohbette anında görünür; eşleşme listesi son mesajı önizler, etkinliğe göre sıralanır ve okunmamış mesajı nokta ile işaretler (`matchReads`); aynı nokta alt çubuktaki Eşleşmeler sekmesinin ikonunda da görünür ve kullanıcı başka sekmedeyken de canlıdır, sohbet açılınca kaybolur; push bildirimi yok; FR-4'teki eşleşme diyaloğundan "Sohbete başla" ile veya alt çubuktaki Eşleşmeler sekmesinden (`/matches`) ulaşılıyor)*
 - FR-5.1 Eşleşen kullanıcılar metin tabanlı sohbet edebilir.
 - FR-5.2 Bir sohbette **toplam 30 mesaj değişimi VEYA 7 gün aktif yazışma** (hangisi önce gerçekleşirse) sonrasında, "aile görüşmesi" veya "buluşma" önerisi tek seferlik, nazik bir kart olarak gösterilir — zorlayıcı değil, kapatılabilir (retention/conversion nudge — Elif/araştırma bulgusu: "sohbet sonu yok" şikayeti).
 
@@ -74,7 +74,7 @@ Bi Nasip; Türkiye'deki mevcut seçeneklerin (küresel Müslüman uygulamaları 
 - FR-6.2 Kullanıcı engelleme yapabilir; engellenen kullanıcı bir daha görünmez.
 - FR-6.3 Yüklenen fotoğraflar managed moderation API'sinden geçer (uygunsuz içerik otomatik reddedilir).
 
-### FR-7 — Hesap & Veri *(kuruldu — `lib/features/account/`; `/settings` ekranı keşif ve veli ekranlarının üst çubuğundaki dişli ikonundan açılıyor. Hesap silme artık gerçek: Firestore'daki profil/publicProfile/users/aile bağlantısı belgeleri ve Firebase Auth hesabının kendisi siliniyor (son adım oturumu kalıcı olarak kapatıyor, telefon numarasını yeni kayıt için serbest bırakıyor). FR-7.2 mimari olarak zaten karşılanıyor: `AuthUser` sadece `verifiedAt` taşır, ham selfie hiçbir yerde tutulmaz. Kapsam notu: Cloud Functions (Blaze) olmadığı için `likes`/`matches`/mesajlar silinemiyor — bunlar sahiplerinin ikisine de ait, tek taraflı silinmesi karşı tarafın verisini bozabilir; kalan kayıtlar zaten eksik profille "Kullanıcı" gibi yer tutucularla gösterilecek şekilde ele alınıyor)*
+### FR-7 — Hesap & Veri *(kuruldu — `lib/features/account/`; aynı ekran bekâr kullanıcıda alt çubuktaki Hesap sekmesi (`/account`), veli hesabında ise veli ana ekranının üst çubuğundaki dişli ikonuyla açılan `/settings` sayfası. Hesap silme artık gerçek: Firestore'daki profil/publicProfile/users/aile bağlantısı belgeleri ve Firebase Auth hesabının kendisi siliniyor (son adım oturumu kalıcı olarak kapatıyor, telefon numarasını yeni kayıt için serbest bırakıyor). FR-7.2 mimari olarak zaten karşılanıyor: `AuthUser` sadece `verifiedAt` taşır, ham selfie hiçbir yerde tutulmaz. Kapsam notu: Cloud Functions (Blaze) olmadığı için `likes`/`matches`/mesajlar silinemiyor — bunlar sahiplerinin ikisine de ait, tek taraflı silinmesi karşı tarafın verisini bozabilir; kalan kayıtlar zaten eksik profille "Kullanıcı" gibi yer tutucularla gösterilecek şekilde ele alınıyor)*
 - FR-7.1 Kullanıcı hesabını ve tüm verisini silebilir (KVKK "unutulma hakkı").
 - FR-7.2 Doğrulama sonucu (yalnızca `verified: true/false` + zaman damgası) profil/aktivite verisinden ayrı bir veri deposunda tutulur; ham selfie/biyometrik veri Bi Nasip tarafında hiç tutulmaz, işleme tamamen 3. parti sağlayıcıda kalır.
 
@@ -89,7 +89,7 @@ Senaryo: kullanıcı zaten evli, kendisi için eş aramıyor — bir yakınını
 - FR-8.5 Bağlı veli hesabı, SADECE bağlı olduğu kullanıcının "aileme göster" işaretli eşleşmelerini **salt-okunur** görür: aday adı/yaş/şehir/niyet + sohbetin minimal bir durum etiketi (örn. "yeni eşleşme" / "aktif yazışıyorlar"). Mesaj içeriğini **birebir okuyamaz** — bu mahremiyet ilkesiyle doğrudan çelişir. *(Bu durum-etiketi kapsamı kendi kararımdır — isterseniz genişletebilir/daraltabiliriz.)*
 - FR-8.6 Veli hesabı **hiçbir koşulda**: (a) başka bir kullanıcının keşif/eşleştirme akışında aday olarak önerilmez, (b) beğeni/geçme yapamaz, (c) mesaj gönderemez, (d) eşleştirme filtrelerine tabi tutulmaz. Bu, hesap tipi seviyesinde garanti altına alınır — mimari olarak veli hesapları `MatchingRepository`/`MessagingRepository`'ye hiç erişemez (sadece salt-okunur bir `FamilyViewRepository` üzerinden).
 
-### FR-9 — Günün Sorusu Akışı *(kuruldu — `lib/features/feed/`, Firestore'a bağlı (`feedPosts`, `feedLikes`); `/feed` rotası, Keşfet üst çubuğundan ve adaylar bittiğinde gösterilen boş durumdan açılıyor)*
+### FR-9 — Günün Sorusu Akışı *(kuruldu — `lib/features/feed/`, Firestore'a bağlı (`feedPosts`, `feedLikes`); `/feed` rotası alt çubuktaki Günün Sorusu sekmesi; adaylar bittiğinde gösterilen boş durum da buraya yönlendiriyor)*
 - FR-9.1 Her gün (UTC günü) tüm üyelere aynı tek soru gösterilir; sorular istemcideki sabit bir listeden sırayla gelir.
 - FR-9.2 Bir üye günde **en fazla bir** cevap paylaşır (en fazla 280 karakter). Cevap adı, yaşı ve şehriyle birlikte tüm bekâr üyelere görünür; fotoğraf gösterilmez (FR-3). Cevap düzenlenemez, sahibi silebilir.
 - FR-9.3 Etkileşim yalnızca beğenidir: yorum yoktur ve akıştaki beğeni bir eşleşme beğenisi **değildir** — eşleşme oluşturmaz, sohbet açmaz. Mesajlaşma yalnızca eşleşenler arasında kalır (FR-5). Kimin beğendiği görünmez, yalnızca sayı görünür; kişi kendi cevabını beğenemez.
@@ -111,12 +111,15 @@ Conversation  { matchId, messages[] }
 Message       { conversationId, senderId, text, sentAt }
 Report        { id, reporterId, targetUserId, reason, createdAt }
 WaitlistEntry { name, contact, city?, createdAt, inviteStatus }
+FeedPost      { id (authorId_dayKey), authorId, dayKey, text, createdAt, likeCount }  // FR-9.2
+FeedLike      { id (postId_userId), postId, userId, dayKey, createdAt }              // FR-9.3
 ```
 
 ## 6. Fonksiyonel Olmayan Gereksinimler
 
 - **Platform:** Flutter — iOS + Android (tek kod tabanı), proje adı `binasip`.
 - **Dil:** v1 yalnızca Türkçe arayüz.
+- **Gezinme:** Bekâr kullanıcının ana ekranı dört sekmeli bir alt çubuktur: **Keşfet** (`/discover`), **Günün Sorusu** (`/feed`), **Eşleşmeler** (`/matches`), **Hesap** (`/account`). Her sekme kendi durumunu korur (sekme değiştirip dönünce adaylar yeniden yüklenmez); bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet, aile ayarları gibi tam ekran sayfalar çubuğun üstünü kaplar. Okunmamış mesaj varken Eşleşmeler sekmesinde nokta görünür (FR-5). Veli hesabında sekme çubuğu yoktur; tek ana ekranı vardır (FR-8.2).
 - **Yasal/Veri:** KVKK uyumu — veri minimizasyonu, doğrulama verisinin ayrı saklanması, açık rıza akışları.
 - **Marka/Tasarım:** "Gece Moru" renk paleti (mor/toz gülü/altın — bkz. Figma `binasip` dosyası, `🎨 Foundations` sayfası), Fraunces (display) + Sora (UI) tipografi, Phosphor Icons (Light) + özel İslami motifler: **hilal/kemer/fener** (yıldız/sekizgen-yıldız benzeri şekiller **kullanılmaz** — başka bir dinî sembole benzeyebildiği için ürün sahibi tarafından reddedildi; Keşfet kartında hilal + küçük "pırıltı" ikonu kullanılıyor).
 - **Görsel dil:** Genç ve canlı — iki renkli canlı gradyanlar (koyulaştırılmış tek renk değil), yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana butonlar, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması, mesaj girişi). Düz yeşil kullanılmaz; logodaki turkuaz (`teal`) ve bakır (`brass`) ikincil marka renkleridir (bağlantılar, konum iğneleri, arka plan ışıması, avatar geçişleri), ana eylemler mor → mercan geçişinde kalır. Fotoğraflar mahremiyet kapılı olduğu için kişiler gradyan + baş harf avatarıyla gösterilir (FR-3).

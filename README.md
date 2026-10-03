@@ -32,12 +32,13 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Area | What it does |
 | --- | --- |
 | **Onboarding** | Invite gate → account type (single / relative) → KVKK consent → phone + SMS OTP → liveness step → 5-step profile wizard |
+| **Navigation** | Single users get a bottom tab bar — Keşfet, Günün Sorusu, Eşleşmeler, Hesap; each tab keeps its own state, and a dot on the Eşleşmeler tab flags unread replies from any tab. Relatives (guardian accounts) have a single home screen and no tab bar |
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
-| **Matches & chat** | Matches list with last-message preview, 1:1 text chat, one-time gentle "involve your family?" nudge |
+| **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
 | **Privacy** | Per-user photo visibility (hidden / on request / on match), optional religious details behind a separate KVKK m.6 consent |
 | **Family** | Invite code for a relative, per-match "show my family" switch, read-only guardian view |
 | **Safety** | Report and block from the card menu and the chat, account deletion, log out |
-| **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — where Discovery sends people once the candidates run out |
+| **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — its own tab, and where Discovery sends people once the candidates run out |
 | **Waitlist** | Public waitlist page for people without an invite code |
 
 ---
@@ -53,7 +54,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Photo upload | **Not implemented** — photos are picked and shown locally but not stored; people are shown as initial-letter avatars |
 | Photo moderation | **Mock** — filename heuristic only |
 | Waitlist submissions | **Firestore** — create-only `waitlist` collection, reviewed in the Console |
-| Real-time chat, previews and unread dot | **Real** — Firestore listeners keep open chats and the matches list live while the app is open |
+| Real-time chat, previews and unread dots | **Real** — Firestore listeners keep open chats, the matches list and the Eşleşmeler tab dot live while the app is open |
 | Question-of-the-day feed | **Real** (Firestore `feedPosts` / `feedLikes`); text is not moderated automatically — report/block only |
 | Push notifications | **No** — nothing reaches a closed app; needs Cloud Functions + FCM |
 | KVKK consent text | **Draft** — needs a lawyer's review before real users see it (see `docs/REQUIREMENTS.md` §7) |
@@ -68,7 +69,7 @@ The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Fu
 - **Backend:** Firebase — Authentication (phone), Cloud Firestore
 - **State management:** BLoC / Cubit (`flutter_bloc`), `equatable`
 - **Dependency injection:** `get_it`
-- **Routing:** `go_router`
+- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar)
 - **Fonts:** Fraunces (display) and Sora (UI) via `google_fonts`
 
 ### Architecture
@@ -124,7 +125,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the chat and matches cubits, the chat and matches screens (unread dot, live updates, send errors, family nudge) against fake repositories in `test/support/fakes.dart`, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the chat, matches and feed cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the unread dot, tap callbacks), the photo step, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 
@@ -136,7 +137,7 @@ npm install      # first time only
 npm test
 ```
 
-It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, reports/blocks and the account docs. Run it after every `firestore.rules` change, before deploying.
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
 
 ---
 

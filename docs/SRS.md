@@ -2,7 +2,7 @@
 
 **Doküman türü:** Software Requirements Specification, IEEE 830 yapısına gevşek şekilde uyarlanmıştır.
 **Durum:** Taslak — kapalı beta geliştirme aşaması. Bu doküman [`REQUIREMENTS.md`](REQUIREMENTS.md)'deki ürün kararlarını biçimselleştirir ve genişletir; iki doküman çelişirse **REQUIREMENTS.md güncel kabul edilir**, bu SRS ondan türetilmiştir.
-**Son güncelleme bağlamı:** Kayıt sihirbazı, Keşfet, eşleşmeler, sohbet, ayarlar ve aile ekranları yeniden tasarlandıktan; telefon/OTP, profil, eşleştirme, mesajlaşma, güvenlik, hesap ve aile özellikleri Firestore'a taşındıktan sonraki durumu yansıtır. Bölüm 8 hangi parçanın gerçek, hangisinin yer tutucu (mock) olduğunu ayrıca listeler — bir gereksinimin "kuruldu" sayılması onun üretime hazır olduğu anlamına gelmez.
+**Son güncelleme bağlamı:** Kayıt sihirbazı, Keşfet, eşleşmeler, sohbet, ayarlar ve aile ekranları yeniden tasarlandıktan; telefon/OTP, profil, eşleştirme, mesajlaşma, güvenlik, hesap ve aile özellikleri Firestore'a taşındıktan; Günün Sorusu akışı (FR-9) ve bekâr kullanıcılar için alt sekme çubuğu eklendikten sonraki durumu yansıtır. Bölüm 8 hangi parçanın gerçek, hangisinin yer tutucu (mock) olduğunu ayrıca listeler — bir gereksinimin "kuruldu" sayılması onun üretime hazır olduğu anlamına gelmez.
 
 ---
 
@@ -30,7 +30,7 @@ Bu doküman, Bi Nasip mobil/web uygulamasının yazılım gereksinimlerini; payd
 | Terim | Açıklama |
 |---|---|
 | **KVKK** | 6698 sayılı Kişisel Verilerin Korunması Kanunu (Türkiye) |
-| **FR** | Fonksiyonel Gereksinim (Functional Requirement), bu dokümanda ve `REQUIREMENTS.md`'de aynı numaralandırmayla kullanılır (FR-1…FR-8) |
+| **FR** | Fonksiyonel Gereksinim (Functional Requirement), bu dokümanda ve `REQUIREMENTS.md`'de aynı numaralandırmayla kullanılır (FR-1…FR-9) |
 | **NFR** | Fonksiyonel Olmayan Gereksinim (Non-Functional Requirement) |
 | **Tekil hesap (single)** | Kendisi için eş arayan kullanıcı hesabı türü |
 | **Veli/yakın hesabı (guardian)** | Kendisi eşleşmeyen, bağlı olduğu bir tekil hesabın izin verdiği eşleşmeleri salt okunur izleyen hesap türü |
@@ -48,7 +48,7 @@ Bu doküman, Bi Nasip mobil/web uygulamasının yazılım gereksinimlerini; payd
 
 ### 1.5 Genel Bakış
 
-Bölüm 2 ürünü ve kullanıcılarını genel hatlarıyla tanıtır. Bölüm 3 dış arayüzleri tanımlar. Bölüm 4 fonksiyonel gereksinimleri (FR-1…FR-8) girdi/işlem/çıktı ve kabul kriterleriyle detaylandırır. Bölüm 5 fonksiyonel olmayan gereksinimleri kapsar. Bölüm 6 veri modelini verir. Bölüm 7 bilinen mimari sınırlamaları, Bölüm 8 gerçek-vs-mock durumunu, Bölüm 9 açık kararları listeler.
+Bölüm 2 ürünü ve kullanıcılarını genel hatlarıyla tanıtır. Bölüm 3 dış arayüzleri tanımlar. Bölüm 4 fonksiyonel gereksinimleri (FR-1…FR-9) girdi/işlem/çıktı ve kabul kriterleriyle detaylandırır. Bölüm 5 fonksiyonel olmayan gereksinimleri kapsar. Bölüm 6 veri modelini verir. Bölüm 7 bilinen mimari sınırlamaları, Bölüm 8 gerçek-vs-mock durumunu, Bölüm 9 açık kararları listeler.
 
 ---
 
@@ -72,6 +72,7 @@ Rakip konumlandırması: küresel Müslüman tanışma uygulamaları yerel (Tür
 | FR-6 | Güven & Güvenlik | Şikayet, engelleme, fotoğraf moderasyonu |
 | FR-7 | Hesap & Veri | Hesap silme, doğrulama verisinin izolasyonu |
 | FR-8 | Veli/Aile Hesabı | Ayrı hesap türü, davet koduyla bağlanma, salt okunur görünürlük |
+| FR-9 | Günün Sorusu Akışı | Günde tek soru, üye başına tek kısa cevap, yalnızca beğeni |
 
 Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriyle detaylandırılmıştır.
 
@@ -86,8 +87,8 @@ Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriy
 
 İki hesap türü vardır ve her biri ürünü farklı amaçla kullanır:
 
-- **Tekil kullanıcı** — kendisi için eş arayan, FR-2/FR-3/FR-4/FR-5 akışlarının tamamına erişen kullanıcı.
-- **Veli/yakın kullanıcı** — kendisi evli/eşleşmeyen, bir tekil hesabın izin verdiği ölçüde süreci izleyen kullanıcı; FR-2/FR-3/FR-4/FR-5'in hiçbirine erişemez (bkz. FR-8.6).
+- **Tekil kullanıcı** — kendisi için eş arayan, FR-2/FR-3/FR-4/FR-5/FR-9 akışlarının tamamına erişen kullanıcı.
+- **Veli/yakın kullanıcı** — kendisi evli/eşleşmeyen, bir tekil hesabın izin verdiği ölçüde süreci izleyen kullanıcı; FR-2/FR-3/FR-4/FR-5/FR-9'un hiçbirine erişemez (bkz. FR-8.6, FR-9.5).
 
 ### 2.4 Kısıtlamalar
 
@@ -109,9 +110,10 @@ Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriy
 
 ### 3.1 Kullanıcı Arayüzleri
 
-- Uygulama Material 3 tabanlıdır; "Gece Moru" tasarım sistemini kullanır (mor/toz gülü/altın tonları, sıcak krem zemin), açık ve koyu temayı destekler.
+- Uygulama Material 3 tabanlıdır; "Gece Moru" tasarım sistemini kullanır (canlı mor → mercan marka geçişi, logodan gelen turkuaz ve bakır ikincil renkler, sıcak krem zemin), açık ve koyu temayı destekler.
 - Tipografi: Fraunces (başlıklar/display), Sora (arayüz metni).
-- Görsel dil kasıtlı olarak genç ve canlı tutulmuştur: iki renkli gradyanlar, yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana aksiyon butonları, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması). Yeşil renk ve yıldız/sekizgen-yıldız biçimli motifler kullanılmaz (bkz. REQUIREMENTS.md §6 için gerekçe).
+- Görsel dil kasıtlı olarak genç ve canlı tutulmuştur: iki renkli gradyanlar, yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana aksiyon butonları, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması). Düz yeşil ve yıldız/sekizgen-yıldız biçimli motifler kullanılmaz; logodaki turkuaz serbesttir (bkz. REQUIREMENTS.md §6 için gerekçe).
+- **Gezinme:** Tekil kullanıcının ana ekranı dört sekmeli, yüzen bir alt çubuktur — Keşfet (`/discover`), Günün Sorusu (`/feed`), Eşleşmeler (`/matches`), Hesap (`/account`). Her sekme kendi gezinme yığınını ve durumunu korur; bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet ve aile ayarları gibi tam ekran sayfalar çubuğu örter. Okunmamış mesaj varken Eşleşmeler sekmesinin ikonunda bir nokta görünür (bkz. FR-5.3). Veli hesabında sekme çubuğu yoktur; tek bir ana ekran ve ondan açılan ayarlar sayfası vardır.
 - Mahremiyet ilkesi gereği kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla temsil edilir.
 - Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında açık/koyu tema anahtarıyla canlı olarak incelenebilir.
 - Erişilebilirlik hedefi: WCAG AA metin kontrastı, minimum 44×44pt dokunma hedefleri.
@@ -191,6 +193,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 |---|---|---|---|---|
 | FR-5.1 | Eşleşenler arası metin sohbeti | Mesaj metni | Gönderim ve kayıt | Yalnızca karşılıklı eşleşmiş kullanıcılar birbirine mesaj gönderebilir |
 | FR-5.2 | Aile/buluşma önerisi nudge'ı | Mesaj sayısı/süre | Eşik kontrolü (30 mesaj VEYA 7 gün, hangisi önce gerçekleşirse) | Tek seferlik, kapatılabilir, zorlayıcı olmayan bir öneri kartı gösterilir; aynı sohbette tekrar gösterilmez |
+| FR-5.3 | Okunmamış işareti | Karşı taraftan gelen son mesaj, kullanıcının sohbeti son açma zamanı | Karşılaştırma (canlı dinleyici) | Okunmamış sohbet eşleşme listesinde nokta ile işaretlenir; en az bir okunmamış sohbet varken alt çubuktaki Eşleşmeler sekmesinde de nokta görünür (kullanıcı başka sekmedeyken de). Sohbet açılınca ikisi de kaybolur; kullanıcının kendi son mesajı okunmamış sayılmaz |
 
 ### FR-6 — Güven & Güvenlik
 
@@ -223,6 +226,19 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-8.6 | Veli hesabının kısıtları | — | Mimari erişim kısıtı | Veli hesabı keşif/eşleştirme adayı olamaz, beğeni/geçme yapamaz, mesaj gönderemez, eşleştirme filtrelerine tabi olmaz |
 
 **Kabul kriteri:** Bir veli hesabının `MatchingRepository`/`MessagingRepository` katmanlarına hiçbir kod yolundan erişimi olmamalıdır; yalnızca salt okunur bir aile görünümü üzerinden veri alır.
+
+### FR-9 — Günün Sorusu Akışı
+
+| # | Gereksinim | Girdi | İşlem | Çıktı / Kabul Kriteri |
+|---|---|---|---|---|
+| FR-9.1 | Günün sorusu | Tarih (UTC günü) | İstemcideki sabit listeden sırayla seçim | Aynı gün tüm üyeler aynı tek soruyu görür |
+| FR-9.2 | Günde tek cevap | En fazla 280 karakterlik metin | Cevap kaydı oluşturma | Üye günde en fazla bir cevap paylaşır; cevap ad, yaş ve şehirle tüm tekil üyelere görünür, fotoğraf gösterilmez; düzenlenemez, sahibi silebilir |
+| FR-9.3 | Yalnızca beğeni | Beğen / beğeniyi geri al | Beğeni kaydı ve sayaç güncelleme | Yorum yoktur; akış beğenisi eşleşme oluşturmaz ve sohbet açmaz; kimin beğendiği görünmez, yalnızca sayı görünür; kişi kendi cevabını beğenemez |
+| FR-9.4 | Şikayet / engelleme | Hedef cevap sahibi | FR-6.1 / FR-6.2 ile aynı | Her cevapta menü bulunur; engellenen kişinin cevapları gösterilmez |
+| FR-9.5 | Veli hesabı kapsam dışı | — | Hesap türü kontrolü (kurallarda) | Veli hesabı akışı okuyamaz, cevap veya beğeni veremez |
+| FR-9.6 | Keşfet'ten yönlendirme | Aday listesinin bitmesi | Boş durum ekranı | Aday kalmadığında ana eylem kullanıcıyı akışa götürür |
+
+**Not:** Metin için otomatik moderasyon yoktur (sunucu gerektirir, bkz. §7.1); güvenlik ağı karakter sınırı, günde tek cevap ve şikayet/engelle menüsüdür.
 
 ---
 
@@ -269,7 +285,7 @@ Flutter tek kod tabanından Android, iOS ve Web hedeflenir. Web hedefi şu an ö
 
 ### 5.8 Marka ve Görsel Kimlik
 
-Bkz. §3.1. Özetle: "Gece Moru" renk paleti, Fraunces + Sora tipografi, yıldız/sekizgen-yıldız motifleri kullanılmaz (hilal/kemer/fener tercih edilir), yeşil kullanılmaz, kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla gösterilir.
+Bkz. §3.1. Özetle: "Gece Moru" renk paleti, Fraunces + Sora tipografi, yıldız/sekizgen-yıldız motifleri kullanılmaz (hilal/kemer/fener tercih edilir), düz yeşil kullanılmaz (logodaki turkuaz ve bakır ikincil marka renkleridir), kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla gösterilir.
 
 ---
 
@@ -290,6 +306,8 @@ Message           { conversationId, senderId, text, sentAt }
 Report            { id, reporterId, targetUserId, reason, createdAt }
 WaitlistEntry     { name, contact, city?, createdAt, inviteStatus }
 Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
+FeedPost          { id (authorId_dayKey), authorId, dayKey, text, createdAt, likeCount }
+FeedLike          { id (postId_userId), postId, userId, dayKey, createdAt }
 ```
 
 ---
@@ -314,7 +332,8 @@ Consent           { userId, consentVersion, acceptedAt, lastAcceptedAt }
 | Fotoğraf yükleme/depolama | **Yok** — fotoğraflar yerel olarak seçilip gösterilir ama saklanmaz; kişiler baş harf avatarıyla temsil edilir |
 | Fotoğraf moderasyonu | **Mock** — yalnızca dosya adı sezgisel kontrolü |
 | Bekleme listesi kayıtları | **Firestore** — yalnızca oluşturulabilir `waitlist` koleksiyonu; istemci okuyamaz, Console'dan incelenir |
-| Gerçek zamanlı sohbet ve okunmamış işareti | **Firestore dinleyicileri** — uygulama açıkken canlı; arka plan bildirimi yok (bkz. §7.2) |
+| Gerçek zamanlı sohbet ve okunmamış işareti (liste + Eşleşmeler sekmesi) | **Firestore dinleyicileri** — uygulama açıkken canlı; arka plan bildirimi yok (bkz. §7.2) |
+| Günün Sorusu akışı | **Gerçek** (Firestore `feedPosts` / `feedLikes`); metin otomatik denetlenmez — yalnızca şikayet/engelleme |
 | Push bildirimleri | **Yok** |
 | KVKK rıza metni | **Taslak** — hukuki incelemeden geçmedi (bkz. §9) |
 
