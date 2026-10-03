@@ -66,8 +66,8 @@ class _FeedViewState extends State<_FeedView> {
       appBar: AppBar(
         title: Text(
           'Günün Sorusu',
-          style: textTheme.displayMedium?.copyWith(
-            fontSize: 26,
+          style: textTheme.titleSmall?.copyWith(
+            fontSize: 18,
             color: colors.plumStrong,
           ),
         ),
@@ -104,6 +104,7 @@ class _FeedViewState extends State<_FeedView> {
                   padding: const EdgeInsets.only(bottom: 32),
                   children: [
                     _QuestionHeader(question: feed.question),
+                    Divider(height: 1, color: colors.line),
                     if (mine == null)
                       _Composer(
                         controller: _answerController,
@@ -122,7 +123,7 @@ class _FeedViewState extends State<_FeedView> {
                     ),
                     if (others.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                         child: Text(
                           mine == null
                               ? 'Henüz kimse cevap vermedi. İlk cevabı sen yaz.'
@@ -149,8 +150,8 @@ class _FeedViewState extends State<_FeedView> {
   }
 }
 
-/// The day's prompt: a quiet label and the question in the display face,
-/// with a short gradient rule as the only decoration.
+/// The day's prompt, centered: a "BUGÜN" label with the crescent beside
+/// it and the question underneath.
 class _QuestionHeader extends StatelessWidget {
   const _QuestionHeader({required this.question});
 
@@ -162,11 +163,12 @@ class _QuestionHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.nightlight_round, size: 14, color: colors.teal),
               const SizedBox(width: 6),
@@ -179,19 +181,11 @@ class _QuestionHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             question.text,
+            textAlign: TextAlign.center,
             style: textTheme.displayMedium?.copyWith(
-              fontSize: 25,
-              height: 1.25,
+              fontSize: 22,
+              height: 1.3,
               color: colors.plumStrong,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            width: 48,
-            height: 4,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              gradient: LinearGradient(colors: colors.brandGradient),
             ),
           ),
         ],
@@ -219,7 +213,7 @@ class _Composer extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -373,7 +367,7 @@ class _SectionBand extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: colors.plumTint.withValues(alpha: 0.6),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Text(
         label,
         style: Theme.of(context).textTheme.titleSmall
@@ -403,7 +397,6 @@ class _PostRow extends StatelessWidget {
         : '${post.authorCity} · ${formatRelativeShort(post.createdAt)}';
 
     return Container(
-      color: _mine ? colors.plumTint.withValues(alpha: 0.55) : null,
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,7 +441,9 @@ class _PostRow extends StatelessWidget {
                                     ? 'Senin cevabın'
                                     : '${post.authorName}, ${post.authorAge}',
                                 style: textTheme.titleSmall?.copyWith(
-                                  color: colors.plumStrong,
+                                  color: _mine
+                                      ? colors.plum
+                                      : colors.plumStrong,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
