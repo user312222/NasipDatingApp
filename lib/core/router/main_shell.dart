@@ -9,9 +9,20 @@ import '../../theme/app_colors.dart';
 /// and back doesn't reload the candidates. Full-screen pages (chat, family
 /// settings, ...) are top-level routes and cover the bar.
 class MainShell extends StatelessWidget {
-  const MainShell({super.key, required this.navigationShell});
+  const MainShell({
+    super.key,
+    required this.navigationShell,
+    this.badgedTabs = const {},
+    this.onTabSelected,
+  });
 
   final StatefulNavigationShell navigationShell;
+
+  /// Indexes of tabs that show a small "something new" dot.
+  final Set<int> badgedTabs;
+
+  /// Called with the index every time a tab is tapped (e.g. to refresh it).
+  final ValueChanged<int>? onTabSelected;
 
   static const tabs = [
     _Tab('Keşfet', Icons.explore_outlined, Icons.explore_rounded),
@@ -56,12 +67,16 @@ class MainShell extends StatelessWidget {
                     child: _TabButton(
                       tab: tabs[i],
                       selected: i == navigationShell.currentIndex,
+                      badged: badgedTabs.contains(i),
                       // Tapping the tab you're already on goes back to its
                       // root, the usual bottom-bar behaviour.
-                      onTap: () => navigationShell.goBranch(
-                        i,
-                        initialLocation: i == navigationShell.currentIndex,
-                      ),
+                      onTap: () {
+                        onTabSelected?.call(i);
+                        navigationShell.goBranch(
+                          i,
+                          initialLocation: i == navigationShell.currentIndex,
+                        );
+                      },
                     ),
                   ),
               ],
@@ -86,10 +101,12 @@ class _TabButton extends StatelessWidget {
     required this.tab,
     required this.selected,
     required this.onTap,
+    this.badged = false,
   });
 
   final _Tab tab;
   final bool selected;
+  final bool badged;
   final VoidCallback onTap;
 
   @override
@@ -101,7 +118,7 @@ class _TabButton extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: tab.label,
+      label: badged ? '${tab.label}, yeni mesaj var' : tab.label,
       excludeSemantics: true,
       child: InkResponse(
         onTap: onTap,
@@ -117,10 +134,30 @@ class _TabButton extends StatelessWidget {
                 color: selected ? colors.plumTint : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                selected ? tab.selectedIcon : tab.icon,
-                size: 22,
-                color: color,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    selected ? tab.selectedIcon : tab.icon,
+                    size: 22,
+                    color: color,
+                  ),
+                  if (badged)
+                    Positioned(
+                      top: -2,
+                      right: -4,
+                      child: Container(
+                        key: const ValueKey('tab_badge'),
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.accent,
+                          border: Border.all(color: colors.surface, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 3),

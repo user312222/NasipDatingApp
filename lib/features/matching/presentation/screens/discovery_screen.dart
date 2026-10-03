@@ -63,42 +63,12 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [colors.teal, colors.plumFill],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.teal.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.nightlight_round,
-                size: 19,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Keşfet',
-              style: textTheme.displayMedium?.copyWith(
-                fontSize: 28,
-                color: colors.plumStrong,
-              ),
-            ),
-          ],
+        title: Text(
+          'Keşfet',
+          style: textTheme.displayMedium?.copyWith(
+            fontSize: 28,
+            color: colors.plumStrong,
+          ),
         ),
         actions: [
           BlocBuilder<MatchingCubit, MatchingState>(

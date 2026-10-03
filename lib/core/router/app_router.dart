@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/screens/settings_screen.dart';
@@ -13,6 +14,7 @@ import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/phone_entry_screen.dart';
 import '../../features/auth/presentation/screens/selfie_verification_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
+import '../../features/matching/presentation/bloc/matches_cubit.dart';
 import '../../features/matching/presentation/screens/discovery_screen.dart';
 import '../../features/matching/presentation/screens/matches_screen.dart';
 import '../../features/messaging/presentation/screens/chat_screen.dart';
@@ -24,6 +26,7 @@ import '../../features/profile/presentation/screens/profile_photos_screen.dart';
 import '../../features/profile/presentation/screens/profile_privacy_screen.dart';
 import '../../features/waitlist/presentation/screens/waitlist_screen.dart';
 import '../../screens/design_preview_screen.dart';
+import '../di/injection_container.dart';
 import 'main_shell.dart';
 
 /// Session restore only runs from `/` (`InviteGateScreen` calls
@@ -32,6 +35,11 @@ import 'main_shell.dart';
 /// `AuthCubit`. On the very first navigation, send such locations through
 /// `/` so the session is restored and the user is routed onward. Public
 /// pages are exempt.
+const _matchesTab = 2;
+
+bool _hasUnread(MatchesState state) =>
+    state is MatchesLoaded && state.hasUnread;
+
 bool _booted = false;
 const _publicRoutes = {'/', '/waitlist', '/design-preview'};
 
@@ -126,8 +134,25 @@ final appRouter = GoRouter(
     // is the same screen as `/settings`, which stays a standalone route for
     // guardian accounts (they have no tabs).
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          MainShell(navigationShell: navigationShell),
+      // One MatchesCubit for the whole tab bar: it feeds both the
+      // Eşleşmeler tab and the unread dot on that tab, so the dot is live
+      // even while another tab is open.
+      builder: (context, state, navigationShell) => BlocProvider(
+        create: (_) => sl<MatchesCubit>()..load(),
+        child: BlocBuilder<MatchesCubit, MatchesState>(
+          buildWhen: (previous, current) =>
+              _hasUnread(previous) != _hasUnread(current),
+          builder: (context, matches) => MainShell(
+            navigationShell: navigationShell,
+            badgedTabs: {if (_hasUnread(matches)) _matchesTab},
+            onTabSelected: (index) {
+              if (index == _matchesTab) {
+                context.read<MatchesCubit>().refresh();
+              }
+            },
+          ),
+        ),
+      ),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -149,7 +174,8 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/matches',
-              builder: (context, state) => const MatchesScreen(),
+              builder: (context, state) =>
+                  const MatchesScreen(ownsCubit: false),
             ),
           ],
         ),

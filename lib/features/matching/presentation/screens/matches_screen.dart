@@ -16,10 +16,15 @@ import '../../../../theme/wizard_widgets.dart';
 /// Every mutual match, newest first — the way back into a conversation
 /// once the match celebration has been dismissed.
 class MatchesScreen extends StatelessWidget {
-  const MatchesScreen({super.key});
+  const MatchesScreen({super.key, this.ownsCubit = true});
+
+  /// False inside the tab bar, which provides one long-lived
+  /// [MatchesCubit] shared with the tab's unread dot.
+  final bool ownsCubit;
 
   @override
   Widget build(BuildContext context) {
+    if (!ownsCubit) return const _MatchesView();
     return BlocProvider(
       create: (_) => sl<MatchesCubit>()..load(),
       child: const _MatchesView(),

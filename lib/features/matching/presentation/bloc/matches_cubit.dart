@@ -58,6 +58,10 @@ final class MatchesLoaded extends MatchesState {
     return readAt == null || last.sentAt.isAfter(readAt);
   }
 
+  /// Whether any conversation is waiting on a reply - drives the dot on
+  /// the Eşleşmeler tab.
+  bool get hasUnread => matches.any((m) => isUnread(m.id));
+
   @override
   List<Object?> get props => [matches, previews, readTimes];
 }
@@ -99,25 +103,58 @@ class MatchesCubit extends Cubit<MatchesState> {
         _previews = const {};
         _readTimes = null;
         _publish();
-        if (_matches.isEmpty) return;
-        _previewsSub =
-            _watchLastMessages(
-              WatchLastMessagesParams([for (final m in _matches) m.id]),
-            ).listen((result) {
-              if (result case Ok<Map<String, ChatMessage>>(:final value)) {
-                _previews = value;
-                _publish();
-              }
-            });
-        _readTimesSub = _watchReadTimes().listen((result) {
-          if (result case Ok<Map<String, DateTime>>(:final value)) {
-            _readTimes = value;
-            _publish();
-          }
-        });
+        _watch();
       case Err<List<Match>>(:final failure):
         emit(MatchesError(failure.message));
     }
+  }
+
+  /// Re-fetches the match list without a loading state. The cubit lives as
+  /// long as the tab bar (it also feeds the unread dot), so this is how it
+  /// picks up matches made since it first loaded - called whenever the
+  /// matches tab is selected. The preview listener is only rebuilt when the
+  /// set of matches actually changed.
+  Future<void> refresh() async {
+    final current = state;
+    if (current is MatchesLoading) return;
+    if (current is! MatchesLoaded) return load();
+
+    final result = await _getMyMatches(const NoParams());
+    if (isClosed) return;
+    if (result case Ok<List<Match>>(:final value)) {
+      final before = {for (final m in _matches) m.id};
+      final after = {for (final m in value) m.id};
+      _matches = [...value]..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
+      if (before.length != after.length || !before.containsAll(after)) {
+        final previews = _previewsSub;
+        _previewsSub = null;
+        await previews?.cancel();
+        if (isClosed) return;
+        _watch();
+      }
+      _publish();
+    }
+  }
+
+  /// Starts the preview listener for the current matches, and the read
+  /// times listener if it isn't running yet.
+  void _watch() {
+    if (_matches.isEmpty) return;
+    _previewsSub ??=
+        _watchLastMessages(
+          WatchLastMessagesParams([for (final m in _matches) m.id]),
+        ).listen((result) {
+          if (result case Ok<Map<String, ChatMessage>>(:final value)) {
+            _previews = value;
+            _publish();
+          }
+        });
+    _readTimesSub ??= _watchReadTimes().listen((result) {
+      if (result case Ok<Map<String, DateTime>>(:final value)) {
+        _readTimes = value;
+        _publish();
+      }
+    });
   }
 
   /// Orders by most recent activity; a stream error leaves the list as it

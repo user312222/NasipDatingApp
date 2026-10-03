@@ -23,7 +23,8 @@ import 'package:binasip/features/safety/domain/repositories/safety_repository.da
 class FakeMatchingRepository implements MatchingRepository {
   FakeMatchingRepository(this.result);
 
-  final Result<List<Match>> result;
+  /// Mutable so a test can change what the next `getMyMatches` returns.
+  Result<List<Match>> result;
 
   @override
   Future<Result<List<Match>>> getMyMatches() async => result;
@@ -52,7 +53,22 @@ class FakeMessagingRepository implements MessagingRepository {
     if (firstPreviews != null) previews.add(firstPreviews);
   }
 
-  final previews = StreamController<Result<Map<String, ChatMessage>>>();
+  /// One controller per [watchLastMessages] call (a resubscribe gets a
+  /// fresh one); [previews] is the latest, created on first read so a test
+  /// can seed data before anything subscribes.
+  final previewStreams = <StreamController<Result<Map<String, ChatMessage>>>>[];
+  var _lastPreviewsHandedOut = false;
+
+  StreamController<Result<Map<String, ChatMessage>>> get previews =>
+      previewStreams.isEmpty ? _newPreviews() : previewStreams.last;
+
+  StreamController<Result<Map<String, ChatMessage>>> _newPreviews() {
+    final controller = StreamController<Result<Map<String, ChatMessage>>>();
+    previewStreams.add(controller);
+    _lastPreviewsHandedOut = false;
+    return controller;
+  }
+
   final readTimes = StreamController<Result<Map<String, DateTime>>>();
 
   /// The ids [watchLastMessages] was last asked about; null if never.
@@ -87,7 +103,11 @@ class FakeMessagingRepository implements MessagingRepository {
     List<String> matchIds,
   ) {
     lastRequestedIds = matchIds;
-    return previews.stream;
+    final controller = previewStreams.isEmpty || _lastPreviewsHandedOut
+        ? _newPreviews()
+        : previewStreams.last;
+    _lastPreviewsHandedOut = true;
+    return controller.stream;
   }
 
   @override

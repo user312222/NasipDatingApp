@@ -239,4 +239,89 @@ void main() {
       expect(s.cubit.isClosed, isTrue);
     });
   });
+
+  group('refresh (the cubit outlives a visit to the tab)', () {
+    test('picks up a new match and watches its messages too', () async {
+      final a = testMatch('a', DateTime(2026, 1, 1));
+      final b = testMatch('b', DateTime(2026, 2, 1));
+      final matching = FakeMatchingRepository(Ok([a]));
+      final messaging = FakeMessagingRepository(const Ok({}));
+      final cubit = MatchesCubit(
+        getMyMatches: GetMyMatches(matching),
+        watchLastMessages: WatchLastMessages(messaging),
+        watchReadTimes: WatchReadTimes(messaging),
+      );
+      await cubit.load();
+      await pumpEventQueue();
+      expect(messaging.lastRequestedIds, ['a']);
+
+      matching.result = Ok([a, b]);
+      await cubit.refresh();
+      await pumpEventQueue();
+
+      expect((cubit.state as MatchesLoaded).matches, unorderedEquals([a, b]));
+      expect(messaging.lastRequestedIds, unorderedEquals(['a', 'b']));
+      expect(messaging.previewStreams.first.hasListener, isFalse);
+    });
+
+    test(
+      'does not show a spinner or resubscribe when nothing changed',
+      () async {
+        final a = testMatch('a', DateTime(2026, 1, 1));
+        final messaging = FakeMessagingRepository(const Ok({}));
+        final cubit = _cubitWith(Ok([a]), messaging: messaging);
+        await cubit.load();
+        await pumpEventQueue();
+        final states = <MatchesState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        await cubit.refresh();
+        await pumpEventQueue();
+        await sub.cancel();
+
+        expect(states.whereType<MatchesLoading>(), isEmpty);
+        expect(messaging.previewStreams, hasLength(1));
+        expect(messaging.previews.hasListener, isTrue);
+      },
+    );
+
+    test('after an error it falls back to a full load', () async {
+      final a = testMatch('a', DateTime(2026, 1, 1));
+      final matching = FakeMatchingRepository(
+        const Err(ServerFailure('Eşleşmeler yüklenemedi.')),
+      );
+      final cubit = MatchesCubit(
+        getMyMatches: GetMyMatches(matching),
+        watchLastMessages: WatchLastMessages(FakeMessagingRepository()),
+        watchReadTimes: WatchReadTimes(FakeMessagingRepository()),
+      );
+      await cubit.load();
+      expect(cubit.state, isA<MatchesError>());
+
+      matching.result = Ok([a]);
+      await cubit.refresh();
+
+      expect((cubit.state as MatchesLoaded).matches, [a]);
+    });
+  });
+
+  group('hasUnread', () {
+    test('is true only while some reply is unread', () async {
+      final messaging = FakeMessagingRepository(
+        Ok({'a': theirMessage('selam', DateTime(2026, 3, 1, 12))}),
+      );
+      final cubit = _cubitWith(
+        Ok([testMatch('a', DateTime(2026, 1, 1))]),
+        messaging: messaging,
+      );
+      await cubit.load();
+      messaging.readTimes.add(const Ok({}));
+      await pumpEventQueue();
+      expect((cubit.state as MatchesLoaded).hasUnread, isTrue);
+
+      messaging.readTimes.add(Ok({'a': DateTime(2026, 3, 1, 13)}));
+      await pumpEventQueue();
+      expect((cubit.state as MatchesLoaded).hasUnread, isFalse);
+    });
+  });
 }

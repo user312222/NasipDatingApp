@@ -34,11 +34,18 @@ class _CounterTabState extends State<_CounterTab> {
   );
 }
 
-GoRouter _router() => GoRouter(
+GoRouter _router({
+  Set<int> badgedTabs = const {},
+  ValueChanged<int>? onTabSelected,
+}) => GoRouter(
   initialLocation: '/discover',
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, shell) => MainShell(navigationShell: shell),
+      builder: (context, state, shell) => MainShell(
+        navigationShell: shell,
+        badgedTabs: badgedTabs,
+        onTabSelected: onTabSelected,
+      ),
       branches: [
         for (final path in ['/discover', '/feed', '/matches', '/account'])
           StatefulShellBranch(
@@ -54,9 +61,19 @@ GoRouter _router() => GoRouter(
 );
 
 void main() {
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    Set<int> badgedTabs = const {},
+    ValueChanged<int>? onTabSelected,
+  }) async {
     await tester.pumpWidget(
-      MaterialApp.router(theme: AppTheme.light(), routerConfig: _router()),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router(
+          badgedTabs: badgedTabs,
+          onTabSelected: onTabSelected,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -109,5 +126,32 @@ void main() {
 
     expect(find.text('tam ekran sayfa'), findsOneWidget);
     expect(find.text('Hesap'), findsNothing);
+  });
+
+  testWidgets('a badged tab shows the dot and says so to screen readers', (
+    tester,
+  ) async {
+    await pump(tester, badgedTabs: {2});
+
+    expect(find.byKey(const ValueKey('tab_badge')), findsOneWidget);
+    expect(find.bySemanticsLabel('Eşleşmeler, yeni mesaj var'), findsOneWidget);
+  });
+
+  testWidgets('no dot without a badge', (tester) async {
+    await pump(tester);
+
+    expect(find.byKey(const ValueKey('tab_badge')), findsNothing);
+  });
+
+  testWidgets('reports which tab was tapped', (tester) async {
+    final tapped = <int>[];
+    await pump(tester, onTabSelected: tapped.add);
+
+    await tester.tap(find.text('Eşleşmeler'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eşleşmeler'));
+    await tester.pumpAndSettle();
+
+    expect(tapped, [2, 2]);
   });
 }
