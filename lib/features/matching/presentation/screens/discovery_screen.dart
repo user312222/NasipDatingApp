@@ -101,16 +101,6 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
           ],
         ),
         actions: [
-          ChromeIconButton(
-            icon: Icons.forum_outlined,
-            onPressed: () => context.push('/feed'),
-            tooltip: 'Günün sorusu',
-          ),
-          ChromeIconButton(
-            icon: Icons.chat_bubble_outline_rounded,
-            onPressed: () => context.push('/matches'),
-            tooltip: 'Eşleşmeler',
-          ),
           BlocBuilder<MatchingCubit, MatchingState>(
             builder: (context, state) {
               final filter = state is MatchingLoaded
@@ -124,19 +114,10 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
               );
             },
           ),
-          _ChromeMenuButton(
-            items: [
-              _ChromeMenuItem(
-                icon: Icons.settings_outlined,
-                label: 'Hesap & veri',
-                onTap: () => context.push('/settings'),
-              ),
-              _ChromeMenuItem(
-                icon: Icons.family_restroom_outlined,
-                label: 'Aile bağlantısı',
-                onTap: () => context.push('/family/settings'),
-              ),
-            ],
+          ChromeIconButton(
+            icon: Icons.family_restroom_outlined,
+            onPressed: () => context.push('/family/settings'),
+            tooltip: 'Aile bağlantısı',
           ),
           const SizedBox(width: 10),
         ],
@@ -174,9 +155,9 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
 
           if (candidate == null) {
             return _EmptyDiscovery(
-              onOpenFeed: () => context.push('/feed'),
+              onOpenFeed: () => context.go('/feed'),
               onChangeFilters: () => _openFilters(loaded.filter),
-              onOpenMatches: () => context.push('/matches'),
+              onOpenMatches: () => context.go('/matches'),
             );
           }
 
@@ -414,63 +395,6 @@ class _MatchCelebrationState extends State<_MatchCelebration>
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// A single overflow entry for [_ChromeMenuButton].
-class _ChromeMenuItem {
-  const _ChromeMenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-}
-
-/// Groups the less-frequently-used app-bar actions (account settings,
-/// family link) behind a single tinted overflow button instead of giving
-/// each its own same-toned circle — see [_ChromeIconButton]'s doc comment
-/// for why that repetition was the problem.
-class _ChromeMenuButton extends StatelessWidget {
-  const _ChromeMenuButton({required this.items});
-
-  final List<_ChromeMenuItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: PopupMenuButton<VoidCallback>(
-        tooltip: 'Diğer',
-        color: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colors.line),
-        ),
-        onSelected: (action) => action(),
-        itemBuilder: (context) => [
-          for (final item in items)
-            PopupMenuItem<VoidCallback>(
-              value: item.onTap,
-              child: Row(
-                children: [
-                  Icon(item.icon, size: 19, color: colors.plumStrong),
-                  const SizedBox(width: 12),
-                  Text(
-                    item.label,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-        ],
-        child: const ChromeChip(icon: Icons.more_horiz),
       ),
     );
   }

@@ -24,6 +24,7 @@ import '../../features/profile/presentation/screens/profile_photos_screen.dart';
 import '../../features/profile/presentation/screens/profile_privacy_screen.dart';
 import '../../features/waitlist/presentation/screens/waitlist_screen.dart';
 import '../../screens/design_preview_screen.dart';
+import 'main_shell.dart';
 
 /// Session restore only runs from `/` (`InviteGateScreen` calls
 /// `AuthCubit.restoreSession`), so a web reload — or any deep link — that
@@ -121,14 +122,46 @@ final appRouter = GoRouter(
       path: '/profile/complete',
       builder: (context, state) => const ProfileCompleteScreen(),
     ),
-    GoRoute(
-      path: '/discover',
-      builder: (context, state) => const DiscoveryScreen(),
-    ),
-    GoRoute(path: '/feed', builder: (context, state) => const FeedScreen()),
-    GoRoute(
-      path: '/matches',
-      builder: (context, state) => const MatchesScreen(),
+    // The single user's home: four tabs behind the bottom bar. `/account`
+    // is the same screen as `/settings`, which stays a standalone route for
+    // guardian accounts (they have no tabs).
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          MainShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/discover',
+              builder: (context, state) => const DiscoveryScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/feed',
+              builder: (context, state) => const FeedScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/matches',
+              builder: (context, state) => const MatchesScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/account',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
       path: '/chat',
