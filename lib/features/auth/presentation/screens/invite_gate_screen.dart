@@ -82,7 +82,9 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                           leading: BrandLogo(),
                           icon: Icons.favorite_rounded,
                           title: 'Bi Nasip’e hoş geldin.',
-                          subtitle: 'Şu an kapalı beta aşamasındayız. Devam etmek için davetiye kodunu gir.',
+                          subtitle:
+                              'Şu an kapalı beta aşamasındayız. Davetiye '
+                              'kodunla kayıt ol ya da hesabınla giriş yap.',
                           centered: true,
                         ),
                         const SizedBox(height: 28),
@@ -110,6 +112,15 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // Names this door, now that the screen
+                                // has two.
+                                Text(
+                                  'YENİ KAYIT',
+                                  style: textTheme.labelSmall?.copyWith(
+                                    color: colors.inkSoft,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 TextField(
                                   controller: _codeController,
                                   textCapitalization:

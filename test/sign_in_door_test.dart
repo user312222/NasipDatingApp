@@ -77,8 +77,11 @@ void main() {
   testWidgets('the entry screen offers both doors', (tester) async {
     await pumpEntry(tester);
 
+    expect(find.text('YENİ KAYIT'), findsOneWidget);
     expect(find.text('DAVETİYE KODU'), findsOneWidget);
     expect(find.text('Hesabım var, giriş yap'), findsOneWidget);
+    // The intro names both doors, not only the invite code.
+    expect(find.textContaining('kayıt ol ya da'), findsOneWidget);
     expect(find.textContaining('kayıtlı bir hesap bulamadık'), findsNothing);
   });
 
