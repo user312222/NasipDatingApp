@@ -94,6 +94,8 @@ class SafetyMenuButton extends StatelessWidget {
     final cubit = context.read<SafetyCubit>();
     await showModalBottomSheet<void>(
       context: context,
+      // Above the tab bar, so the sheet and its dimming cover it too.
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) => _ReportSheet(
         targetName: targetName,

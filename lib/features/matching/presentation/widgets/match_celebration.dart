@@ -171,6 +171,9 @@ class _MatchCelebrationState extends State<MatchCelebration>
                           onPressed: widget.onChat,
                           style: FilledButton.styleFrom(
                             backgroundColor: colors.plumFill,
+                            // The theme's on-primary is dark in dark mode;
+                            // plumFill always carries white text.
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),

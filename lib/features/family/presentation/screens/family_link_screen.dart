@@ -260,7 +260,8 @@ class _MatchSwitchTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$city · aileme göster',
+                  // A deleted account's match has no city left to show.
+                  city.isEmpty ? 'aileme göster' : '$city · aileme göster',
                   style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
                 ),
               ],

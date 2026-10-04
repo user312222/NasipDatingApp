@@ -49,6 +49,8 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
   Future<void> _openFilters(CandidateFilter current) async {
     final applied = await showModalBottomSheet<CandidateFilter>(
       context: context,
+      // Above the tab bar, so the sheet and its dimming cover it too.
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (context) => _FilterSheet(initial: current),
     );

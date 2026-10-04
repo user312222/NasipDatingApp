@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:binasip/features/matching/presentation/widgets/match_celebration.dart';
@@ -114,5 +115,31 @@ void main() {
 
     expect(chats, 1);
     expect(laters, 1);
+  });
+
+  testWidgets('the chat button keeps white text in the dark theme', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark(),
+        home: Scaffold(
+          body: MatchCelebration(
+            candidate: candidate,
+            onChat: () {},
+            onLater: () {},
+            onShowFamilyChanged: (_) async => true,
+          ),
+        ),
+      ),
+    );
+
+    final label = tester.renderObject<RenderParagraph>(
+      find.descendant(
+        of: find.byType(FilledButton),
+        matching: find.byType(RichText),
+      ),
+    );
+    expect(label.text.style?.color, Colors.white);
   });
 }
