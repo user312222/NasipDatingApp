@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:binasip/core/result/result.dart';
+import 'package:binasip/features/family/domain/entities/family_visible_match.dart';
+import 'package:binasip/features/family/domain/entities/relationship.dart';
+import 'package:binasip/features/family/domain/repositories/family_repository.dart';
 import 'package:binasip/features/feed/domain/entities/daily_question.dart';
 import 'package:binasip/features/feed/domain/entities/feed.dart';
 import 'package:binasip/features/feed/domain/entities/feed_post.dart';
@@ -221,6 +224,33 @@ Conversation testConversation(
   messages: messages,
   familyNudgeShown: familyNudgeShown,
 );
+
+class FakeFamilyRepository implements FamilyRepository {
+  Result<List<FamilyVisibleMatch>> matches = const Ok([]);
+  Result<String?> singleName = const Ok(null);
+  Result<void> linkResult = const Ok(null);
+
+  @override
+  Future<Result<List<FamilyVisibleMatch>>> getVisibleMatches(
+    String guardianUserId,
+  ) async => matches;
+
+  @override
+  Future<Result<String?>> getLinkedSingleName(String guardianUserId) async =>
+      singleName;
+
+  @override
+  Future<Result<void>> linkGuardian({
+    required String guardianUserId,
+    required String guardianName,
+    required Relationship relationship,
+    required String inviteCode,
+  }) async => linkResult;
+
+  @override
+  Future<Result<String>> getOrCreateInviteCode(String singleUserId) =>
+      throw UnimplementedError();
+}
 
 class FakeFeedRepository implements FeedRepository {
   final feeds = StreamController<Result<Feed>>();

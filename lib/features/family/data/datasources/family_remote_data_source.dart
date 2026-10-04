@@ -20,6 +20,7 @@ abstract interface class FamilyRemoteDataSource {
     required String inviteCode,
   });
   Future<List<FamilyVisibleMatch>> getVisibleMatches(String guardianUserId);
+  Future<String?> getLinkedSingleName(String guardianUserId);
   Future<String> getOrCreateInviteCode(String singleUserId);
 }
 
@@ -53,6 +54,10 @@ class MockFamilyRemoteDataSource implements FamilyRemoteDataSource {
     }
     _linkedGuardians.add(guardianUserId);
   }
+
+  /// The mock has no profile for the linked single, so there is no name.
+  @override
+  Future<String?> getLinkedSingleName(String guardianUserId) async => null;
 
   @override
   Future<List<FamilyVisibleMatch>> getVisibleMatches(

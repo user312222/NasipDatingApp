@@ -30,6 +30,7 @@ import '../../features/family/data/datasources/firestore_family_remote_data_sour
 import '../../features/family/data/repositories/family_repository_impl.dart';
 import '../../features/family/domain/repositories/family_repository.dart';
 import '../../features/family/domain/usecases/get_or_create_invite_code.dart';
+import '../../features/family/domain/usecases/get_linked_single_name.dart';
 import '../../features/family/domain/usecases/get_visible_matches.dart';
 import '../../features/family/domain/usecases/link_guardian.dart';
 import '../../features/family/presentation/bloc/family_link_cubit.dart';
@@ -324,7 +325,11 @@ void _initFamily() {
   // Presentation — GuardianCubit at the app root (two screens share it);
   // FamilyLinkCubit is provided locally by FamilyLinkScreen.
   sl.registerFactory(
-    () => GuardianCubit(linkGuardian: sl(), getVisibleMatches: sl()),
+    () => GuardianCubit(
+      linkGuardian: sl(),
+      getVisibleMatches: sl(),
+      getLinkedSingleName: sl(),
+    ),
   );
   sl.registerFactory(
     () => FamilyLinkCubit(
@@ -337,6 +342,7 @@ void _initFamily() {
   // Domain
   sl.registerLazySingleton(() => LinkGuardian(sl()));
   sl.registerLazySingleton(() => GetVisibleMatches(sl()));
+  sl.registerLazySingleton(() => GetLinkedSingleName(sl()));
   sl.registerLazySingleton(() => GetOrCreateInviteCode(sl()));
 
   // Data — the mock family source shares the mock matching source's

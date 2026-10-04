@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/family_visible_match.dart';
 import '../../domain/entities/relationship.dart';
+import '../../domain/usecases/get_linked_single_name.dart';
 import '../../domain/usecases/get_visible_matches.dart';
 import '../../domain/usecases/link_guardian.dart';
 
@@ -18,12 +19,15 @@ class GuardianCubit extends Cubit<GuardianState> {
   GuardianCubit({
     required LinkGuardian linkGuardian,
     required GetVisibleMatches getVisibleMatches,
+    required GetLinkedSingleName getLinkedSingleName,
   }) : _linkGuardian = linkGuardian,
        _getVisibleMatches = getVisibleMatches,
+       _getLinkedSingleName = getLinkedSingleName,
        super(const GuardianIdle());
 
   final LinkGuardian _linkGuardian;
   final GetVisibleMatches _getVisibleMatches;
+  final GetLinkedSingleName _getLinkedSingleName;
 
   Future<void> link({
     required String guardianUserId,
@@ -50,10 +54,24 @@ class GuardianCubit extends Cubit<GuardianState> {
 
   Future<void> loadMatches(String guardianUserId) async {
     emit(const GuardianMatchesLoading());
-    final result = await _getVisibleMatches(guardianUserId);
+    final (result, name) = await (
+      _getVisibleMatches(guardianUserId),
+      _getLinkedSingleName(guardianUserId),
+    ).wait;
+    if (isClosed) return;
     switch (result) {
       case Ok<List<FamilyVisibleMatch>>(:final value):
-        emit(GuardianMatchesLoaded(value));
+        emit(
+          GuardianMatchesLoaded(
+            value,
+            // The name is a courtesy; failing to read it must not hide
+            // the matches.
+            singleName: switch (name) {
+              Ok<String?>(:final value) => value,
+              Err<String?>() => null,
+            },
+          ),
+        );
       case Err<List<FamilyVisibleMatch>>(:final failure):
         emit(GuardianMatchesFailed(failure.message));
     }

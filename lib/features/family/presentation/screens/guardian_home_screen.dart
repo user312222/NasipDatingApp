@@ -64,6 +64,11 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             final matches = state is GuardianMatchesLoaded
                 ? state.matches
                 : <FamilyVisibleMatch>[];
+            // Naming the linked account lets a guardian notice a wrong
+            // code; without a name the wording stays generic.
+            final singleName = state is GuardianMatchesLoaded
+                ? state.singleName
+                : null;
             if (matches.isEmpty) {
               return Center(
                 child: Padding(
@@ -72,8 +77,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
                     icon: Icons.visibility_off_outlined,
                     title: 'Henüz paylaşılan eşleşme yok',
                     body:
-                        'Yakının henüz seninle hiçbir eşleşmeyi paylaşmadı. '
-                        'Paylaştığında burada görünecek.',
+                        '${singleName ?? 'Yakının'} henüz seninle hiçbir '
+                        'eşleşmeyi paylaşmadı. Paylaştığında burada görünecek.',
                   ),
                 ),
               );
@@ -85,7 +90,9 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               itemBuilder: (context, index) => index == 0
                   ? SummaryBand(
                       icon: Icons.family_restroom_rounded,
-                      title: '${matches.length} eşleşme paylaşıldı',
+                      title: singleName == null
+                          ? '${matches.length} eşleşme paylaşıldı'
+                          : '$singleName ${matches.length} eşleşme paylaştı',
                       subtitle:
                           'Yalnızca yakınının seçtiklerini görürsün; '
                           'mesajlar sana gösterilmez.',

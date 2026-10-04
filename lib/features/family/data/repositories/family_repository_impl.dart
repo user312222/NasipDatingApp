@@ -32,6 +32,10 @@ class FamilyRepositoryImpl implements FamilyRepository {
   ) => _guard(() => remoteDataSource.getVisibleMatches(guardianUserId));
 
   @override
+  Future<Result<String?>> getLinkedSingleName(String guardianUserId) =>
+      _guard(() => remoteDataSource.getLinkedSingleName(guardianUserId));
+
+  @override
   Future<Result<String>> getOrCreateInviteCode(String singleUserId) =>
       _guard(() => remoteDataSource.getOrCreateInviteCode(singleUserId));
 

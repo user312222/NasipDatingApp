@@ -32,11 +32,15 @@ final class GuardianMatchesLoading extends GuardianState {
 }
 
 final class GuardianMatchesLoaded extends GuardianState {
-  const GuardianMatchesLoaded(this.matches);
+  const GuardianMatchesLoaded(this.matches, {this.singleName});
   final List<FamilyVisibleMatch> matches;
 
+  /// Whose matches these are. Null when it could not be read - the list is
+  /// still shown, just without a name.
+  final String? singleName;
+
   @override
-  List<Object?> get props => [matches];
+  List<Object?> get props => [matches, singleName];
 }
 
 final class GuardianMatchesFailed extends GuardianState {

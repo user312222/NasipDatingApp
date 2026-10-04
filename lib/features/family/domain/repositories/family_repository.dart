@@ -16,6 +16,11 @@ abstract interface class FamilyRepository {
     String guardianUserId,
   );
 
+  /// Guardian-side: the first name of the account this guardian is linked
+  /// to, so the home screen can say whose matches these are (and a wrong
+  /// code is noticed). Null when that account has no public profile.
+  Future<Result<String?>> getLinkedSingleName(String guardianUserId);
+
   /// FR-8.3: single-side — creates one on first call, returns the same
   /// code on every later call for this user.
   Future<Result<String>> getOrCreateInviteCode(String singleUserId);

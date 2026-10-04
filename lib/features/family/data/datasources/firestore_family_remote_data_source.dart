@@ -98,6 +98,26 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
   }
 
   @override
+  Future<String?> getLinkedSingleName(String guardianUserId) async {
+    try {
+      final link = await _db.collection('guardianOf').doc(guardianUserId).get();
+      final singleUserId = link.data()?['singleUserId'] as String?;
+      if (singleUserId == null) return null;
+      // The public profile is all a guardian may read of the single's own
+      // data; the name on it is what every other member sees too.
+      final profile = await _db
+          .collection('publicProfiles')
+          .doc(singleUserId)
+          .get();
+      final name = (profile.data()?['name'] as String?)?.trim();
+      return name == null || name.isEmpty ? null : name;
+    } on FirebaseException catch (e) {
+      logFailure('family', e);
+      throw const ServerException('Bağlı hesap okunamadı.');
+    }
+  }
+
+  @override
   Future<List<FamilyVisibleMatch>> getVisibleMatches(
     String guardianUserId,
   ) async {
