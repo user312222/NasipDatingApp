@@ -47,7 +47,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
         throw const ServerException('Bu davetiye kodu tanınmıyor.');
       }
     } on FirebaseException catch (e) {
-      logFailure('auth', e);
+      logFailure('auth', e, needsSession: false);
       throw const ServerException('Kod doğrulanamadı.');
     }
   }
@@ -175,7 +175,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     try {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
-      logFailure('auth', e);
+      logFailure('auth', e, needsSession: false);
       throw const ServerException('Çıkış yapılamadı.');
     }
   }
@@ -196,7 +196,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   }
 
   String _message(FirebaseAuthException e) {
-    logFailure('auth', e);
+    logFailure('auth', e, needsSession: false);
     return switch (e.code) {
       'invalid-phone-number' => 'Geçerli bir telefon numarası gir.',
       'invalid-verification-code' => 'Kod hatalı. Tekrar dener misin?',

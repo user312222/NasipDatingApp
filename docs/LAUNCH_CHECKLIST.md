@@ -37,6 +37,10 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
       konsoluna yazılıyor.
 - [ ] **`logFailure` içini crash raporlamaya bağla** (Crashlytics/Sentry). Şu an sadece
       `debugPrint`; yayında hataları görmenin tek yolu bu.
+- [x] **Oturum kapanışı gürültüsü log'dan ayıklandı.** Çıkışta ya da hesap silmede hâlâ
+      açık olan Firestore dinleyicilerinin aldığı `permission-denied` artık raporlanmıyor
+      (`isSessionEndNoise`); oturum açıkken gelen aynı hata ve oturumsuz çağrılar (davetiye
+      kodu, bekleme listesi, giriş) raporlanmaya devam ediyor.
 
 ## 3. Hukuki (senin/avukatın işi)
 

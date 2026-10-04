@@ -25,7 +25,7 @@ class FirestoreWaitlistRemoteDataSource implements WaitlistRemoteDataSource {
     try {
       await _db.collection('waitlist').add(entry.toFirestore());
     } on FirebaseException catch (e) {
-      logFailure('waitlist', e);
+      logFailure('waitlist', e, needsSession: false);
       throw const ServerException('Kayıt gönderilemedi.');
     }
   }
