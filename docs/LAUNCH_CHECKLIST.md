@@ -48,6 +48,11 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
       doldur: şirket unvanı/iletişim bilgisi (satır ~218) ve başvuru kanalı (satır ~279).
 - [ ] KVKK aydınlatma metnini, yurt dışına aktarım dayanağını (eur3) ve mezhep/dini not için
       ayrı açık rıza (m.6) metnini **avukata onaylat**. Kodda yalnızca arayüz ve veri akışı hazır.
+- [ ] **"Hesabım var" kapısını avukata sor.** Bu kapıda telefon numarası rıza ekranı
+      görülmeden girilir. Kayıtlı kullanıcının rızası zaten var; ama yeni biri yanlışlıkla bu
+      kapıyı seçerse numarası bir SMS göndermek için işlenmiş olur (hesabı olmadığı anlaşılınca
+      deneme iz bırakmadan kapatılıyor). Giriş ekranına kısa bir aydınlatma notu/bağlantısı
+      gerekip gerekmediğini sor.
 - [ ] Rıza kaydının (`consents/{uid}`) saklama süresine karar ver; hesap silinince
       bilerek silinmiyor.
 

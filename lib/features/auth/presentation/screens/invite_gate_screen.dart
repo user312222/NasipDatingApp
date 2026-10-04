@@ -18,6 +18,9 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
   final _codeController = TextEditingController();
   String? _errorText;
 
+  /// Set when the sign-in door was tried with a number that has no account.
+  bool _accountNotFound = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +45,9 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
     return Scaffold(
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is InviteAccepted) {
+          if (state is SignInAccountNotFound) {
+            setState(() => _accountNotFound = true);
+          } else if (state is InviteAccepted) {
             context.push('/account-type');
           } else if (state is InviteRejected) {
             setState(() => _errorText = 'Bu kod tanınmıyor.');
@@ -81,6 +86,24 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                           centered: true,
                         ),
                         const SizedBox(height: 28),
+                        if (_accountNotFound) ...[
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: colors.brassTint,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Text(
+                              'Bu numarayla kayıtlı bir hesap bulamadık. '
+                              'Yeni kayıt için davetiye kodunu gir.',
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colors.ink,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
                         Card(
                           child: Padding(
                             padding: const EdgeInsets.all(22),
@@ -120,7 +143,29 @@ class _InviteGateScreenState extends State<InviteGateScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
+                        // The second door: a returning user needs none of
+                        // the registration steps, only phone + code.
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            setState(() => _accountNotFound = false);
+                            context.read<AuthCubit>().beginSignIn();
+                            context.push('/phone');
+                          },
+                          icon: const Icon(Icons.login_rounded, size: 20),
+                          label: const Text('Hesabım var, giriş yap'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colors.plumStrong,
+                            side: BorderSide(
+                              color: colors.plum.withValues(alpha: 0.5),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         TextButton(
                           onPressed: () => context.push('/waitlist'),
                           child: Text(

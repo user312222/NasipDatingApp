@@ -87,6 +87,12 @@ final class OtpVerifyFailed extends AuthState {
   List<Object?> get props => [message];
 }
 
+/// The sign-in door was used with a number that has no account. The entry
+/// screen says so and offers registration (invite code) instead.
+final class SignInAccountNotFound extends AuthState {
+  const SignInAccountNotFound();
+}
+
 final class PhoneVerified extends AuthState {
   const PhoneVerified(this.user);
   final AuthUser user;

@@ -18,6 +18,13 @@ abstract interface class AuthRemoteDataSource {
     required String code,
     required AccountType accountType,
   });
+
+  /// See `AuthRepository.verifySignInOtp`: null when the number has no
+  /// account.
+  Future<AuthUser?> verifySignInOtp({
+    required String phone,
+    required String code,
+  });
   Future<AuthUser> submitSelfieVerification(AuthUser user);
 
   /// See `AuthRepository.getCurrentSession`. The mock has nothing to
@@ -64,6 +71,20 @@ class MockAuthRemoteDataSource implements AuthRemoteDataSource {
       throw const ServerException('Kod hatalı. Tekrar dener misin?');
     }
     return AuthUser(id: _fakeId(), phone: phone, accountType: accountType);
+  }
+
+  /// The mock keeps no accounts between sessions, so nobody "already has"
+  /// one.
+  @override
+  Future<AuthUser?> verifySignInOtp({
+    required String phone,
+    required String code,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (code.trim() != _mockOtp) {
+      throw const ServerException('Kod hatalı. Tekrar dener misin?');
+    }
+    return null;
   }
 
   @override

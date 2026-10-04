@@ -25,6 +25,16 @@ abstract interface class AuthRepository {
     required AccountType accountType,
   });
 
+  /// The sign-in door for people who already have an account: verifies
+  /// the OTP without any of the registration choices (invite code, account
+  /// type, consent - all settled when the account was made). `Ok(null)`
+  /// means no account exists for this number; nothing is kept of the
+  /// attempt and the caller sends the person to registration instead.
+  Future<Result<AuthUser?>> verifySignInOtp({
+    required String phone,
+    required String code,
+  });
+
   /// FR-1.2: mandatory selfie-liveness check. Returns [user] with
   /// `verifiedAt` set once the vendor confirms — never a raw selfie/ID.
   Future<Result<AuthUser>> submitSelfieVerification(AuthUser user);

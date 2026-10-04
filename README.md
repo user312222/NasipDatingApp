@@ -31,7 +31,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 
 | Area | What it does |
 | --- | --- |
-| **Onboarding** | Invite gate → account type (single / relative) → KVKK consent → phone + SMS OTP → liveness step → 5-step profile wizard |
+| **Onboarding** | Two doors on the entry screen. New here: invite code → account type (single / relative) → KVKK consent → phone + SMS OTP → liveness step → 5-step profile wizard. Already a member: "Hesabım var" → phone + SMS OTP → straight in |
 | **Navigation** | Single users get a bottom tab bar — Keşfet, Günün Sorusu, Eşleşmeler, Hesap; each tab keeps its own state. A dot on the Eşleşmeler tab flags unread replies, and one on the Günün Sorusu tab shows that today's question is still unanswered — both live from any tab. Relatives (guardian accounts) have a single home screen and no tab bar |
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
 | **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
@@ -133,7 +133,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the chat, matches, matching, feed and guardian cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the auth, chat, matches, matching, feed and guardian cubits, the two entry doors (registration and sign-in), the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 

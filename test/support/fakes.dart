@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:binasip/core/result/result.dart';
+import 'package:binasip/features/auth/domain/entities/account_type.dart';
+import 'package:binasip/features/auth/domain/entities/auth_user.dart';
+import 'package:binasip/features/auth/domain/repositories/auth_repository.dart';
+import 'package:binasip/features/consent/domain/repositories/consent_repository.dart';
 import 'package:binasip/features/family/domain/entities/family_visible_match.dart';
 import 'package:binasip/features/family/domain/entities/relationship.dart';
 import 'package:binasip/features/family/domain/repositories/family_repository.dart';
@@ -224,6 +228,74 @@ Conversation testConversation(
   messages: messages,
   familyNudgeShown: familyNudgeShown,
 );
+
+class FakeAuthRepository implements AuthRepository {
+  Result<void> inviteResult = const Ok(null);
+  Result<void> otpRequestResult = const Ok(null);
+
+  /// What the registration door's OTP check returns.
+  Result<AuthUser> registerResult = const Ok(
+    AuthUser(id: 'new_user', phone: '5550000009'),
+  );
+
+  /// What the sign-in door's OTP check returns; `Ok(null)` = no account.
+  Result<AuthUser?> signInResult = const Ok(null);
+
+  Result<AuthUser?> session = const Ok(null);
+
+  /// The account type each registration OTP check was asked to store.
+  final registerCalls = <AccountType>[];
+  var signInCalls = 0;
+
+  @override
+  Future<Result<void>> checkInviteCode(String code) async => inviteResult;
+
+  @override
+  Future<Result<void>> requestOtp(String phone) async => otpRequestResult;
+
+  @override
+  Future<Result<AuthUser>> verifyOtp({
+    required String phone,
+    required String code,
+    required AccountType accountType,
+  }) async {
+    registerCalls.add(accountType);
+    return registerResult;
+  }
+
+  @override
+  Future<Result<AuthUser?>> verifySignInOtp({
+    required String phone,
+    required String code,
+  }) async {
+    signInCalls++;
+    return signInResult;
+  }
+
+  @override
+  Future<Result<AuthUser>> submitSelfieVerification(AuthUser user) async =>
+      Ok(user.copyWith(verifiedAt: DateTime(2026, 1, 1)));
+
+  @override
+  Future<Result<AuthUser?>> getCurrentSession() async => session;
+
+  @override
+  Future<Result<void>> logOut() async => const Ok(null);
+}
+
+class FakeConsentRepository implements ConsentRepository {
+  /// The user ids a consent record was written for.
+  final recordedFor = <String>[];
+
+  @override
+  Future<Result<void>> recordConsent({
+    required String userId,
+    required String consentVersion,
+  }) async {
+    recordedFor.add(userId);
+    return const Ok(null);
+  }
+}
 
 class FakeFamilyRepository implements FamilyRepository {
   Result<List<FamilyVisibleMatch>> matches = const Ok([]);

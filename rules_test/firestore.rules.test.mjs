@@ -505,6 +505,13 @@ describe('account docs', () => {
     await assertFails(getDoc(doc(as('bob'), 'users', 'alice')));
   });
 
+  test('users: the sign-in door can look up its own account, present or not', async () => {
+    await assertSucceeds(getDoc(doc(as('alice'), 'users', 'alice')));
+    await seed((db) => setDoc(doc(db, 'users', 'alice'), { accountType: 'single' }));
+    await assertSucceeds(getDoc(doc(as('alice'), 'users', 'alice')));
+    await assertFails(getDoc(doc(anon(), 'users', 'alice')));
+  });
+
   test('consents: only the owner', async () => {
     const data = { consentVersion: 'v1', lastAcceptedAt: serverTimestamp() };
     await assertSucceeds(setDoc(doc(as('alice'), 'consents', 'alice'), data));

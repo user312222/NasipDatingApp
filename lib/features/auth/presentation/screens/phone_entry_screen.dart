@@ -23,6 +23,9 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The sign-in door is not a step of the registration wizard, so it has
+    // its own wording and no progress bar.
+    final signingIn = context.read<AuthCubit>().isSigningIn;
     return Scaffold(
       appBar: AppBar(),
       extendBodyBehindAppBar: false,
@@ -42,13 +45,24 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const WizardHeader(
-                      icon: Icons.phone_iphone_rounded,
-                      title: 'Sana bir doğrulama kodu göndereceğiz.',
-                      subtitle: 'Telefon numaran yalnızca doğrulama ve hesabınla ilgili önemli bildirimler için kullanılır.',
-                      step: 3,
-                      totalSteps: 5,
-                    ),
+                    if (signingIn)
+                      const WizardHeader(
+                        icon: Icons.login_rounded,
+                        title: 'Tekrar hoş geldin.',
+                        subtitle:
+                            'Kayıtlı telefon numaranı gir; sana bir doğrulama '
+                            'kodu gönderelim.',
+                      )
+                    else
+                      const WizardHeader(
+                        icon: Icons.phone_iphone_rounded,
+                        title: 'Sana bir doğrulama kodu göndereceğiz.',
+                        subtitle:
+                            'Telefon numaran yalnızca doğrulama ve hesabınla '
+                            'ilgili önemli bildirimler için kullanılır.',
+                        step: 3,
+                        totalSteps: 5,
+                      ),
                     const SizedBox(height: 28),
                     TextField(
                       controller: _phoneController,

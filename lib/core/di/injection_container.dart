@@ -13,6 +13,7 @@ import '../../features/auth/domain/usecases/log_out.dart';
 import '../../features/auth/domain/usecases/request_phone_otp.dart';
 import '../../features/auth/domain/usecases/submit_selfie_verification.dart';
 import '../../features/auth/domain/usecases/verify_phone_otp.dart';
+import '../../features/auth/domain/usecases/verify_sign_in_otp.dart';
 import '../../features/auth/presentation/bloc/auth_cubit.dart';
 import '../../features/account/data/datasources/account_remote_data_source.dart';
 import '../../features/account/data/datasources/firestore_account_remote_data_source.dart';
@@ -137,6 +138,7 @@ void _initAuth() {
       checkInviteCode: sl(),
       requestPhoneOtp: sl(),
       verifyPhoneOtp: sl(),
+      verifySignInOtp: sl(),
       submitSelfieVerification: sl(),
       getCurrentSession: sl(),
       recordConsent: sl(),
@@ -147,6 +149,7 @@ void _initAuth() {
   sl.registerLazySingleton(() => CheckInviteCode(sl()));
   sl.registerLazySingleton(() => RequestPhoneOtp(sl()));
   sl.registerLazySingleton(() => VerifyPhoneOtp(sl()));
+  sl.registerLazySingleton(() => VerifySignInOtp(sl()));
   sl.registerLazySingleton(() => SubmitSelfieVerification(sl()));
   sl.registerLazySingleton(() => GetCurrentSession(sl()));
   sl.registerLazySingleton(() => LogOut(sl()));

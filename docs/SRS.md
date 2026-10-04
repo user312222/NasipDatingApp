@@ -155,9 +155,10 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-1.1 | Telefon + SMS OTP ile kayıt | Telefon numarası, SMS ile gelen kod | Firebase Phone Auth ile doğrulama | Geçerli kodla oturum açılır; hatalı/süresi dolmuş kodda anlaşılır hata mesajı gösterilir |
 | FR-1.2 | Zorunlu selfie-liveness doğrulaması | Kullanıcının selfie'si | Üçüncü taraf sağlayıcıya gönderim, yalnızca `verified: true/false` + zaman damgası geri alınır | Ham selfie/biyometrik veri Bi Nasip altyapısında hiçbir zaman saklanmaz; mümkünse sağlayıcının yaş tahmini özelliği kullanılır, görüntü işlem sonrası saklanmaz |
 | FR-1.3 | Davetiye kodu kontrolü | Davetiye kodu | Kod geçerliliği kontrolü | Geçersiz/eksik kodda kullanıcı bekleme listesi akışına yönlendirilir |
+| FR-1.5 | İki kapılı giriş | "Davetiye kodum var" (yeni kayıt) ya da "Hesabım var" (giriş) | Yeni kayıt mevcut sırayı izler; giriş yalnızca telefon + SMS kodu ister ve kayıtlı hesabı arar | Kayıtlı kullanıcı davetiye kodu, hesap türü ve rıza adımlarını yeniden doldurmadan, kayıtlı hesap türüyle içeri alınır; numaranın hesabı yoksa kullanıcı giriş ekranına döner, kayda yönlendirilir ve denemeden geriye hesap kalmaz |
 | FR-1.4 | KVKK rızası, telefon istenmeden önce | — | Aydınlatma metni gösterimi, iki ayrı açık rıza (veri işleme + yurt dışı aktarım) | İki rıza da onaylanmadan akış ilerlemez; rıza Firestore'da `consents/{uid}` altında kayıt altına alınır |
 
-**Kabul kriteri (uçtan uca):** Davetiye kodu → hesap türü seçimi → KVKK rızası → telefon → OTP → selfie adımı tamamlanmadan kullanıcı profil oluşturma veya keşif ekranına erişemez.
+**Kabul kriteri (uçtan uca):** Yeni bir kullanıcı davetiye kodu → hesap türü seçimi → KVKK rızası → telefon → OTP → selfie adımını tamamlamadan profil oluşturma veya keşif ekranına erişemez. Kayıtlı bir kullanıcı "Hesabım var" kapısından telefon → OTP ile, başka hiçbir adım doldurmadan uygulamaya girer; aynı kapı kayıtsız bir numarayı içeri almaz.
 
 ### FR-2 — Profil Oluşturma
 

@@ -33,6 +33,13 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
+  Future<Result<AuthUser?>> verifySignInOtp({
+    required String phone,
+    required String code,
+  }) =>
+      _guard(() => remoteDataSource.verifySignInOtp(phone: phone, code: code));
+
+  @override
   Future<Result<AuthUser>> submitSelfieVerification(AuthUser user) =>
       _guard(() => remoteDataSource.submitSelfieVerification(user));
 

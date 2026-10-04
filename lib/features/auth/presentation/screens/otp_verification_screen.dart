@@ -16,12 +16,15 @@ class OtpVerificationScreen extends StatefulWidget {
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _codeController = TextEditingController();
   late final String _phone;
+  late final bool _signingIn;
 
   @override
   void initState() {
     super.initState();
-    final state = context.read<AuthCubit>().state;
+    final cubit = context.read<AuthCubit>();
+    final state = cubit.state;
     _phone = state is OtpSent ? state.phone : '';
+    _signingIn = cubit.isSigningIn;
   }
 
   @override
@@ -40,6 +43,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           if (state is OtpVerifyFailed) {
             ScaffoldMessenger.of(context)
                 .showSnackBar(SnackBar(content: Text(state.message)));
+          }
+          if (state is SignInAccountNotFound) {
+            // The sign-in door, but nobody registered with this number:
+            // back to the entry screen, which explains and offers the
+            // invite code instead.
+            context.go('/');
           }
           if (state is SessionActive) {
             // This phone number already belonged to a fully-onboarded
@@ -62,8 +71,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       title: 'Kodu gir.',
                       subtitle:
                           '+90 $_phone numarasına gönderilen 6 haneli kodu gir.',
-                      step: 4,
-                      totalSteps: 5,
+                      step: _signingIn ? null : 4,
+                      totalSteps: _signingIn ? null : 5,
                     ),
                     const SizedBox(height: 28),
                     TextField(

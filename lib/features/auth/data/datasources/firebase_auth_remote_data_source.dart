@@ -87,6 +87,66 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
     }
   }
 
+  @override
+  Future<AuthUser?> verifySignInOtp({
+    required String phone,
+    required String code,
+  }) async {
+    final confirmation = _confirmation;
+    if (confirmation == null) {
+      throw const ServerException('Önce kod iste.');
+    }
+    final UserCredential credential;
+    try {
+      credential = await confirmation.confirm(code.trim());
+    } on FirebaseAuthException catch (e) {
+      throw ServerException(_message(e));
+    }
+    final user = credential.user;
+    if (user == null) {
+      throw const ServerException('Giriş yapılamadı. Tekrar dener misin?');
+    }
+
+    final Map<String, dynamic>? data;
+    try {
+      data = (await _db.collection('users').doc(user.uid).get()).data();
+    } on FirebaseException catch (e) {
+      logFailure('auth', e, needsSession: false);
+      // Unknown is not "no account": end the session and let them retry.
+      await _auth.signOut();
+      throw const ServerException('Hesabın okunamadı. Tekrar dener misin?');
+    }
+
+    if (data == null) {
+      // Nobody registered with this number. Confirming the code made
+      // Firebase create an auth user for it; when this very sign-in created
+      // it, remove it again so an attempt by someone who never registered
+      // (and never saw the privacy notice) leaves nothing behind. An older
+      // auth user without a document is left alone - deleting an account
+      // on a hunch is not worth the risk.
+      if (credential.additionalUserInfo?.isNewUser ?? false) {
+        try {
+          await user.delete();
+        } on FirebaseAuthException catch (e) {
+          logFailure('auth', e, needsSession: false);
+        }
+      }
+      await _auth.signOut();
+      return null;
+    }
+
+    return AuthUser(
+      id: user.uid,
+      phone: phone,
+      accountType: data['accountType'] == 'guardian'
+          ? AccountType.guardian
+          : AccountType.single,
+      // Null for an account that stopped before the selfie step; the
+      // session router resumes it there.
+      verifiedAt: (data['verifiedAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
   /// A phone number Firebase has seen before signs back into the SAME
   /// uid — so this "registration" attempt can actually be a login for an
   /// already fully-onboarded account. When that's the case, this returns

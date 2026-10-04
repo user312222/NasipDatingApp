@@ -14,6 +14,7 @@ import '../../domain/usecases/get_current_session.dart';
 import '../../domain/usecases/request_phone_otp.dart';
 import '../../domain/usecases/submit_selfie_verification.dart';
 import '../../domain/usecases/verify_phone_otp.dart';
+import '../../domain/usecases/verify_sign_in_otp.dart';
 
 part 'auth_state.dart';
 
@@ -26,12 +27,14 @@ class AuthCubit extends Cubit<AuthState> {
     required CheckInviteCode checkInviteCode,
     required RequestPhoneOtp requestPhoneOtp,
     required VerifyPhoneOtp verifyPhoneOtp,
+    required VerifySignInOtp verifySignInOtp,
     required SubmitSelfieVerification submitSelfieVerification,
     required GetCurrentSession getCurrentSession,
     required RecordConsent recordConsent,
   }) : _checkInviteCode = checkInviteCode,
        _requestPhoneOtp = requestPhoneOtp,
        _verifyPhoneOtp = verifyPhoneOtp,
+       _verifySignInOtp = verifySignInOtp,
        _submitSelfieVerification = submitSelfieVerification,
        _getCurrentSession = getCurrentSession,
        _recordConsent = recordConsent,
@@ -40,6 +43,7 @@ class AuthCubit extends Cubit<AuthState> {
   final CheckInviteCode _checkInviteCode;
   final RequestPhoneOtp _requestPhoneOtp;
   final VerifyPhoneOtp _verifyPhoneOtp;
+  final VerifySignInOtp _verifySignInOtp;
   final SubmitSelfieVerification _submitSelfieVerification;
   final GetCurrentSession _getCurrentSession;
   final RecordConsent _recordConsent;
@@ -70,6 +74,18 @@ class AuthCubit extends Cubit<AuthState> {
     _accountType = type;
   }
 
+  /// Which door was taken on the entry screen. The sign-in door ("Hesabım
+  /// var") goes straight to phone + code and skips the invite code,
+  /// account type and consent steps - a returning user settled all three
+  /// when the account was made. Entering an invite code switches back to
+  /// registration.
+  bool _signingIn = false;
+  bool get isSigningIn => _signingIn;
+
+  void beginSignIn() {
+    _signingIn = true;
+  }
+
   /// KVKK consent, accepted on `/consent` (between `/account-type` and
   /// `/phone`) — see [ConsentScreen]. Kept as plain cubit state for the
   /// same reason as [_accountType]: read once, when [verifyOtp] persists
@@ -85,6 +101,7 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await _checkInviteCode(code);
     switch (result) {
       case Ok<void>():
+        _signingIn = false;
         emit(const InviteAccepted());
       case Err<void>():
         emit(const InviteRejected());
@@ -121,6 +138,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> verifyOtp({required String phone, required String code}) async {
+    if (_signingIn) return _verifySignIn(phone: phone, code: code);
     emit(const OtpVerifyInProgress());
     final result = await _verifyPhoneOtp(
       VerifyPhoneOtpParams(phone: phone, code: code, accountType: _accountType),
@@ -154,6 +172,26 @@ class AuthCubit extends Cubit<AuthState> {
         }
         emit(PhoneVerified(value.copyWith(accountType: _accountType)));
       case Err<AuthUser>(:final failure):
+        emit(OtpVerifyFailed(failure.message));
+    }
+  }
+
+  Future<void> _verifySignIn({
+    required String phone,
+    required String code,
+  }) async {
+    emit(const OtpVerifyInProgress());
+    final result = await _verifySignInOtp(
+      VerifySignInOtpParams(phone: phone, code: code),
+    );
+    switch (result) {
+      case Ok<AuthUser?>(value: final user?):
+        _accountType = user.accountType;
+        emit(SessionActive(user));
+      case Ok<AuthUser?>():
+        _signingIn = false;
+        emit(const SignInAccountNotFound());
+      case Err<AuthUser?>(:final failure):
         emit(OtpVerifyFailed(failure.message));
     }
   }
