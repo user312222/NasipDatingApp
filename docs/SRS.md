@@ -338,6 +338,7 @@ FeedLike          { id (postId_userId), postId, userId, dayKey, createdAt }
 | Bekleme listesi kayıtları | **Firestore** — yalnızca oluşturulabilir `waitlist` koleksiyonu; istemci okuyamaz, Console'dan incelenir |
 | Gerçek zamanlı sohbet ve okunmamış işareti (liste + Eşleşmeler sekmesi) | **Firestore dinleyicileri** — uygulama açıkken canlı; arka plan bildirimi yok (bkz. §7.2) |
 | Günün Sorusu akışı | **Gerçek** (Firestore `feedPosts` / `feedLikes`); metin otomatik denetlenmez — yalnızca şikayet/engelleme |
+| App Check | **Bağlı, kapalı** — reCAPTCHA v3 site anahtarı girilince etkinleşir; Console'da "Enforce" açılana kadar hiçbir isteği engellemez |
 | Push bildirimleri | **Yok** |
 | KVKK rıza metni | **Taslak** — hukuki incelemeden geçmedi (bkz. §9) |
 

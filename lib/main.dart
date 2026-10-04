@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'core/config/app_check.dart';
 import 'core/config/dev_flags.dart';
 import 'core/di/injection_container.dart';
 import 'core/restart/restart_app.dart';
@@ -16,6 +17,8 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Before the first Firestore/Auth request, so every one carries a token.
+  await activateAppCheck();
   if (kDisableRecaptchaForTesting) {
     await FirebaseAuth.instance.setSettings(
       appVerificationDisabledForTesting: true,

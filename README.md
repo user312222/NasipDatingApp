@@ -56,6 +56,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Waitlist submissions | **Firestore** — create-only `waitlist` collection, reviewed in the Console |
 | Real-time chat, previews and unread dots | **Real** — Firestore listeners keep open chats, the matches list and the Eşleşmeler tab dot live while the app is open |
 | Question-of-the-day feed | **Real** (Firestore `feedPosts` / `feedLikes`); text is not moderated automatically — report/block only |
+| App Check | **Wired, switched off** — turns on once a reCAPTCHA v3 site key is set in `lib/core/config/app_check.dart` (steps in `docs/LAUNCH_CHECKLIST.md`) |
 | Push notifications | **No** — nothing reaches a closed app; needs Cloud Functions + FCM |
 | KVKK consent text | **Draft** — needs a lawyer's review before real users see it (see `docs/REQUIREMENTS.md` §7) |
 
@@ -66,7 +67,7 @@ The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Fu
 ## Tech stack
 
 - **Framework:** [Flutter](https://flutter.dev/) (Material 3), Dart
-- **Backend:** Firebase — Authentication (phone), Cloud Firestore
+- **Backend:** Firebase — Authentication (phone), Cloud Firestore, App Check (off until configured)
 - **State management:** BLoC / Cubit (`flutter_bloc`), `equatable`
 - **Dependency injection:** `get_it`
 - **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen)

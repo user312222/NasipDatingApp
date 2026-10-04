@@ -13,8 +13,19 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
       (`node tools/serve_web.js`) test numarasıyla denerken reCAPTCHA görünür.
 - [ ] **Firebase Console → Authentication → Phone → test numaralarını sil**
       (+90 555 000 00 00 … 03, kod 123456). Silinmezse bu numaralarla herkes giriş yapabilir.
-- [ ] **App Check** aç (web için reCAPTCHA Enterprise/v3 sağlayıcısı) ve
-      `firebase_options.dart`'taki API anahtarını HTTP referrer ile kısıtla.
+- [ ] **App Check'i aç.** Kod tarafı hazır (`lib/core/config/app_check.dart`,
+      `firebase_app_check` paketi); site anahtarı boş olduğu için şu an kapalı. Sırasıyla:
+      1. Firebase Console → App Check → web uygulamasını **reCAPTCHA v3** ile kaydet
+         (anahtarı reCAPTCHA yönetim panelinde v3 olarak, yayın alan adın için oluştur).
+      2. Site anahtarını `kAppCheckWebSiteKey` sabitine yapıştır (site anahtarı gizli değildir).
+      3. `flutter run` ile uygulamayı bir kez aç; tarayıcı konsoluna yazılan **debug token**'ı
+         App Check → Uygulamalar → "Debug token'ları yönet" altına ekle. Bu token gizlidir,
+         repoya girmez (`--dart-define=APP_CHECK_DEBUG_TOKEN=...` ile sabitlenebilir).
+      4. App Check ekranındaki istek grafiğinde doğrulanan oranı izle; sorun yoksa Firestore
+         (ve Authentication) için **Enforce**'u aç. Enforce açılmadan App Check hiçbir şeyi
+         engellemez.
+      5. Mobil yayın için Android'de Play Integrity, iOS'ta DeviceCheck kaydını ekle.
+- [ ] `firebase_options.dart`'taki API anahtarını HTTP referrer ile kısıtla.
 - [ ] **Davetiye kodlarını dağıt ve test kodunu kapat.** Kodlar artık Firestore'da
       (`inviteCodes/{KOD}`, `active: true`); `NASIP2026` Console'da `active: false` yapılmalı veya
       silinmeli. Kodlar yeniden kullanılabilir (geri dönen kullanıcı aynı kapıdan geçiyor); tek
