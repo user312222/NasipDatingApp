@@ -221,7 +221,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-8.1 | Hesap türü seçimi | "Kendim için bakıyorum" / "Bir yakınımın sürecini takip ediyorum" | Onboarding'in ilk adımında seçim | Seçim kalıcıdır, sonradan değiştirilemez |
 | FR-8.2 | Veli hesabının doğrulaması ve kapsamı | Telefon + selfie (FR-1 ile aynı) | Aynı doğrulama akışı; FR-2/3/4'e erişim verilmez | Onboarding sonrası ad, yakınlık derecesi ve davet kodu istenir |
 | FR-8.3 | Aile davet kodu | Tekil kullanıcının ürettiği kod | Kod doğrulama ve bağlama | Geçerli kod girilmeden bağlantı kurulamaz; kodsuz veli hesabı hiçbir veriye erişemez |
-| FR-8.4 | Eşleşme bazlı "aileme göster" | Açık/kapalı toggle, eşleşme başına | Görünürlük kaydı | Varsayılan kapalı; kullanıcı istediği zaman açıp kapatabilir |
+| FR-8.4 | Eşleşme bazlı "aileme göster" | Açık/kapalı toggle, eşleşme başına | Görünürlük kaydı | Varsayılan kapalı; anahtar eşleşme kutlama diyaloğunda ve aile ayarları ekranında bulunur, kullanıcı istediği zaman açıp kapatabilir |
 | FR-8.5 | Veli görünümü (salt okunur) | — | Yalnızca "aileme göster" işaretli eşleşmelerin minimal görünümü | Aday adı/yaş/şehir/niyet + kaba bir durum etiketi ("yeni eşleşme"/"aktif yazışıyorlar") gösterilir; mesaj içeriği asla gösterilmez |
 | FR-8.6 | Veli hesabının kısıtları | — | Mimari erişim kısıtı | Veli hesabı keşif/eşleştirme adayı olamaz, beğeni/geçme yapamaz, mesaj gönderemez, eşleştirme filtrelerine tabi olmaz |
 

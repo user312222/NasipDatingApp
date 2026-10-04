@@ -4,6 +4,7 @@ import '../features/family/domain/entities/family_visible_match.dart';
 import '../features/family/presentation/screens/guardian_home_screen.dart';
 import '../features/matching/domain/entities/candidate.dart';
 import '../features/matching/presentation/screens/discovery_screen.dart';
+import '../features/matching/presentation/widgets/match_celebration.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
@@ -264,6 +265,31 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
             ),
             const SizedBox(height: 20),
           ],
+          const SizedBox(height: 8),
+          _section(textTheme, 'Eşleşme kutlaması'),
+          // A Builder so the dialog picks up the gallery's light/dark choice.
+          Builder(
+            builder: (context) => OutlinedButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (dialogContext) => MatchCelebration(
+                  candidate: const Candidate(
+                    id: 'preview_1',
+                    name: 'Zeynep',
+                    age: 27,
+                    city: 'İstanbul',
+                    intent: CandidateIntent.marriage,
+                    avatarColorSeed: 0,
+                  ),
+                  onLater: () => Navigator.of(dialogContext).pop(),
+                  onChat: () => Navigator.of(dialogContext).pop(),
+                  // Nothing is saved from the gallery.
+                  onShowFamilyChanged: (_) async => true,
+                ),
+              ),
+              child: const Text('Kutlamayı göster'),
+            ),
+          ),
           const SizedBox(height: 32),
         ],
       ),

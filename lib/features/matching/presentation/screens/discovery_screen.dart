@@ -14,6 +14,7 @@ import '../bloc/matching_cubit.dart';
 import '../../../../theme/avatar_palette.dart';
 import '../../../../theme/wizard_widgets.dart';
 import '../widgets/crescent_motif_painter.dart';
+import '../widgets/match_celebration.dart';
 
 /// A single self-contained screen — unlike auth/profile, discovery has no
 /// multi-screen wizard state to share, so `MatchingCubit` is provided
@@ -180,6 +181,7 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
   }
 
   void _showMatchDialog(BuildContext context, Match match) {
+    final cubit = context.read<MatchingCubit>();
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -195,8 +197,10 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
           child: child,
         ),
       ),
-      pageBuilder: (dialogContext, _, _) => _MatchCelebration(
+      pageBuilder: (dialogContext, _, _) => MatchCelebration(
         candidate: match.candidate,
+        onShowFamilyChanged: (visible) =>
+            cubit.setMatchVisibleToFamily(matchId: match.id, visible: visible),
         onLater: () => Navigator.of(dialogContext).pop(),
         onChat: () {
           Navigator.of(dialogContext).pop();
@@ -210,161 +214,6 @@ class _DiscoveryViewState extends State<_DiscoveryView> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-/// The mutual-like celebration (FR-4.2): a gradient header in the
-/// candidate's own palette with a pulsing heart, replacing the plain
-/// `AlertDialog`. The pulse is a looping `AnimationController` that lives
-/// only as long as the dialog is on screen.
-class _MatchCelebration extends StatefulWidget {
-  const _MatchCelebration({
-    required this.candidate,
-    required this.onLater,
-    required this.onChat,
-  });
-
-  final Candidate candidate;
-  final VoidCallback onLater;
-  final VoidCallback onChat;
-
-  @override
-  State<_MatchCelebration> createState() => _MatchCelebrationState();
-}
-
-class _MatchCelebrationState extends State<_MatchCelebration>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-    final pair = _CandidateCard.paletteFor(widget.candidate);
-
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          width: 320,
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 190,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: pair,
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pulse,
-                      builder: (context, _) {
-                        final t = _pulse.value;
-                        return Container(
-                          width: 84 + 90 * t,
-                          height: 84 + 90 * t,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(
-                              alpha: 0.28 * (1 - t),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    Container(
-                      width: 84,
-                      height: 84,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        size: 44,
-                        color: colors.plumFill,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
-                child: Column(
-                  children: [
-                    Text(
-                      'Eşleştiniz!',
-                      style: textTheme.headlineMedium?.copyWith(
-                        color: colors.plumStrong,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${widget.candidate.name} ile karşılıklı beğendiniz.',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colors.inkSoft,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: widget.onChat,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.plumFill,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: const Text('Sohbete başla'),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextButton(
-                      onPressed: widget.onLater,
-                      child: Text(
-                        'Şimdi değil',
-                        style: TextStyle(color: colors.inkSoft),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

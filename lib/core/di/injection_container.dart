@@ -188,7 +188,11 @@ void _initProfile() {
 void _initMatching() {
   // Presentation — provided at the app root, same reasoning as the others.
   sl.registerFactory(
-    () => MatchingCubit(getCandidates: sl(), swipeCandidate: sl()),
+    () => MatchingCubit(
+      getCandidates: sl(),
+      swipeCandidate: sl(),
+      setMatchVisibleToFamily: sl(),
+    ),
   );
   sl.registerFactory(
     () => MatchesCubit(

@@ -39,11 +39,20 @@ class FakeMatchingRepository implements MatchingRepository {
     required SwipeAction action,
   }) => throw UnimplementedError();
 
+  /// What the next [setMatchVisibleToFamily] call returns.
+  Result<void> familyVisibleResult = const Ok(null);
+
+  /// Every (matchId, visible) pair [setMatchVisibleToFamily] was asked for.
+  final familyVisibleCalls = <({String matchId, bool visible})>[];
+
   @override
   Future<Result<void>> setMatchVisibleToFamily({
     required String matchId,
     required bool visible,
-  }) => throw UnimplementedError();
+  }) async {
+    familyVisibleCalls.add((matchId: matchId, visible: visible));
+    return familyVisibleResult;
+  }
 }
 
 class FakeMessagingRepository implements MessagingRepository {
