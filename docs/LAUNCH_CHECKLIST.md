@@ -6,10 +6,11 @@ Durum özeti için bkz. `README.md` (gerçek / mock tablosu) ve `docs/REQUIREMEN
 
 ## 1. Kimlik ve kötüye kullanım koruması (engelleyici)
 
-- [ ] **reCAPTCHA'yı geri aç.** `lib/core/config/dev_flags.dart` içinde
-      `kDisableRecaptchaForTesting` şu an `true` (`lib/main.dart` bunu okuyor).
-      `false` yap. Bu bayrak yalnızca test numaralarında etkili ama açık kalırsa
-      gerçek numaralarda sahte hesap/spam koruması devre dışı kalır.
+- [x] **reCAPTCHA yayın derlemesinde her zaman açık.** `lib/core/config/dev_flags.dart`
+      içindeki `kDisableRecaptchaForTesting` artık `kDebugMode`'a bağlı: `flutter run` (debug)
+      test numaralarında doğrulamayı atlar, `flutter build ...` ile alınan her derlemede
+      doğrulama açıktır. Elle çevrilecek bir bayrak kalmadı. Not: yayın derlemesini
+      (`node tools/serve_web.js`) test numarasıyla denerken reCAPTCHA görünür.
 - [ ] **Firebase Console → Authentication → Phone → test numaralarını sil**
       (+90 555 000 00 00 … 03, kod 123456). Silinmezse bu numaralarla herkes giriş yapabilir.
 - [ ] **App Check** aç (web için reCAPTCHA Enterprise/v3 sağlayıcısı) ve
@@ -67,9 +68,19 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 ## 5. Son kontroller
 
-- [ ] `firestore.rules` son halini deploy et ve gerekli bileşik indeksleri doğrula
+- [ ] `firestore.rules` son halini deploy et
       (`firebase deploy --only firestore:rules --project binasip`).
+- [x] **Bileşik indeks gerekmiyor.** Uygulamadaki tüm sorgular ya yalnızca eşitlik filtresi
+      kullanıyor ya da tek alanda sıralıyor (`messages` → `sentAt`); bunları Firestore'un
+      otomatik tek-alan indeksleri karşılıyor, `firestore.indexes.json` yok ve gerekmiyor.
+      Yeni bir sorguya eşitsizlik filtresi ya da farklı alanda `orderBy` eklenirse yeniden bak.
 - [x] Firestore kural testleri hazır (`rules_test/`, `npm test`; Java gerekir). Kuralları her
       değiştirdiğinde deploy etmeden önce çalıştır. Uygulama katmanı (veri kaynakları) hâlâ elle doğrulanıyor.
-- [ ] Gizlilik sınırlarını kurallarda bir kez daha doğrula: veli mesaj içeriğini göremez
-      (FR-8.5) ve `matchReads` yalnızca sahibine okunur.
+- [x] **Gizlilik sınırları kural testleriyle sabitlendi.** Bağlı bir veli, kendisiyle
+      paylaşılan eşleşmenin mesajlarını okuyamaz/yazamaz, eşleşme belgesini, okunma
+      işaretlerini ve bekârın özel profilini okuyamaz, paylaşımı kendisi açıp kapatamaz
+      (`rules_test/` → "guardian privacy (FR-8.5)"); `matchReads` yalnızca sahibine okunur
+      ("matchReads (unread markers)").
+- [ ] **`/design-preview` herkese açık.** Geliştirici vitrini giriş yapmadan, yayın
+      derlemesinde de açılıyor. Zararsız ama ürün ekranı değil; lansmanda `kDebugMode`
+      arkasına alınabilir.

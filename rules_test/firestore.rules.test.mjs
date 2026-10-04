@@ -421,6 +421,54 @@ describe('family sharing', () => {
   });
 });
 
+// FR-8.5: a linked guardian learns *that* a shared match exists (see
+// 'family sharing' above) and nothing about what is said in it.
+describe('guardian privacy (FR-8.5)', () => {
+  const messages = (db) => collection(db, 'matches', MATCH, 'messages');
+
+  // gina is linked to alice, and alice shares her match with bob.
+  const seedSharedMatch = () =>
+    seed(async (db) => {
+      await setDoc(doc(db, 'matches', MATCH), { users: ['alice', 'bob'], createdAt: Timestamp.now() });
+      await setDoc(doc(db, 'matches', MATCH, 'messages', 'm1'), { text: 'özel', senderId: 'alice', sentAt: Timestamp.now() });
+      await setDoc(doc(db, 'matchReads', `${MATCH}_alice`), { matchId: MATCH, userId: 'alice', readAt: Timestamp.now() });
+      await setDoc(doc(db, 'familyVisible', `${MATCH}_alice`), { singleUserId: 'alice', matchId: MATCH, otherUserId: 'bob', matchedAt: Timestamp.now(), markedAt: Timestamp.now() });
+      await setDoc(doc(db, 'guardianOf', 'gina'), { singleUserId: 'alice', guardianName: 'Gina', relationship: 'anne', linkedAt: Timestamp.now() });
+      await setDoc(doc(db, 'users', 'gina'), { accountType: 'guardian' });
+    });
+
+  test('cannot read the messages of a match shared with them', async () => {
+    await seedSharedMatch();
+    await assertFails(getDocs(messages(as('gina'))));
+    await assertFails(getDoc(doc(as('gina'), 'matches', MATCH, 'messages', 'm1')));
+  });
+
+  test('cannot write into the conversation', async () => {
+    await seedSharedMatch();
+    await assertFails(addDoc(messages(as('gina')), { text: 'selam', senderId: 'gina', sentAt: serverTimestamp() }));
+    await assertFails(addDoc(messages(as('gina')), { text: 'selam', senderId: 'alice', sentAt: serverTimestamp() }));
+  });
+
+  test('cannot read the match document or any read markers', async () => {
+    await seedSharedMatch();
+    await assertFails(getDoc(doc(as('gina'), 'matches', MATCH)));
+    await assertFails(getDoc(doc(as('gina'), 'matchReads', `${MATCH}_alice`)));
+    await assertFails(getDocs(query(collection(as('gina'), 'matchReads'), where('userId', '==', 'alice'))));
+  });
+
+  test('cannot read the private profile of the single user', async () => {
+    await seedSharedMatch();
+    await seed((db) => setDoc(doc(db, 'profiles', 'alice'), { name: 'Alice' }));
+    await assertFails(getDoc(doc(as('gina'), 'profiles', 'alice')));
+  });
+
+  test('cannot switch the sharing on or off themselves', async () => {
+    await seedSharedMatch();
+    await assertFails(deleteDoc(doc(as('gina'), 'familyVisible', `${MATCH}_alice`)));
+    await assertFails(setDoc(doc(as('gina'), 'familyVisible', `${MATCH}_alice`), { singleUserId: 'alice', matchId: MATCH, otherUserId: 'bob', matchedAt: Timestamp.now(), markedAt: serverTimestamp() }));
+  });
+});
+
 describe('safety', () => {
   const report = (over = {}) => ({ reporterId: 'alice', targetUserId: 'bob', reason: 'scam', createdAt: serverTimestamp(), ...over });
 
