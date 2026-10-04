@@ -216,6 +216,26 @@ class FirestoreMatchingRemoteDataSource implements MatchingRemoteDataSource {
   }
 
   @override
+  Future<bool> isMatchVisibleToFamily(String matchId) async {
+    try {
+      // A query, not a `get` on `{matchId}_{me}`: the read rule checks
+      // `resource.data.singleUserId`, so fetching a doc that does not
+      // exist (the "off" case) would be denied instead of coming back
+      // empty.
+      final snap = await _db
+          .collection('familyVisible')
+          .where('singleUserId', isEqualTo: _uid)
+          .where('matchId', isEqualTo: matchId)
+          .limit(1)
+          .get();
+      return snap.docs.isNotEmpty;
+    } on FirebaseException catch (e) {
+      logFailure('matching', e);
+      throw const ServerException('Aile ayarı okunamadı.');
+    }
+  }
+
+  @override
   Future<void> setMatchVisibleToFamily({
     required String matchId,
     required bool visible,

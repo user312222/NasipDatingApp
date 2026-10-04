@@ -19,6 +19,9 @@ abstract interface class MatchingRepository {
   /// toggle list — see `features/family` for the read-only side of this.
   Future<Result<List<Match>>> getMyMatches();
 
+  /// FR-8.4: whether one match is currently marked "aileme göster".
+  Future<Result<bool>> isMatchVisibleToFamily(String matchId);
+
   /// FR-8.4.
   Future<Result<void>> setMatchVisibleToFamily({
     required String matchId,

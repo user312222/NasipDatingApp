@@ -34,6 +34,12 @@ class MatchingRepositoryImpl implements MatchingRepository {
       _guard(() => remoteDataSource.getMyMatches(), 'Eşleşmeler yüklenemedi.');
 
   @override
+  Future<Result<bool>> isMatchVisibleToFamily(String matchId) => _guard(
+    () => remoteDataSource.isMatchVisibleToFamily(matchId),
+    'Aile ayarı okunamadı.',
+  );
+
+  @override
   Future<Result<void>> setMatchVisibleToFamily({
     required String matchId,
     required bool visible,

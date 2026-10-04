@@ -36,7 +36,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
 | **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
 | **Privacy** | Per-user photo visibility (hidden / on request / on match), optional religious details behind a separate KVKK m.6 consent |
-| **Family** | Invite code for a relative, per-match "show my family" switch, read-only guardian view |
+| **Family** | Invite code for a relative, per-match "show my family" switch (on the match celebration, in the chat and in family settings), read-only guardian view |
 | **Safety** | Report and block from the card menu and the chat, account deletion, log out |
 | **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — its own tab, and where Discovery sends people once the candidates run out |
 | **Waitlist** | Public waitlist page for people without an invite code |
@@ -125,7 +125,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the chat, matches, matching and feed cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the unread dot, tap callbacks), the match celebration ("show my family" switch), the photo step, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the chat, matches, matching and feed cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the unread dot, tap callbacks), the "show my family" switch (match celebration and chat), the photo step, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 

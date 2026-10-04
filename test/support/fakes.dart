@@ -39,6 +39,13 @@ class FakeMatchingRepository implements MatchingRepository {
     required SwipeAction action,
   }) => throw UnimplementedError();
 
+  /// What [isMatchVisibleToFamily] answers.
+  Result<bool> familyVisible = const Ok(false);
+
+  @override
+  Future<Result<bool>> isMatchVisibleToFamily(String matchId) async =>
+      familyVisible;
+
   /// What the next [setMatchVisibleToFamily] call returns.
   Result<void> familyVisibleResult = const Ok(null);
 

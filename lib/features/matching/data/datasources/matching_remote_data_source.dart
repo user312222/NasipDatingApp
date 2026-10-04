@@ -18,6 +18,7 @@ abstract interface class MatchingRemoteDataSource {
     required SwipeAction action,
   });
   Future<List<Match>> getMyMatches();
+  Future<bool> isMatchVisibleToFamily(String matchId);
   Future<void> setMatchVisibleToFamily({
     required String matchId,
     required bool visible,
@@ -169,6 +170,10 @@ class MockMatchingRemoteDataSource implements MatchingRemoteDataSource {
         .toList()
       ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
   }
+
+  @override
+  Future<bool> isMatchVisibleToFamily(String matchId) async =>
+      _myMatches[matchId]?.visibleToFamily ?? false;
 
   @override
   Future<void> setMatchVisibleToFamily({

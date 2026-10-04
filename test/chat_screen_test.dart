@@ -6,6 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:binasip/core/di/injection_container.dart';
 import 'package:binasip/core/error/failures.dart';
 import 'package:binasip/core/result/result.dart';
+import 'package:binasip/features/matching/domain/entities/match.dart';
+import 'package:binasip/features/matching/domain/usecases/get_match_visible_to_family.dart';
+import 'package:binasip/features/matching/domain/usecases/set_match_visible_to_family.dart';
+import 'package:binasip/features/matching/presentation/bloc/family_visibility_cubit.dart';
 import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
 import 'package:binasip/features/messaging/domain/usecases/dismiss_family_nudge.dart';
 import 'package:binasip/features/messaging/domain/usecases/mark_conversation_read.dart';
@@ -22,8 +26,15 @@ import 'support/fakes.dart';
 
 void main() {
   late FakeMessagingRepository repo;
+  late FakeMatchingRepository matching;
 
   Future<void> pumpChat(WidgetTester tester) async {
+    sl.registerFactory(
+      () => FamilyVisibilityCubit(
+        getMatchVisibleToFamily: GetMatchVisibleToFamily(matching),
+        setMatchVisibleToFamily: SetMatchVisibleToFamily(matching),
+      ),
+    );
     sl.registerFactory(
       () => ChatCubit(
         watchConversation: WatchConversation(repo),
@@ -82,6 +93,7 @@ void main() {
   setUp(() async {
     await sl.reset();
     repo = FakeMessagingRepository();
+    matching = FakeMatchingRepository(const Ok(<Match>[]));
   });
 
   tearDown(() async {
@@ -298,6 +310,73 @@ void main() {
         findsNothing,
       );
       expect(repo.dismissedMatchIds, ['m1']);
+    });
+  });
+
+  group('"aileme göster" (FR-8.4)', () {
+    Finder familyButton({required bool on}) =>
+        find.byTooltip(on ? 'Ailene gösteriliyor' : 'Aileme göster');
+
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.tap(familyButton(on: false));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the app bar button reflects the stored choice', (
+      tester,
+    ) async {
+      matching.familyVisible = const Ok(true);
+      await loadWith(tester, [theirMessage('selam', noon)]);
+
+      expect(familyButton(on: true), findsOneWidget);
+      expect(familyButton(on: false), findsNothing);
+    });
+
+    testWidgets('is hidden when the choice cannot be read', (tester) async {
+      matching.familyVisible = const Err(ServerFailure('Okunamadı.'));
+      await loadWith(tester, [theirMessage('selam', noon)]);
+
+      expect(familyButton(on: true), findsNothing);
+      expect(familyButton(on: false), findsNothing);
+    });
+
+    testWidgets('turning the switch on saves it for this match', (
+      tester,
+    ) async {
+      await loadWith(tester, [theirMessage('selam', noon)]);
+      await openSheet(tester);
+      expect(find.text('Aile görünürlüğü'), findsOneWidget);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(matching.familyVisibleCalls, [(matchId: 'm1', visible: true)]);
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      expect(familyButton(on: true), findsOneWidget);
+    });
+
+    testWidgets('a failed save puts the switch back and says so', (
+      tester,
+    ) async {
+      matching.familyVisibleResult = const Err(ServerFailure('Kaydedilemedi.'));
+      await loadWith(tester, [theirMessage('selam', noon)]);
+      await openSheet(tester);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+      expect(find.text('Kaydedilemedi, tekrar dene.'), findsOneWidget);
+    });
+
+    testWidgets('the sheet links to the family settings', (tester) async {
+      await loadWith(tester, [theirMessage('selam', noon)]);
+      await openSheet(tester);
+
+      await tester.tap(find.text('Aile bağlantısını yönet'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('aile ayarları'), findsOneWidget);
     });
   });
 }

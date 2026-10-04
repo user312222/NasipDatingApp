@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/avatar_palette.dart';
 import '../../domain/entities/candidate.dart';
+import 'show_family_switch_row.dart';
 
 /// The mutual-like celebration (FR-4.2): a gradient header in the
 /// candidate's own palette with a pulsing heart, replacing the plain
@@ -158,7 +159,7 @@ class _MatchCelebrationState extends State<MatchCelebration>
                         ),
                       ),
                       const SizedBox(height: 18),
-                      _ShowFamilyRow(
+                      ShowFamilySwitchRow(
                         value: _showFamily,
                         failed: _familyFailed,
                         onChanged: _savingFamily ? null : _setShowFamily,
@@ -192,66 +193,6 @@ class _MatchCelebrationState extends State<MatchCelebration>
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShowFamilyRow extends StatelessWidget {
-  const _ShowFamilyRow({
-    required this.value,
-    required this.failed,
-    required this.onChanged,
-  });
-
-  final bool value;
-  final bool failed;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-      decoration: BoxDecoration(
-        color: value ? colors.plumTint : colors.bg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: value ? colors.plum : colors.line),
-      ),
-      child: MergeSemantics(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aileme göster',
-                    style: textTheme.titleSmall?.copyWith(
-                      color: colors.plumStrong,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    failed ? 'Kaydedilemedi, tekrar dene.' : 'Bağlı yakının bu eşleşmeyi görür; mesajları göremez.',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: failed ? colors.rose : colors.inkSoft,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: Colors.white,
-              activeTrackColor: colors.plumFill,
-            ),
-          ],
         ),
       ),
     );

@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/avatar_palette.dart';
+import '../../../../theme/wizard_widgets.dart';
+import '../../../matching/presentation/bloc/family_visibility_cubit.dart';
+import '../../../matching/presentation/widgets/show_family_switch_row.dart';
 import '../../../safety/presentation/widgets/safety_menu_button.dart';
 import '../../domain/entities/chat_message.dart';
 import '../bloc/chat_cubit.dart';
@@ -28,7 +31,9 @@ class ChatRouteArgs {
 }
 
 /// Self-contained, like `DiscoveryScreen` — no cross-screen wizard state
-/// to share, so `ChatCubit` is provided right here.
+/// to share, so `ChatCubit` is provided right here, next to the
+/// `FamilyVisibilityCubit` behind the app bar's "aileme göster" button
+/// (FR-8.4).
 class ChatScreen extends StatelessWidget {
   const ChatScreen({
     super.key,
@@ -45,13 +50,18 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ChatCubit>()
-        ..open(
-          matchId: matchId,
-          otherPartyName: otherPartyName,
-          otherPartyAvatarSeed: otherPartyAvatarSeed,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<ChatCubit>()
+            ..open(
+              matchId: matchId,
+              otherPartyName: otherPartyName,
+              otherPartyAvatarSeed: otherPartyAvatarSeed,
+            ),
         ),
+        BlocProvider(create: (_) => sl<FamilyVisibilityCubit>()..load(matchId)),
+      ],
       child: _ChatView(
         otherPartyUserId: otherPartyUserId,
         otherPartyName: otherPartyName,
@@ -98,6 +108,26 @@ class _ChatViewState extends State<_ChatView> {
     });
   }
 
+  void _openFamilySheet() {
+    final cubit = context.read<FamilyVisibilityCubit>();
+    showModalBottomSheet<void>(
+      context: context,
+      // Sized to its content (and scrollable) rather than capped at the
+      // default 9/16 of the screen, which is too short on small phones.
+      isScrollControlled: true,
+      builder: (sheetContext) => BlocProvider.value(
+        value: cubit,
+        child: _FamilySheet(
+          name: widget.otherPartyName,
+          onManage: () {
+            Navigator.of(sheetContext).pop();
+            context.push('/family/settings');
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -138,6 +168,23 @@ class _ChatViewState extends State<_ChatView> {
               ],
             ),
             actions: [
+              BlocBuilder<FamilyVisibilityCubit, FamilyVisibilityState>(
+                builder: (context, family) {
+                  if (family is! FamilyVisibilityReady) {
+                    return const SizedBox.shrink();
+                  }
+                  return ChromeIconButton(
+                    icon: family.visible
+                        ? Icons.family_restroom_rounded
+                        : Icons.family_restroom_outlined,
+                    primary: family.visible,
+                    tooltip: family.visible
+                        ? 'Ailene gösteriliyor'
+                        : 'Aileme göster',
+                    onPressed: _openFamilySheet,
+                  );
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: SafetyMenuButton(
@@ -582,6 +629,90 @@ class _FamilyNudgeCard extends StatelessWidget {
             color: colors.inkSoft,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// FR-8.4: the per-match "aileme göster" switch, reachable from the chat
+/// at any time after the match celebration.
+class _FamilySheet extends StatelessWidget {
+  const _FamilySheet({required this.name, required this.onManage});
+
+  final String name;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.plumTint,
+                  ),
+                  child: Icon(
+                    Icons.family_restroom_rounded,
+                    color: colors.plum,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Aile görünürlüğü',
+                    style: textTheme.headlineMedium?.copyWith(
+                      fontSize: 22,
+                      color: colors.plumStrong,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Açarsan bağlı yakının $name ile eşleştiğini; adını, yaşını, '
+              'şehrini ve niyetini görür. Mesajların hiçbir zaman gösterilmez.',
+              style: textTheme.bodyMedium?.copyWith(color: colors.inkSoft),
+            ),
+            const SizedBox(height: 16),
+            BlocBuilder<FamilyVisibilityCubit, FamilyVisibilityState>(
+              builder: (context, state) {
+                if (state is! FamilyVisibilityReady) {
+                  return const SizedBox.shrink();
+                }
+                return ShowFamilySwitchRow(
+                  value: state.visible,
+                  failed: state.saveFailed,
+                  caption: 'Yalnızca bu eşleşme için geçerli.',
+                  onChanged: state.isSaving
+                      ? null
+                      : context.read<FamilyVisibilityCubit>().setVisible,
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: onManage,
+              icon: const Icon(Icons.chevron_right_rounded, size: 20),
+              iconAlignment: IconAlignment.end,
+              label: const Text('Aile bağlantısını yönet'),
+              style: TextButton.styleFrom(foregroundColor: colors.teal),
+            ),
+          ],
+        ),
       ),
     );
   }

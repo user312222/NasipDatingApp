@@ -16,6 +16,7 @@ import {
   getDoc,
   getDocs,
   increment,
+  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -386,6 +387,22 @@ describe('family sharing', () => {
       await setDoc(doc(db, 'guardianOf', 'gina'), { singleUserId: 'zoe', guardianName: 'Gina', relationship: 'anne', linkedAt: Timestamp.now() });
     });
     await assertFails(getDocs(byOwner(as('gina'), 'alice')));
+  });
+
+  test('the single user can ask whether one match is shared (chat switch)', async () => {
+    await seed((db) => setDoc(doc(db, 'familyVisible', `${MATCH}_alice`), visible));
+    const one = (db, uid, matchId) => query(
+      collection(db, 'familyVisible'),
+      where('singleUserId', '==', uid),
+      where('matchId', '==', matchId),
+      limit(1),
+    );
+    await assertSucceeds(getDocs(one(as('alice'), 'alice', MATCH)));
+    // "Off" is an empty result, not a denial - which is why the app queries
+    // instead of fetching `{matchId}_{uid}` directly.
+    await assertSucceeds(getDocs(one(as('alice'), 'alice', 'some_other_match')));
+    await assertFails(getDoc(doc(as('alice'), 'familyVisible', 'some_other_match_alice')));
+    await assertFails(getDocs(one(as('carol'), 'alice', MATCH)));
   });
 
   test('only the single user, in their own match, can mark it shared', async () => {

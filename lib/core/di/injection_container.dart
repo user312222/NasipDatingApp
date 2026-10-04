@@ -45,12 +45,14 @@ import '../../features/feed/domain/usecases/watch_feed.dart';
 import '../../features/feed/presentation/bloc/feed_cubit.dart';
 import '../../features/matching/data/datasources/firestore_matching_remote_data_source.dart';
 import '../../features/matching/data/datasources/matching_remote_data_source.dart';
+import '../../features/matching/domain/usecases/get_match_visible_to_family.dart';
 import '../../features/matching/domain/usecases/get_my_matches.dart';
 import '../../features/matching/domain/usecases/set_match_visible_to_family.dart';
 import '../../features/matching/data/repositories/matching_repository_impl.dart';
 import '../../features/matching/domain/repositories/matching_repository.dart';
 import '../../features/matching/domain/usecases/get_candidates.dart';
 import '../../features/matching/domain/usecases/swipe_candidate.dart';
+import '../../features/matching/presentation/bloc/family_visibility_cubit.dart';
 import '../../features/matching/presentation/bloc/matches_cubit.dart';
 import '../../features/matching/presentation/bloc/matching_cubit.dart';
 import '../../features/messaging/data/datasources/firestore_messaging_remote_data_source.dart';
@@ -201,11 +203,18 @@ void _initMatching() {
       watchReadTimes: sl(),
     ),
   );
+  sl.registerFactory(
+    () => FamilyVisibilityCubit(
+      getMatchVisibleToFamily: sl(),
+      setMatchVisibleToFamily: sl(),
+    ),
+  );
 
   // Domain
   sl.registerLazySingleton(() => GetCandidates(sl()));
   sl.registerLazySingleton(() => SwipeCandidate(sl()));
   sl.registerLazySingleton(() => GetMyMatches(sl()));
+  sl.registerLazySingleton(() => GetMatchVisibleToFamily(sl()));
   sl.registerLazySingleton(() => SetMatchVisibleToFamily(sl()));
 
   // Data
