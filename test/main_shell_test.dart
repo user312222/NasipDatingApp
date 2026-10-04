@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:binasip/core/router/main_shell.dart';
+import 'package:binasip/theme/app_colors.dart';
 import 'package:binasip/theme/app_theme.dart';
 
 class _CounterTab extends StatefulWidget {
@@ -65,15 +66,41 @@ void main() {
     WidgetTester tester, {
     Map<int, String> badges = const {},
     ValueChanged<int>? onTabSelected,
+    ThemeData? theme,
   }) async {
     await tester.pumpWidget(
       MaterialApp.router(
-        theme: AppTheme.light(),
+        theme: theme ?? AppTheme.light(),
         routerConfig: _router(badges: badges, onTabSelected: onTabSelected),
       ),
     );
     await tester.pumpAndSettle();
   }
+
+  // How much the selected tab's pill stands out from the bar behind it, as
+  // a WCAG-style contrast ratio (1.0 = invisible).
+  double pillContrast(WidgetTester tester) {
+    final colors = Theme.of(tester.element(find.byType(MainShell)))
+        .extension<AppColors>()!;
+    final pill = tester
+        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+        .map((c) => (c.decoration! as BoxDecoration).color!)
+        .firstWhere((c) => c.a > 0);
+    final onBar = Color.alphaBlend(pill, colors.surface);
+    final a = onBar.computeLuminance() + 0.05;
+    final b = colors.surface.computeLuminance() + 0.05;
+    return a > b ? a / b : b / a;
+  }
+
+  testWidgets('the selected tab is marked clearly in both themes', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(pillContrast(tester), greaterThan(1.15));
+
+    await pump(tester, theme: AppTheme.dark());
+    expect(pillContrast(tester), greaterThan(1.3));
+  });
 
   testWidgets('shows the four tabs and starts on Keşfet', (tester) async {
     await pump(tester);

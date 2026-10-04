@@ -118,6 +118,11 @@ class _TabButton extends StatelessWidget {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
     final color = selected ? colors.plum : colors.inkSoft;
+    // In dark mode plumTint is almost the bar's own colour, so the pill is
+    // tinted from plum itself there to stay visible.
+    final pill = Theme.of(context).brightness == Brightness.dark
+        ? colors.plum.withValues(alpha: 0.2)
+        : colors.plumTint;
 
     return Semantics(
       button: true,
@@ -135,7 +140,7 @@ class _TabButton extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: selected ? colors.plumTint : Colors.transparent,
+                color: selected ? pill : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Stack(

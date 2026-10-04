@@ -118,6 +118,14 @@ flutter build web
 node tools/serve_web.js      # serves build/web on http://localhost:8766
 ```
 
+If the build stops with "An Application Control policy has blocked this file" on `font-subset.exe` (Windows machines with application control turned on), skip the icon-font shrinking step - the app is the same, the bundle is a little larger:
+
+```bash
+flutter build web --no-tree-shake-icons
+```
+
+Release builds differ from `flutter run` in two ways: phone sign-in always shows reCAPTCHA (also for test numbers), and the `/design-preview` gallery is not included.
+
 ### Tests and analysis
 
 ```bash
