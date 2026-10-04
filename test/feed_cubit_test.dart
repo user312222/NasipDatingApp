@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:binasip/core/error/failures.dart';
 import 'package:binasip/core/result/result.dart';
 import 'package:binasip/features/feed/domain/entities/daily_question.dart';
+import 'package:binasip/features/feed/domain/entities/feed.dart';
 import 'package:binasip/features/feed/domain/usecases/delete_my_answer.dart';
 import 'package:binasip/features/feed/domain/usecases/set_post_liked.dart';
 import 'package:binasip/features/feed/domain/usecases/submit_answer.dart';
@@ -55,6 +56,33 @@ void main() {
       expect(tomorrow.text, isNot(morning.text));
       expect(morning.text, isNotEmpty);
     });
+
+    test('the question changes at the next UTC midnight', () {
+      final change = DailyQuestion.nextChangeAfter(
+        DateTime.utc(2026, 3, 6, 23, 59, 30),
+      );
+
+      expect(change, DateTime.utc(2026, 3, 7));
+      expect(
+        DailyQuestion.forDay(change),
+        isNot(
+          DailyQuestion.forDay(change.subtract(const Duration(seconds: 1))),
+        ),
+      );
+      // Month and year ends roll over too.
+      expect(
+        DailyQuestion.nextChangeAfter(DateTime.utc(2026, 12, 31, 12)),
+        DateTime.utc(2027),
+      );
+      // 01:30 in Istanbul is still the previous UTC day: the change is at
+      // 03:00 local, not at local midnight.
+      expect(
+        DailyQuestion.nextChangeAfter(
+          DateTime.parse('2026-03-07T01:30:00+03:00'),
+        ),
+        DateTime.utc(2026, 3, 7),
+      );
+    });
   });
 
   group('FeedCubit', () {
@@ -71,6 +99,25 @@ void main() {
       await pumpEventQueue();
       expect((s.cubit.state as FeedLoaded).feed.posts, hasLength(2));
     });
+
+    test(
+      'moves on to the question of the next day when the stream does',
+      () async {
+        final s = _setup();
+        s.cubit.start();
+        s.repo.feeds.add(Ok(testFeed([testPost('me', isMine: true)])));
+        await pumpEventQueue();
+        expect((s.cubit.state as FeedLoaded).feed.mine, isNotNull);
+
+        const tomorrow = DailyQuestion(dayKey: '2026-3-7', text: 'Yeni soru?');
+        s.repo.feeds.add(const Ok(Feed(question: tomorrow, posts: [])));
+        await pumpEventQueue();
+
+        final feed = (s.cubit.state as FeedLoaded).feed;
+        expect(feed.question, tomorrow);
+        expect(feed.mine, isNull);
+      },
+    );
 
     test('a stream failure becomes FeedError', () async {
       final s = _setup();

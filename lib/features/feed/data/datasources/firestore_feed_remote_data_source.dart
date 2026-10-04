@@ -50,8 +50,9 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
     Set<String>? likedPostIds;
     var blocked = <String>{};
     var generation = 0;
+    Timer? dayChange;
 
-    final question = DailyQuestion.forDay(DateTime.now());
+    var question = DailyQuestion.forDay(DateTime.now());
 
     Future<void> publish(String me) async {
       final docs = posts;
@@ -101,6 +102,46 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
       }
     }
 
+    // Both listeners are tied to one day's question. A new question starts
+    // at UTC midnight, so they are rebuilt then - an app left open moves on
+    // to the new question (and an empty answer box) by itself.
+    void listenForToday(String me) {
+      final now = DateTime.now();
+      question = DailyQuestion.forDay(now);
+      posts = null;
+      likedPostIds = null;
+      // Drops a publish still loading authors for the previous day.
+      generation++;
+
+      postsSub = _db
+          .collection('feedPosts')
+          .where('dayKey', isEqualTo: question.dayKey)
+          .snapshots()
+          .listen((snap) {
+            posts = snap.docs;
+            unawaited(publish(me));
+          }, onError: fail);
+      likesSub = _db
+          .collection('feedLikes')
+          .where('userId', isEqualTo: me)
+          .where('dayKey', isEqualTo: question.dayKey)
+          .snapshots()
+          .listen((snap) {
+            likedPostIds = {
+              for (final d in snap.docs) d.data()['postId'] as String,
+            };
+            unawaited(publish(me));
+          }, onError: fail);
+
+      dayChange = Timer(_untilNextQuestion(now), () async {
+        await Future.wait([
+          if (postsSub != null) postsSub!.cancel(),
+          if (likesSub != null) likesSub!.cancel(),
+        ]);
+        if (!controller.isClosed) listenForToday(me);
+      });
+    }
+
     controller = StreamController<Feed>(
       onListen: () async {
         final String me;
@@ -124,28 +165,10 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
           logFailure('feed.blocked', e);
         }
         if (controller.isClosed) return;
-
-        postsSub = _db
-            .collection('feedPosts')
-            .where('dayKey', isEqualTo: question.dayKey)
-            .snapshots()
-            .listen((snap) {
-              posts = snap.docs;
-              unawaited(publish(me));
-            }, onError: fail);
-        likesSub = _db
-            .collection('feedLikes')
-            .where('userId', isEqualTo: me)
-            .where('dayKey', isEqualTo: question.dayKey)
-            .snapshots()
-            .listen((snap) {
-              likedPostIds = {
-                for (final d in snap.docs) d.data()['postId'] as String,
-              };
-              unawaited(publish(me));
-            }, onError: fail);
+        listenForToday(me);
       },
       onCancel: () async {
+        dayChange?.cancel();
         await Future.wait([
           if (postsSub != null) postsSub!.cancel(),
           if (likesSub != null) likesSub!.cancel(),
@@ -165,7 +188,7 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
     // whether that one doc exists - a single-document listener, cheap
     // enough to keep open for as long as the tab bar is on screen.
     void listenForToday(String me) {
-      final now = DateTime.now().toUtc();
+      final now = DateTime.now();
       sub = _db
           .collection('feedPosts')
           .doc('${me}_${DailyQuestion.dayKeyFor(now)}')
@@ -181,14 +204,10 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
           );
       // A new question starts at UTC midnight; move to its doc then, so an
       // app left open asks again without being restarted.
-      final nextDay = DateTime.utc(now.year, now.month, now.day + 1);
-      dayChange = Timer(
-        nextDay.difference(now) + const Duration(seconds: 1),
-        () async {
-          await sub?.cancel();
-          if (!controller.isClosed) listenForToday(me);
-        },
-      );
+      dayChange = Timer(_untilNextQuestion(now), () async {
+        await sub?.cancel();
+        if (!controller.isClosed) listenForToday(me);
+      });
     }
 
     controller = StreamController<bool>(
@@ -207,6 +226,12 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
     );
     return controller.stream;
   }
+
+  /// How long until the day's question changes, plus a second of slack so
+  /// the timer never fires while it is still the old day.
+  static Duration _untilNextQuestion(DateTime now) =>
+      DailyQuestion.nextChangeAfter(now).difference(now) +
+      const Duration(seconds: 1);
 
   Future<void> _loadAuthors(Set<String> ids) async {
     final missing = ids.where((id) => !_authors.containsKey(id)).toList();

@@ -18,6 +18,13 @@ class DailyQuestion extends Equatable {
     return '${utc.year}-${utc.month}-${utc.day}';
   }
 
+  /// When the question that is current at [moment] is replaced by the next
+  /// one: the start of the following UTC day.
+  static DateTime nextChangeAfter(DateTime moment) {
+    final utc = moment.toUtc();
+    return DateTime.utc(utc.year, utc.month, utc.day + 1);
+  }
+
   factory DailyQuestion.forDay(DateTime moment) {
     final utc = moment.toUtc();
     final day = DateTime.utc(

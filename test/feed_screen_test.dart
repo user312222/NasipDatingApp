@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:binasip/core/di/injection_container.dart';
 import 'package:binasip/core/error/failures.dart';
 import 'package:binasip/core/result/result.dart';
+import 'package:binasip/features/feed/domain/entities/daily_question.dart';
+import 'package:binasip/features/feed/domain/entities/feed.dart';
 import 'package:binasip/features/feed/domain/entities/feed_post.dart';
 import 'package:binasip/features/feed/domain/usecases/delete_my_answer.dart';
 import 'package:binasip/features/feed/domain/usecases/set_post_liked.dart';
@@ -199,6 +201,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('cevap b'), findsOneWidget);
+  });
+
+  testWidgets('a new day brings the new question and the composer back', (
+    tester,
+  ) async {
+    await pumpFeed(tester, [testPost('me', isMine: true)]);
+    expect(find.byType(TextField), findsNothing);
+
+    repo.feeds.add(
+      const Ok(
+        Feed(
+          question: DailyQuestion(dayKey: '2026-3-7', text: 'Yeni soru?'),
+          posts: [],
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Yeni soru?'), findsOneWidget);
+    expect(find.text(testQuestion.text), findsNothing);
+    expect(find.byType(TextField), findsOneWidget);
   });
 
   testWidgets('shows the failure when the feed cannot load', (tester) async {
