@@ -36,7 +36,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
 | **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
 | **Privacy** | Per-user photo visibility (hidden / on request / on match), optional religious details behind a separate KVKK m.6 consent |
-| **Family** | Invite code for a relative, per-match "show my family" switch (on the match celebration, in the chat and in family settings), read-only guardian view |
+| **Family** | Invite code for a relative, per-match "show my family" switch (on the match celebration, in the chat and in family settings), read-only guardian view (whose matches these are, then name, age, city, intent and a coarse status per shared match — never messages) |
 | **Safety** | Report and block from the card menu and the chat, account deletion, log out |
 | **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — its own tab, and where Discovery sends people once the candidates run out |
 | **Waitlist** | Public waitlist page for people without an invite code |
@@ -69,7 +69,7 @@ The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Fu
 - **Backend:** Firebase — Authentication (phone), Cloud Firestore
 - **State management:** BLoC / Cubit (`flutter_bloc`), `equatable`
 - **Dependency injection:** `get_it`
-- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar)
+- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen)
 - **Fonts:** Fraunces (display) and Sora (UI) via `google_fonts`
 
 ### Architecture
@@ -80,11 +80,11 @@ Feature-first clean architecture. Each feature under `lib/features/<name>/` has 
 - **data** — repository implementations and remote data sources (`Firestore*` for real backends, `Mock*` for placeholders — swapped in `lib/core/di/injection_container.dart`)
 - **presentation** — cubits/states and screens
 
-Calls that can fail return a `Result<T>` (`Ok` / `Err` with a typed `Failure`) instead of throwing across layers. Shared code lives in `lib/core/` (errors, `Result`, formatting, restart helper) and `lib/theme/` (design tokens and shared widgets).
+Calls that can fail return a `Result<T>` (`Ok` / `Err` with a typed `Failure`) instead of throwing across layers. Technical details go through `logFailure` (`lib/core/error/error_log.dart`), which leaves out the `permission-denied` noise open listeners produce at sign-out. Shared code lives in `lib/core/` (errors, `Result`, formatting, restart helper) and `lib/theme/` (design tokens and shared widgets).
 
 ### Design system
 
-"Gece Moru" palette (vivid plum with a coral `accent`, plus the logo's teal and copper, on warm cream; the plum -> accent pair is the shared brand gradient) with light and dark themes. Tokens are in `lib/theme/app_colors.dart`; shared widgets (`WizardBackdrop`, `WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard`) are in `lib/theme/wizard_widgets.dart`. Run the app in debug mode (`flutter run`) and open **`/design-preview`** for a live gallery with a light/dark switch; the route is left out of release builds.
+"Gece Moru" palette (vivid plum with a coral `accent`, plus the logo's teal and copper, on warm cream; the plum -> accent pair is the shared brand gradient) with light and dark themes. Tokens are in `lib/theme/app_colors.dart`; shared widgets (`WizardBackdrop`, `WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard`, `SummaryBand`) are in `lib/theme/wizard_widgets.dart`. Run the app in debug mode (`flutter run`) and open **`/design-preview`** for a live gallery with a light/dark switch; the route is left out of release builds.
 
 ---
 
@@ -125,7 +125,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the chat, matches, matching and feed cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the photo step, the shared widgets, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the chat, matches, matching, feed and guardian cubits, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 
@@ -137,7 +137,7 @@ npm install      # first time only
 npm test
 ```
 
-It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
 
 ---
 

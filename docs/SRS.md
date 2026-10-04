@@ -2,7 +2,7 @@
 
 **Doküman türü:** Software Requirements Specification, IEEE 830 yapısına gevşek şekilde uyarlanmıştır.
 **Durum:** Taslak — kapalı beta geliştirme aşaması. Bu doküman [`REQUIREMENTS.md`](REQUIREMENTS.md)'deki ürün kararlarını biçimselleştirir ve genişletir; iki doküman çelişirse **REQUIREMENTS.md güncel kabul edilir**, bu SRS ondan türetilmiştir.
-**Son güncelleme bağlamı:** Kayıt sihirbazı, Keşfet, eşleşmeler, sohbet, ayarlar ve aile ekranları yeniden tasarlandıktan; telefon/OTP, profil, eşleştirme, mesajlaşma, güvenlik, hesap ve aile özellikleri Firestore'a taşındıktan; Günün Sorusu akışı (FR-9) ve bekâr kullanıcılar için alt sekme çubuğu eklendikten sonraki durumu yansıtır. Bölüm 8 hangi parçanın gerçek, hangisinin yer tutucu (mock) olduğunu ayrıca listeler — bir gereksinimin "kuruldu" sayılması onun üretime hazır olduğu anlamına gelmez.
+**Son güncelleme bağlamı:** Kayıt sihirbazı, Keşfet, eşleşmeler, sohbet, ayarlar ve aile ekranları yeniden tasarlandıktan; telefon/OTP, profil, eşleştirme, mesajlaşma, güvenlik, hesap ve aile özellikleri Firestore'a taşındıktan; Günün Sorusu akışı (FR-9) ve bekâr kullanıcılar için alt sekme çubuğu eklendikten; "aileme göster" anahtarı kutlama ve sohbet ekranlarına, veli ekranı da niyet ve bağlı kişi bilgisine kavuştuktan sonraki durumu yansıtır. Bölüm 8 hangi parçanın gerçek, hangisinin yer tutucu (mock) olduğunu ayrıca listeler — bir gereksinimin "kuruldu" sayılması onun üretime hazır olduğu anlamına gelmez.
 
 ---
 
@@ -115,7 +115,7 @@ Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriy
 - Görsel dil kasıtlı olarak genç ve canlı tutulmuştur: iki renkli gradyanlar, yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana aksiyon butonları, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması). Düz yeşil ve yıldız/sekizgen-yıldız biçimli motifler kullanılmaz; logodaki turkuaz serbesttir (bkz. REQUIREMENTS.md §6 için gerekçe).
 - **Gezinme:** Tekil kullanıcının ana ekranı dört sekmeli, yüzen bir alt çubuktur — Keşfet (`/discover`), Günün Sorusu (`/feed`), Eşleşmeler (`/matches`), Hesap (`/account`). Her sekme kendi gezinme yığınını ve durumunu korur; bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet ve aile ayarları gibi tam ekran sayfalar çubuğu örter. Okunmamış mesaj varken Eşleşmeler sekmesinin (bkz. FR-5.3), bugünün sorusu cevaplanmadıysa Günün Sorusu sekmesinin (bkz. FR-9.7) ikonunda bir nokta görünür. Veli hesabında sekme çubuğu yoktur; tek bir ana ekran ve ondan açılan ayarlar sayfası vardır.
 - Mahremiyet ilkesi gereği kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla temsil edilir.
-- Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında (yalnızca debug derlemede) açık/koyu tema anahtarıyla canlı olarak incelenebilir.
+- Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard`, `SummaryBand` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında (yalnızca debug derlemede) açık/koyu tema anahtarıyla canlı olarak incelenebilir.
 - Erişilebilirlik hedefi: WCAG AA metin kontrastı, minimum 44×44pt dokunma hedefleri.
 
 ### 3.2 Donanım Arayüzleri
@@ -222,7 +222,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-8.2 | Veli hesabının doğrulaması ve kapsamı | Telefon + selfie (FR-1 ile aynı) | Aynı doğrulama akışı; FR-2/3/4'e erişim verilmez | Onboarding sonrası ad, yakınlık derecesi ve davet kodu istenir |
 | FR-8.3 | Aile davet kodu | Tekil kullanıcının ürettiği kod | Kod doğrulama ve bağlama | Geçerli kod girilmeden bağlantı kurulamaz; kodsuz veli hesabı hiçbir veriye erişemez |
 | FR-8.4 | Eşleşme bazlı "aileme göster" | Açık/kapalı toggle, eşleşme başına | Görünürlük kaydı | Varsayılan kapalı; anahtar eşleşme kutlama diyaloğunda, sohbet ekranında (üst çubuktaki aile düğmesi) ve aile ayarları ekranında bulunur, kullanıcı istediği zaman açıp kapatabilir |
-| FR-8.5 | Veli görünümü (salt okunur) | — | Yalnızca "aileme göster" işaretli eşleşmelerin minimal görünümü | Aday adı/yaş/şehir/niyet + kaba bir durum etiketi ("yeni eşleşme"/"aktif yazışıyorlar") gösterilir; mesaj içeriği asla gösterilmez |
+| FR-8.5 | Veli görünümü (salt okunur) | — | Yalnızca "aileme göster" işaretli eşleşmelerin minimal görünümü | Aday adı/yaş/şehir/niyet + kaba bir durum etiketi ("yeni eşleşme"/"aktif yazışıyorlar") gösterilir; ekranın başında kimin eşleşmelerinin görüldüğü (bağlı kişinin adı) ve kaç eşleşmenin paylaşıldığı yazar; mesaj içeriği asla gösterilmez |
 | FR-8.6 | Veli hesabının kısıtları | — | Mimari erişim kısıtı | Veli hesabı keşif/eşleştirme adayı olamaz, beğeni/geçme yapamaz, mesaj gönderemez, eşleştirme filtrelerine tabi olmaz |
 
 **Kabul kriteri:** Bir veli hesabının `MatchingRepository`/`MessagingRepository` katmanlarına hiçbir kod yolundan erişimi olmamalıdır; yalnızca salt okunur bir aile görünümü üzerinden veri alır.
@@ -231,7 +231,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 
 | # | Gereksinim | Girdi | İşlem | Çıktı / Kabul Kriteri |
 |---|---|---|---|---|
-| FR-9.1 | Günün sorusu | Tarih (UTC günü) | İstemcideki sabit listeden sırayla seçim | Aynı gün tüm üyeler aynı tek soruyu görür |
+| FR-9.1 | Günün sorusu | Tarih (UTC günü) | İstemcideki sabit listeden sırayla seçim | Aynı gün tüm üyeler aynı tek soruyu görür; gün değişirken açık olan uygulama kendiliğinden yeni soruya geçer |
 | FR-9.2 | Günde tek cevap | En fazla 280 karakterlik metin | Cevap kaydı oluşturma | Üye günde en fazla bir cevap paylaşır; cevap ad, yaş ve şehirle tüm tekil üyelere görünür, fotoğraf gösterilmez; düzenlenemez, sahibi silebilir |
 | FR-9.3 | Yalnızca beğeni | Beğen / beğeniyi geri al | Beğeni kaydı ve sayaç güncelleme | Yorum yoktur; akış beğenisi eşleşme oluşturmaz ve sohbet açmaz; kimin beğendiği görünmez, yalnızca sayı görünür; kişi kendi cevabını beğenemez |
 | FR-9.4 | Şikayet / engelleme | Hedef cevap sahibi | FR-6.1 / FR-6.2 ile aynı | Her cevapta menü bulunur; engellenen kişinin cevapları gösterilmez |
@@ -273,6 +273,8 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 
 - Başarısız olabilecek tüm repository/use-case çağrıları, istisna fırlatmak yerine tipli bir `Result<T>` (`Ok`/`Err`) döndürür; sunum katmanı hatayı açıkça ele almak zorundadır.
 - Hesap silme gibi çok adımlı, atomik olmayan işlemler "best-effort" prensibiyle çalışır: bir adım başarısız olursa işlem, kullanıcıya gerçek durumu yansıtacak şekilde (örn. en azından oturumu kapatarak) geri döner; sessizce "başarılı" göstermez.
+- Teknik hata ayrıntıları kullanıcıya gösterilmez, `logFailure` ile kaydedilir. Oturum kapanırken hâlâ açık olan dinleyicilerin aldığı `permission-denied` bir arıza sayılmaz ve kaydedilmez; oturum açıkken gelen aynı hata ile oturumsuz çağrılardaki (davetiye kodu, bekleme listesi, giriş) retler kaydedilir.
+- Tanınmayan bir adres (yanlış yazılmış bağlantı) hata sayfası yerine giriş ekranına yönlendirilir; oturum varsa oradan uygulamaya geçilir.
 
 ### 5.6 Bakım Yapılabilirlik
 
