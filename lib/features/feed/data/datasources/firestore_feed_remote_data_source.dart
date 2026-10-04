@@ -155,6 +155,59 @@ class FirestoreFeedRemoteDataSource implements FeedRemoteDataSource {
     return controller.stream;
   }
 
+  @override
+  Stream<bool> watchAnsweredToday() {
+    late final StreamController<bool> controller;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? sub;
+    Timer? dayChange;
+
+    // The answer's doc id is `{uid}_{dayKey}`, so "answered today" is just
+    // whether that one doc exists - a single-document listener, cheap
+    // enough to keep open for as long as the tab bar is on screen.
+    void listenForToday(String me) {
+      final now = DateTime.now().toUtc();
+      sub = _db
+          .collection('feedPosts')
+          .doc('${me}_${DailyQuestion.dayKeyFor(now)}')
+          .snapshots()
+          .listen(
+            (snap) => controller.add(snap.exists),
+            onError: (Object e) {
+              logFailure('feed.answered', e);
+              controller.addError(
+                const ServerException('Cevap durumu okunamadı.'),
+              );
+            },
+          );
+      // A new question starts at UTC midnight; move to its doc then, so an
+      // app left open asks again without being restarted.
+      final nextDay = DateTime.utc(now.year, now.month, now.day + 1);
+      dayChange = Timer(
+        nextDay.difference(now) + const Duration(seconds: 1),
+        () async {
+          await sub?.cancel();
+          if (!controller.isClosed) listenForToday(me);
+        },
+      );
+    }
+
+    controller = StreamController<bool>(
+      onListen: () {
+        try {
+          listenForToday(_uid);
+        } on ServerException catch (e) {
+          controller.addError(e);
+          unawaited(controller.close());
+        }
+      },
+      onCancel: () async {
+        dayChange?.cancel();
+        await sub?.cancel();
+      },
+    );
+    return controller.stream;
+  }
+
   Future<void> _loadAuthors(Set<String> ids) async {
     final missing = ids.where((id) => !_authors.containsKey(id)).toList();
     if (missing.isEmpty) return;

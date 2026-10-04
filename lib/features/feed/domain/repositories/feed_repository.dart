@@ -5,6 +5,10 @@ abstract interface class FeedRepository {
   /// Live view of today's question and its answers.
   Stream<Result<Feed>> watchToday();
 
+  /// Live: whether the current user has answered today's question. Follows
+  /// the day change, so it goes back to `false` when a new question starts.
+  Stream<Result<bool>> watchAnsweredToday();
+
   /// One answer per user per day; a second attempt fails.
   Future<Result<void>> submitAnswer(String text);
 

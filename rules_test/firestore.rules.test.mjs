@@ -578,6 +578,13 @@ describe('feed (günün sorusu)', () => {
   };
 
   describe('answers', () => {
+    test('a member can check for their own answer before writing one (tab dot)', async () => {
+      await seedMembers();
+      await assertSucceeds(getDoc(doc(as('alice'), 'feedPosts', postId('alice'))));
+      await assertFails(getDoc(doc(as('gina'), 'feedPosts', postId('gina'))));
+      await assertFails(getDoc(doc(anon(), 'feedPosts', postId('alice'))));
+    });
+
     test('a member can answer the question of the day once', async () => {
       await seedMembers();
       await assertSucceeds(setDoc(doc(as('alice'), 'feedPosts', postId('alice')), answer('alice')));

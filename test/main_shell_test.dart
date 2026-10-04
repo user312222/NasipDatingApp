@@ -35,7 +35,7 @@ class _CounterTabState extends State<_CounterTab> {
 }
 
 GoRouter _router({
-  Set<int> badgedTabs = const {},
+  Map<int, String> badges = const {},
   ValueChanged<int>? onTabSelected,
 }) => GoRouter(
   initialLocation: '/discover',
@@ -43,7 +43,7 @@ GoRouter _router({
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => MainShell(
         navigationShell: shell,
-        badgedTabs: badgedTabs,
+        badges: badges,
         onTabSelected: onTabSelected,
       ),
       branches: [
@@ -63,16 +63,13 @@ GoRouter _router({
 void main() {
   Future<void> pump(
     WidgetTester tester, {
-    Set<int> badgedTabs = const {},
+    Map<int, String> badges = const {},
     ValueChanged<int>? onTabSelected,
   }) async {
     await tester.pumpWidget(
       MaterialApp.router(
         theme: AppTheme.light(),
-        routerConfig: _router(
-          badgedTabs: badgedTabs,
-          onTabSelected: onTabSelected,
-        ),
+        routerConfig: _router(badges: badges, onTabSelected: onTabSelected),
       ),
     );
     await tester.pumpAndSettle();
@@ -131,9 +128,25 @@ void main() {
   testWidgets('a badged tab shows the dot and says so to screen readers', (
     tester,
   ) async {
-    await pump(tester, badgedTabs: {2});
+    await pump(tester, badges: {2: 'yeni mesaj var'});
 
     expect(find.byKey(const ValueKey('tab_badge')), findsOneWidget);
+    expect(find.bySemanticsLabel('Eşleşmeler, yeni mesaj var'), findsOneWidget);
+  });
+
+  testWidgets('each badged tab gets its own dot and description', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      badges: {1: 'bugünün sorusu seni bekliyor', 2: 'yeni mesaj var'},
+    );
+
+    expect(find.byKey(const ValueKey('tab_badge')), findsNWidgets(2));
+    expect(
+      find.bySemanticsLabel('Günün Sorusu, bugünün sorusu seni bekliyor'),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('Eşleşmeler, yeni mesaj var'), findsOneWidget);
   });
 

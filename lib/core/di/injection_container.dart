@@ -41,7 +41,9 @@ import '../../features/feed/domain/repositories/feed_repository.dart';
 import '../../features/feed/domain/usecases/delete_my_answer.dart';
 import '../../features/feed/domain/usecases/set_post_liked.dart';
 import '../../features/feed/domain/usecases/submit_answer.dart';
+import '../../features/feed/domain/usecases/watch_answered_today.dart';
 import '../../features/feed/domain/usecases/watch_feed.dart';
+import '../../features/feed/presentation/bloc/feed_badge_cubit.dart';
 import '../../features/feed/presentation/bloc/feed_cubit.dart';
 import '../../features/matching/data/datasources/firestore_matching_remote_data_source.dart';
 import '../../features/matching/data/datasources/matching_remote_data_source.dart';
@@ -236,9 +238,12 @@ void _initFeed() {
       setPostLiked: sl(),
     ),
   );
+  // Provided by the tab bar, for the dot on the feed tab.
+  sl.registerFactory(() => FeedBadgeCubit(watchAnsweredToday: sl()));
 
   // Domain
   sl.registerLazySingleton(() => WatchFeed(sl()));
+  sl.registerLazySingleton(() => WatchAnsweredToday(sl()));
   sl.registerLazySingleton(() => SubmitAnswer(sl()));
   sl.registerLazySingleton(() => DeleteMyAnswer(sl()));
   sl.registerLazySingleton(() => SetPostLiked(sl()));

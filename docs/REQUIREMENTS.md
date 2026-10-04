@@ -96,6 +96,7 @@ Senaryo: kullanıcı zaten evli, kendisi için eş aramıyor — bir yakınını
 - FR-9.4 Her cevapta şikayet/engelle menüsü bulunur (FR-6.1/6.2); engellenen kişinin cevapları gösterilmez.
 - FR-9.5 Veli hesapları akışı göremez ve cevap/beğeni veremez (FR-8.2).
 - FR-9.6 Keşfet'te aday kalmadığında ana eylem kullanıcıyı akışa yönlendirir.
+- FR-9.7 Kullanıcı bugünün sorusunu henüz cevaplamadıysa alt çubuktaki Günün Sorusu sekmesinde nokta görünür (hangi sekmede olursa olsun); cevap paylaşılınca kaybolur, cevap silinirse ya da yeni gün (UTC) başlarsa geri gelir.
 - Kapsam notu: Metin için otomatik moderasyon yoktur (sunucu gerektirir); güvenlik ağı karakter sınırı, günde bir cevap ve şikayet/engelle menüsüdür.
 
 ## 5. Veri Modeli (taslak)
@@ -119,7 +120,7 @@ FeedLike      { id (postId_userId), postId, userId, dayKey, createdAt }         
 
 - **Platform:** Flutter — iOS + Android (tek kod tabanı), proje adı `binasip`.
 - **Dil:** v1 yalnızca Türkçe arayüz.
-- **Gezinme:** Bekâr kullanıcının ana ekranı dört sekmeli bir alt çubuktur: **Keşfet** (`/discover`), **Günün Sorusu** (`/feed`), **Eşleşmeler** (`/matches`), **Hesap** (`/account`). Her sekme kendi durumunu korur (sekme değiştirip dönünce adaylar yeniden yüklenmez); bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet, aile ayarları gibi tam ekran sayfalar çubuğun üstünü kaplar. Okunmamış mesaj varken Eşleşmeler sekmesinde nokta görünür (FR-5). Veli hesabında sekme çubuğu yoktur; tek ana ekranı vardır (FR-8.2).
+- **Gezinme:** Bekâr kullanıcının ana ekranı dört sekmeli bir alt çubuktur: **Keşfet** (`/discover`), **Günün Sorusu** (`/feed`), **Eşleşmeler** (`/matches`), **Hesap** (`/account`). Her sekme kendi durumunu korur (sekme değiştirip dönünce adaylar yeniden yüklenmez); bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet, aile ayarları gibi tam ekran sayfalar çubuğun üstünü kaplar. Okunmamış mesaj varken Eşleşmeler sekmesinde (FR-5), bugünün sorusu cevaplanmadıysa Günün Sorusu sekmesinde (FR-9.7) nokta görünür. Veli hesabında sekme çubuğu yoktur; tek ana ekranı vardır (FR-8.2).
 - **Yasal/Veri:** KVKK uyumu — veri minimizasyonu, doğrulama verisinin ayrı saklanması, açık rıza akışları.
 - **Marka/Tasarım:** "Gece Moru" renk paleti (mor/toz gülü/altın — bkz. Figma `binasip` dosyası, `🎨 Foundations` sayfası), Fraunces (display) + Sora (UI) tipografi, Phosphor Icons (Light) + özel İslami motifler: **hilal/kemer/fener** (yıldız/sekizgen-yıldız benzeri şekiller **kullanılmaz** — başka bir dinî sembole benzeyebildiği için ürün sahibi tarafından reddedildi; Keşfet kartında hilal + küçük "pırıltı" ikonu kullanılıyor).
 - **Görsel dil:** Genç ve canlı — iki renkli canlı gradyanlar (koyulaştırılmış tek renk değil), yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana butonlar, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması, mesaj girişi). Düz yeşil kullanılmaz; logodaki turkuaz (`teal`) ve bakır (`brass`) ikincil marka renkleridir (bağlantılar, konum iğneleri, arka plan ışıması, avatar geçişleri), ana eylemler mor → mercan geçişinde kalır. Fotoğraflar mahremiyet kapılı olduğu için kişiler gradyan + baş harf avatarıyla gösterilir (FR-3).

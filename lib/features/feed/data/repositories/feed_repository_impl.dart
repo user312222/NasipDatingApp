@@ -22,6 +22,17 @@ class FeedRepositoryImpl implements FeedRepository {
   }
 
   @override
+  Stream<Result<bool>> watchAnsweredToday() async* {
+    try {
+      await for (final answered in remoteDataSource.watchAnsweredToday()) {
+        yield Ok(answered);
+      }
+    } on ServerException catch (e) {
+      yield Err(ServerFailure(e.message ?? 'Bir sorun oluştu.'));
+    }
+  }
+
+  @override
   Future<Result<void>> submitAnswer(String text) =>
       _guard(() => remoteDataSource.submitAnswer(text));
 

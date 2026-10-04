@@ -12,14 +12,16 @@ class MainShell extends StatelessWidget {
   const MainShell({
     super.key,
     required this.navigationShell,
-    this.badgedTabs = const {},
+    this.badges = const {},
     this.onTabSelected,
   });
 
   final StatefulNavigationShell navigationShell;
 
-  /// Indexes of tabs that show a small "something new" dot.
-  final Set<int> badgedTabs;
+  /// Tabs that show a small "something waiting" dot: tab index -> what the
+  /// dot means, read out after the tab's name ("Eşleşmeler, yeni mesaj
+  /// var").
+  final Map<int, String> badges;
 
   /// Called with the index every time a tab is tapped (e.g. to refresh it).
   final ValueChanged<int>? onTabSelected;
@@ -67,7 +69,7 @@ class MainShell extends StatelessWidget {
                     child: _TabButton(
                       tab: tabs[i],
                       selected: i == navigationShell.currentIndex,
-                      badged: badgedTabs.contains(i),
+                      badge: badges[i],
                       // Tapping the tab you're already on goes back to its
                       // root, the usual bottom-bar behaviour.
                       onTap: () {
@@ -101,12 +103,14 @@ class _TabButton extends StatelessWidget {
     required this.tab,
     required this.selected,
     required this.onTap,
-    this.badged = false,
+    this.badge,
   });
 
   final _Tab tab;
   final bool selected;
-  final bool badged;
+
+  /// Non-null shows the dot; the text is its screen-reader description.
+  final String? badge;
   final VoidCallback onTap;
 
   @override
@@ -118,7 +122,7 @@ class _TabButton extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: badged ? '${tab.label}, yeni mesaj var' : tab.label,
+      label: badge == null ? tab.label : '${tab.label}, $badge',
       excludeSemantics: true,
       child: InkResponse(
         onTap: onTap,
@@ -142,7 +146,7 @@ class _TabButton extends StatelessWidget {
                     size: 22,
                     color: color,
                   ),
-                  if (badged)
+                  if (badge != null)
                     Positioned(
                       top: -2,
                       right: -4,

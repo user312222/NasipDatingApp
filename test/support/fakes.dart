@@ -236,6 +236,11 @@ class FakeFeedRepository implements FeedRepository {
   @override
   Stream<Result<Feed>> watchToday() => feeds.stream;
 
+  final answered = StreamController<Result<bool>>();
+
+  @override
+  Stream<Result<bool>> watchAnsweredToday() => answered.stream;
+
   @override
   Future<Result<void>> submitAnswer(String text) {
     submitted.add(text);

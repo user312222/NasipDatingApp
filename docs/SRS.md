@@ -113,7 +113,7 @@ Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriy
 - Uygulama Material 3 tabanlıdır; "Gece Moru" tasarım sistemini kullanır (canlı mor → mercan marka geçişi, logodan gelen turkuaz ve bakır ikincil renkler, sıcak krem zemin), açık ve koyu temayı destekler.
 - Tipografi: Fraunces (başlıklar/display), Sora (arayüz metni).
 - Görsel dil kasıtlı olarak genç ve canlı tutulmuştur: iki renkli gradyanlar, yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana aksiyon butonları, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması). Düz yeşil ve yıldız/sekizgen-yıldız biçimli motifler kullanılmaz; logodaki turkuaz serbesttir (bkz. REQUIREMENTS.md §6 için gerekçe).
-- **Gezinme:** Tekil kullanıcının ana ekranı dört sekmeli, yüzen bir alt çubuktur — Keşfet (`/discover`), Günün Sorusu (`/feed`), Eşleşmeler (`/matches`), Hesap (`/account`). Her sekme kendi gezinme yığınını ve durumunu korur; bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet ve aile ayarları gibi tam ekran sayfalar çubuğu örter. Okunmamış mesaj varken Eşleşmeler sekmesinin ikonunda bir nokta görünür (bkz. FR-5.3). Veli hesabında sekme çubuğu yoktur; tek bir ana ekran ve ondan açılan ayarlar sayfası vardır.
+- **Gezinme:** Tekil kullanıcının ana ekranı dört sekmeli, yüzen bir alt çubuktur — Keşfet (`/discover`), Günün Sorusu (`/feed`), Eşleşmeler (`/matches`), Hesap (`/account`). Her sekme kendi gezinme yığınını ve durumunu korur; bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet ve aile ayarları gibi tam ekran sayfalar çubuğu örter. Okunmamış mesaj varken Eşleşmeler sekmesinin (bkz. FR-5.3), bugünün sorusu cevaplanmadıysa Günün Sorusu sekmesinin (bkz. FR-9.7) ikonunda bir nokta görünür. Veli hesabında sekme çubuğu yoktur; tek bir ana ekran ve ondan açılan ayarlar sayfası vardır.
 - Mahremiyet ilkesi gereği kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla temsil edilir.
 - Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında (yalnızca debug derlemede) açık/koyu tema anahtarıyla canlı olarak incelenebilir.
 - Erişilebilirlik hedefi: WCAG AA metin kontrastı, minimum 44×44pt dokunma hedefleri.
@@ -237,6 +237,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-9.4 | Şikayet / engelleme | Hedef cevap sahibi | FR-6.1 / FR-6.2 ile aynı | Her cevapta menü bulunur; engellenen kişinin cevapları gösterilmez |
 | FR-9.5 | Veli hesabı kapsam dışı | — | Hesap türü kontrolü (kurallarda) | Veli hesabı akışı okuyamaz, cevap veya beğeni veremez |
 | FR-9.6 | Keşfet'ten yönlendirme | Aday listesinin bitmesi | Boş durum ekranı | Aday kalmadığında ana eylem kullanıcıyı akışa götürür |
+| FR-9.7 | Cevaplanmamış soru işareti | Kullanıcının bugünkü cevabının varlığı | Tek belgelik canlı dinleyici | Bugünün sorusu cevaplanmadıysa alt çubuktaki Günün Sorusu sekmesinde nokta görünür; cevap paylaşılınca kaybolur, cevap silinince veya yeni gün (UTC) başlayınca geri gelir |
 
 **Not:** Metin için otomatik moderasyon yoktur (sunucu gerektirir, bkz. §7.1); güvenlik ağı karakter sınırı, günde tek cevap ve şikayet/engelle menüsüdür.
 

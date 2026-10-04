@@ -14,6 +14,7 @@ import '../../features/auth/presentation/screens/onboarding_complete_screen.dart
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/phone_entry_screen.dart';
 import '../../features/auth/presentation/screens/selfie_verification_screen.dart';
+import '../../features/feed/presentation/bloc/feed_badge_cubit.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/matching/presentation/bloc/matches_cubit.dart';
 import '../../features/matching/presentation/screens/discovery_screen.dart';
@@ -36,6 +37,7 @@ import 'main_shell.dart';
 /// `AuthCubit`. On the very first navigation, send such locations through
 /// `/` so the session is restored and the user is routed onward. Public
 /// pages are exempt.
+const _feedTab = 1;
 const _matchesTab = 2;
 
 bool _hasUnread(MatchesState state) =>
@@ -141,20 +143,29 @@ final appRouter = GoRouter(
     StatefulShellRoute.indexedStack(
       // One MatchesCubit for the whole tab bar: it feeds both the
       // Eşleşmeler tab and the unread dot on that tab, so the dot is live
-      // even while another tab is open.
-      builder: (context, state, navigationShell) => BlocProvider(
-        create: (_) => sl<MatchesCubit>()..load(),
+      // even while another tab is open. FeedBadgeCubit does the same for
+      // the "not answered yet" dot on the Günün Sorusu tab.
+      builder: (context, state, navigationShell) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => sl<MatchesCubit>()..load()),
+          BlocProvider(create: (_) => sl<FeedBadgeCubit>()..start()),
+        ],
         child: BlocBuilder<MatchesCubit, MatchesState>(
           buildWhen: (previous, current) =>
               _hasUnread(previous) != _hasUnread(current),
-          builder: (context, matches) => MainShell(
-            navigationShell: navigationShell,
-            badgedTabs: {if (_hasUnread(matches)) _matchesTab},
-            onTabSelected: (index) {
-              if (index == _matchesTab) {
-                context.read<MatchesCubit>().refresh();
-              }
-            },
+          builder: (context, matches) => BlocBuilder<FeedBadgeCubit, bool>(
+            builder: (context, questionWaiting) => MainShell(
+              navigationShell: navigationShell,
+              badges: {
+                if (questionWaiting) _feedTab: 'bugünün sorusu seni bekliyor',
+                if (_hasUnread(matches)) _matchesTab: 'yeni mesaj var',
+              },
+              onTabSelected: (index) {
+                if (index == _matchesTab) {
+                  context.read<MatchesCubit>().refresh();
+                }
+              },
+            ),
           ),
         ),
       ),
