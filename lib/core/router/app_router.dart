@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,7 @@ bool _hasUnread(MatchesState state) =>
     state is MatchesLoaded && state.hasUnread;
 
 bool _booted = false;
-const _publicRoutes = {'/', '/waitlist', '/design-preview'};
+const _publicRoutes = {'/', '/waitlist', if (kDebugMode) '/design-preview'};
 
 String? _bootRedirect(BuildContext context, GoRouterState state) {
   if (_booted) return null;
@@ -60,6 +61,10 @@ String? _bootRedirect(BuildContext context, GoRouterState state) {
 final appRouter = GoRouter(
   initialLocation: '/',
   redirect: _bootRedirect,
+  // Unknown addresses (a mistyped link, or the debug-only gallery in a
+  // release build) fall back to the entry screen, which restores the
+  // session, instead of go_router's bare "Page Not Found".
+  onException: (context, state, router) => router.go('/'),
   routes: [
     GoRoute(path: '/', builder: (context, state) => const InviteGateScreen()),
     GoRoute(
@@ -201,9 +206,11 @@ final appRouter = GoRouter(
         );
       },
     ),
-    GoRoute(
-      path: '/design-preview',
-      builder: (context, state) => const DesignPreviewScreen(),
-    ),
+    // Developer gallery - debug builds only, so it never ships to users.
+    if (kDebugMode)
+      GoRoute(
+        path: '/design-preview',
+        builder: (context, state) => const DesignPreviewScreen(),
+      ),
   ],
 );

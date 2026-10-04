@@ -115,7 +115,7 @@ Bu fonksiyonların her biri Bölüm 4'te girdi/işlem/çıktı/kabul kriterleriy
 - Görsel dil kasıtlı olarak genç ve canlı tutulmuştur: iki renkli gradyanlar, yuvarlak köşeler (kart ~30px, buton ~18px), gradyanlı ana aksiyon butonları, hafif hareket efektleri (kart sürükleme, eşleşme kutlaması). Düz yeşil ve yıldız/sekizgen-yıldız biçimli motifler kullanılmaz; logodaki turkuaz serbesttir (bkz. REQUIREMENTS.md §6 için gerekçe).
 - **Gezinme:** Tekil kullanıcının ana ekranı dört sekmeli, yüzen bir alt çubuktur — Keşfet (`/discover`), Günün Sorusu (`/feed`), Eşleşmeler (`/matches`), Hesap (`/account`). Her sekme kendi gezinme yığınını ve durumunu korur; bulunulan sekmeye tekrar basmak o sekmenin başına döner. Sohbet ve aile ayarları gibi tam ekran sayfalar çubuğu örter. Okunmamış mesaj varken Eşleşmeler sekmesinin ikonunda bir nokta görünür (bkz. FR-5.3). Veli hesabında sekme çubuğu yoktur; tek bir ana ekran ve ondan açılan ayarlar sayfası vardır.
 - Mahremiyet ilkesi gereği kişiler gerçek fotoğraf yerine gradyan + baş harf avatarıyla temsil edilir.
-- Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında açık/koyu tema anahtarıyla canlı olarak incelenebilir.
+- Paylaşılan arayüz bileşenleri (`WizardHeader`, `GradientButton`, `OptionCard`, `SectionCard` vb.) `lib/theme/wizard_widgets.dart`'ta tanımlıdır ve uygulama içi `/design-preview` sayfasında (yalnızca debug derlemede) açık/koyu tema anahtarıyla canlı olarak incelenebilir.
 - Erişilebilirlik hedefi: WCAG AA metin kontrastı, minimum 44×44pt dokunma hedefleri.
 
 ### 3.2 Donanım Arayüzleri

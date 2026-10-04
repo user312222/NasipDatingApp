@@ -81,6 +81,6 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
       işaretlerini ve bekârın özel profilini okuyamaz, paylaşımı kendisi açıp kapatamaz
       (`rules_test/` → "guardian privacy (FR-8.5)"); `matchReads` yalnızca sahibine okunur
       ("matchReads (unread markers)").
-- [ ] **`/design-preview` herkese açık.** Geliştirici vitrini giriş yapmadan, yayın
-      derlemesinde de açılıyor. Zararsız ama ürün ekranı değil; lansmanda `kDebugMode`
-      arkasına alınabilir.
+- [x] **`/design-preview` yalnızca debug derlemede.** Geliştirici vitrininin rotası
+      `kDebugMode` arkasında (`lib/core/router/app_router.dart`); yayın derlemesinde yok,
+      o adresle açılan uygulama giriş ekranına yönlenir.
