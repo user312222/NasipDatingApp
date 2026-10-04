@@ -379,68 +379,12 @@ class _MatchesSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors.brandGradient,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.accent.withValues(alpha: 0.32),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.2),
-            ),
-            child: const Icon(
-              Icons.nightlight_round,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$total eşleşmen var',
-                  style: textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  unread > 0
-                      ? '$unread sohbette yeni mesaj seni bekliyor'
-                      : 'Yeni mesaj yok, sıra sende olabilir',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.88),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return SummaryBand(
+      icon: Icons.nightlight_round,
+      title: '$total eşleşmen var',
+      subtitle: unread > 0
+          ? '$unread sohbette yeni mesaj seni bekliyor'
+          : 'Yeni mesaj yok, sıra sende olabilir',
     );
   }
 }

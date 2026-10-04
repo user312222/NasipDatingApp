@@ -80,10 +80,17 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             }
             return ListView.separated(
               padding: const EdgeInsets.all(20),
-              itemCount: matches.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  VisibleMatchCard(match: matches[index]),
+              itemCount: matches.length + 1,
+              separatorBuilder: (_, i) => SizedBox(height: i == 0 ? 18 : 12),
+              itemBuilder: (context, index) => index == 0
+                  ? SummaryBand(
+                      icon: Icons.family_restroom_rounded,
+                      title: '${matches.length} eşleşme paylaşıldı',
+                      subtitle:
+                          'Yalnızca yakınının seçtiklerini görürsün; '
+                          'mesajlar sana gösterilmez.',
+                    )
+                  : VisibleMatchCard(match: matches[index - 1]),
             );
           },
         ),
@@ -112,6 +119,13 @@ class VisibleMatchCard extends StatelessWidget {
         color: colors.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: colors.line),
+        boxShadow: [
+          BoxShadow(
+            color: colors.plumFill.withValues(alpha: 0.07),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -161,6 +175,27 @@ class VisibleMatchCard extends StatelessWidget {
                         match.candidateCity,
                         style: textTheme.bodyMedium?.copyWith(
                           color: colors.inkSoft,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 13,
+                      color: colors.plum,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        match.intentLabel,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colors.plum,
+                          fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),

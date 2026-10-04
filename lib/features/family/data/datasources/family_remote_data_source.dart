@@ -1,5 +1,6 @@
 import '../../../../core/error/exceptions.dart';
 import '../../../matching/data/datasources/matching_remote_data_source.dart';
+import '../../../matching/domain/entities/candidate.dart';
 import '../../domain/entities/family_visible_match.dart';
 import '../../domain/entities/relationship.dart';
 
@@ -69,6 +70,9 @@ class MockFamilyRemoteDataSource implements FamilyRemoteDataSource {
             candidateName: m.candidate.name,
             candidateAge: m.candidate.age,
             candidateCity: m.candidate.city,
+            intentLabel: m.candidate.intent == CandidateIntent.marriage
+                ? 'Evlilik'
+                : 'Henüz emin değil',
             statusLabel: DateTime.now().difference(m.matchedAt).inDays < 1
                 ? 'Yeni eşleşme'
                 : 'Aktif yazışıyorlar',

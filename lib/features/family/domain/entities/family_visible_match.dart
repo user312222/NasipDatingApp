@@ -10,6 +10,7 @@ class FamilyVisibleMatch extends Equatable {
     required this.candidateName,
     required this.candidateAge,
     required this.candidateCity,
+    required this.intentLabel,
     required this.statusLabel,
     required this.matchedAt,
   });
@@ -17,6 +18,10 @@ class FamilyVisibleMatch extends Equatable {
   final String candidateName;
   final int candidateAge;
   final String candidateCity;
+
+  /// FR-8.5: the candidate's stated intent, as shown on their own profile
+  /// ("Evlilik" / "Henüz emin değil").
+  final String intentLabel;
 
   /// FR-8.5: a coarse, human-readable status — e.g. "Yeni eşleşme",
   /// "Aktif yazışıyorlar" — never a message count or transcript.
@@ -29,6 +34,7 @@ class FamilyVisibleMatch extends Equatable {
     candidateName,
     candidateAge,
     candidateCity,
+    intentLabel,
     statusLabel,
     matchedAt,
   ];

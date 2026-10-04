@@ -130,6 +130,9 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
             candidateName: pdata['name'] as String,
             candidateAge: _ageFrom(pdata['birthDate'] as Timestamp),
             candidateCity: pdata['city'] as String,
+            intentLabel: pdata['intent'] == 'marriage'
+                ? 'Evlilik'
+                : 'Henüz emin değil',
             // See REQUIREMENTS.md §7 — an open item on how detailed this
             // should get; kept coarse and time-based like the mock.
             statusLabel: DateTime.now().difference(matchedAt).inDays < 1

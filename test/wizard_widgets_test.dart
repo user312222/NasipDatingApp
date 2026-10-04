@@ -202,6 +202,27 @@ void main() {
     });
   });
 
+  group('SummaryBand', () {
+    testWidgets('shows its icon, headline and line', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: const Scaffold(
+            body: SummaryBand(
+              icon: Icons.family_restroom_rounded,
+              title: '2 eşleşme paylaşıldı',
+              subtitle: 'Mesajlar sana gösterilmez.',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.family_restroom_rounded), findsOneWidget);
+      expect(find.text('2 eşleşme paylaşıldı'), findsOneWidget);
+      expect(find.text('Mesajlar sana gösterilmez.'), findsOneWidget);
+    });
+  });
+
   group('AvatarPalette', () {
     test('is stable for a seed and wraps around', () {
       expect(AvatarPalette.forSeed(1), AvatarPalette.forSeed(1));
