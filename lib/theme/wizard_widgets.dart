@@ -499,6 +499,18 @@ class SectionCard extends StatelessWidget {
   }
 }
 
+/// The outlined, full-width action that sits at the bottom of a
+/// [SectionCard] (edit the profile, sign out).
+ButtonStyle sectionActionStyle(BuildContext context) {
+  final colors = context.colors;
+  return OutlinedButton.styleFrom(
+    foregroundColor: colors.plumStrong,
+    side: BorderSide(color: colors.plum.withValues(alpha: 0.5)),
+    minimumSize: const Size.fromHeight(50),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  );
+}
+
 /// The gradient band that opens a list screen: one headline number and
 /// the single line worth knowing about it (the matches list, the
 /// guardian's shared matches).

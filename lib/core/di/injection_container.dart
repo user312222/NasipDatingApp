@@ -88,6 +88,7 @@ import '../../features/profile/domain/usecases/has_profile.dart';
 import '../../features/profile/domain/usecases/save_profile.dart';
 import '../../features/profile/presentation/bloc/profile_cubit.dart';
 import '../../features/profile/presentation/bloc/profile_edit_cubit.dart';
+import '../../features/profile/presentation/bloc/profile_summary_cubit.dart';
 import '../../features/waitlist/data/datasources/waitlist_remote_data_source.dart';
 import '../../features/waitlist/data/repositories/waitlist_repository_impl.dart';
 import '../../features/waitlist/domain/repositories/waitlist_repository.dart';
@@ -186,6 +187,8 @@ void _initProfile() {
   sl.registerFactory(
     () => ProfileEditCubit(getProfile: sl(), saveProfile: sl()),
   );
+  // So does the "Profilin" card on the Hesap tab.
+  sl.registerFactory(() => ProfileSummaryCubit(getProfile: sl()));
 
   // Domain
   sl.registerLazySingleton(() => SaveProfile(sl()));
