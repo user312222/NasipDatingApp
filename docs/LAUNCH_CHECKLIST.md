@@ -88,14 +88,13 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 ## 5. Son kontroller
 
-- [ ] `firestore.rules` son halini deploy et. Son deploy 2026-10-05 (beğeni ve akış
-      beğenisi için çağıranın herkese açık profili şart; herkese açık profili yalnızca tekil
-      hesaplar oluşturabilir) - canlıda doğrulandı. Sonraki her kural değişikliğinde yinele.
-      **Bekleyen:** davetiye kapısı ve veli bağlantısı kuralları (hesap belgesi yalnızca
-      geçerli davetiye koduyla; üye verisi yalnızca üyelere; veli bağlantısı yalnızca o
-      hesabın aile koduyla; aile kodları listelenemez). Bu kurallar uygulamanın aynı
-      sürümüyle birlikte yayınlanmalı - eski sürüm yeni hesap açamaz, yeni sürüm de eski
-      kurallarla açamaz.
+- [ ] `firestore.rules` son halini deploy et. Son deploy 2026-10-05 (davetiye kapısı ve
+      veli bağlantısı: hesap belgesi yalnızca geçerli davetiye koduyla; üye verisi yalnızca
+      üyelere; veli bağlantısı yalnızca o hesabın aile koduyla; aile kodları listelenemez)
+      - canlıda doğrulandı. Sonraki her kural değişikliğinde yinele.
+      **Dikkat:** bu kurallar uygulamanın aynı sürümüyle birlikte yayınlanmalı - bu
+      değişiklikten önceki bir derleme yeni hesap açamaz ve veli bağlayamaz (mevcut
+      hesapların girişi etkilenmez). Yayındaki derlemeyi kurallarla aynı anda güncelle.
       (`firebase deploy --only firestore:rules --project binasip`).
 - [x] **Bileşik indeks gerekmiyor.** Uygulamadaki tüm sorgular ya yalnızca eşitlik filtresi
       kullanıyor ya da tek alanda sıralıyor (`messages` → `sentAt`); bunları Firestore'un
