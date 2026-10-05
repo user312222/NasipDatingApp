@@ -89,15 +89,14 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 ## 5. Son kontroller
 
-- [ ] `firestore.rules` son halini deploy et. Son deploy 2026-10-05 (davetiye kapısı ve
-      veli bağlantısı: hesap belgesi yalnızca geçerli davetiye koduyla; üye verisi yalnızca
-      üyelere; veli bağlantısı yalnızca o hesabın aile koduyla; aile kodları listelenemez)
-      - canlıda doğrulandı. Sonraki her kural değişikliğinde yinele.
-      **Dikkat:** bu kurallar uygulamanın aynı sürümüyle birlikte yayınlanmalı - bu
-      değişiklikten önceki bir derleme yeni hesap açamaz ve veli bağlayamaz (mevcut
-      hesapların girişi etkilenmez). Yayındaki derlemeyi kurallarla aynı anda güncelle.
-      **Bekleyen:** doğum tarihi kilidi (profil güncellemesinde doğum tarihi değişemez,
-      FR-2.5). Eski derlemeleri bozmaz: tarihi değiştirmeyen her kayıt eskisi gibi geçer.
+- [ ] `firestore.rules` son halini deploy et. Son deploy 2026-10-05 (doğum tarihi kilidi:
+      profil güncellemesinde doğum tarihi değişemez, FR-2.5) - canlıda doğrulandı. Sonraki
+      her kural değişikliğinde yinele.
+      **Dikkat:** davetiye kapısı ve veli bağlantısı kuralları (aynı gün, daha önce)
+      uygulamanın aynı sürümüyle birlikte yayınlanmalı - o değişiklikten önceki bir derleme
+      yeni hesap açamaz ve veli bağlayamaz (mevcut hesapların girişi etkilenmez). Yayındaki
+      derlemeyi kurallarla aynı anda güncelle. Doğum tarihi kilidi böyle bir bağ kurmuyor:
+      tarihi değiştirmeyen her kayıt eski derlemede de geçer.
       (`firebase deploy --only firestore:rules --project binasip`).
 - [x] **Bileşik indeks gerekmiyor.** Uygulamadaki tüm sorgular ya yalnızca eşitlik filtresi
       kullanıyor ya da tek alanda sıralıyor (`messages` → `sentAt`); bunları Firestore'un
