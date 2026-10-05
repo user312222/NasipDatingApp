@@ -2,6 +2,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/family_visible_match.dart';
+import '../../domain/entities/guardian_link.dart';
 import '../../domain/entities/relationship.dart';
 import '../../domain/repositories/family_repository.dart';
 import '../datasources/family_remote_data_source.dart';
@@ -34,6 +35,10 @@ class FamilyRepositoryImpl implements FamilyRepository {
   @override
   Future<Result<String?>> getLinkedSingleName(String guardianUserId) =>
       _guard(() => remoteDataSource.getLinkedSingleName(guardianUserId));
+
+  @override
+  Future<Result<GuardianLink?>> getGuardianLink(String guardianUserId) =>
+      _guard(() => remoteDataSource.getGuardianLink(guardianUserId));
 
   @override
   Future<Result<String>> getOrCreateInviteCode(String singleUserId) =>

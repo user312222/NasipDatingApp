@@ -8,6 +8,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/wizard_widgets.dart';
 import '../../../auth/domain/entities/account_type.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
+import '../../../family/presentation/widgets/guardian_link_card.dart';
 import '../../../profile/presentation/widgets/profile_summary_card.dart';
 import '../bloc/account_cubit.dart';
 
@@ -172,6 +173,14 @@ class _SettingsView extends StatelessWidget {
                 // Guardian accounts have no profile (FR-8.2).
                 if (user?.accountType == AccountType.single) ...[
                   ProfileSummaryCard(
+                    userId: userId,
+                    enabled: !deleting && !loggingOut,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // ...and what a guardian has instead is the account it follows.
+                if (user?.accountType == AccountType.guardian) ...[
+                  GuardianLinkCard(
                     userId: userId,
                     enabled: !deleting && !loggingOut,
                   ),

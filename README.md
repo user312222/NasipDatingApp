@@ -37,7 +37,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
 | **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
 | **Privacy** | Per-user photo visibility (hidden / on request / on match), optional religious details behind a separate KVKK m.6 consent |
-| **Family** | Invite code for a relative, per-match "show my family" switch (on the match celebration, in the chat and in family settings), read-only guardian view (whose matches these are, then name, age, city, intent and a coarse status per shared match — never messages) |
+| **Family** | Invite code for a relative, per-match "show my family" switch (on the match celebration, in the chat and in family settings), read-only guardian view (whose matches these are, then name, age, city, intent and a coarse status per shared match — never messages). A guardian follows one account at a time and can move to another with a new family code, from the "Bağlı hesap" card in settings: the link screen names the current account and asks before replacing it |
 | **Safety** | Report and block from the card menu and the chat, account deletion, log out |
 | **Feed** | "Question of the day": one prompt a day, one short answer per member, likes only — its own tab, and where Discovery sends people once the candidates run out |
 | **Waitlist** | Public waitlist page for people without an invite code |
@@ -135,7 +135,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the auth, profile, profile-edit, chat, matches, matching, feed and guardian cubits, the route access rules, the two entry doors (registration and sign-in), the profile edit screen (what can and cannot be changed, the religious-data consent, the unsaved-changes warning) and the profile card that leads to it, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the auth, profile, profile-edit, chat, matches, matching, feed and guardian cubits, the route access rules, the two entry doors (registration and sign-in), the profile edit screen (what can and cannot be changed, the religious-data consent, the unsaved-changes warning) and the profile card that leads to it, the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, home screen, link screen (first link and changing the linked account) and settings card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 

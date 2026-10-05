@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/error/error_log.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/family_visible_match.dart';
+import '../../domain/entities/guardian_link.dart';
 import '../../domain/entities/relationship.dart';
 import 'family_remote_data_source.dart';
 
@@ -107,18 +108,44 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
       final link = await _db.collection('guardianOf').doc(guardianUserId).get();
       final singleUserId = link.data()?['singleUserId'] as String?;
       if (singleUserId == null) return null;
-      // The public profile is all a guardian may read of the single's own
-      // data; the name on it is what every other member sees too.
-      final profile = await _db
-          .collection('publicProfiles')
-          .doc(singleUserId)
-          .get();
-      final name = (profile.data()?['name'] as String?)?.trim();
-      return name == null || name.isEmpty ? null : name;
+      return await _publicName(singleUserId);
     } on FirebaseException catch (e) {
       logFailure('family', e);
       throw const ServerException('Bağlı hesap okunamadı.');
     }
+  }
+
+  @override
+  Future<GuardianLink?> getGuardianLink(String guardianUserId) async {
+    try {
+      final link = await _db.collection('guardianOf').doc(guardianUserId).get();
+      final data = link.data();
+      final singleUserId = data?['singleUserId'] as String?;
+      if (data == null || singleUserId == null) return null;
+      return GuardianLink(
+        guardianName: data['guardianName'] as String? ?? '',
+        relationship:
+            Relationship.values
+                .where((r) => r.name == data['relationship'])
+                .firstOrNull ??
+            Relationship.diger,
+        singleName: await _publicName(singleUserId),
+      );
+    } on FirebaseException catch (e) {
+      logFailure('family', e);
+      throw const ServerException('Bağlı hesap okunamadı.');
+    }
+  }
+
+  /// The public profile is all a guardian may read of the single's own
+  /// data; the name on it is what every other member sees too.
+  Future<String?> _publicName(String singleUserId) async {
+    final profile = await _db
+        .collection('publicProfiles')
+        .doc(singleUserId)
+        .get();
+    final name = (profile.data()?['name'] as String?)?.trim();
+    return name == null || name.isEmpty ? null : name;
   }
 
   @override

@@ -1,5 +1,6 @@
 import '../../../../core/result/result.dart';
 import '../entities/family_visible_match.dart';
+import '../entities/guardian_link.dart';
 import '../entities/relationship.dart';
 
 abstract interface class FamilyRepository {
@@ -20,6 +21,11 @@ abstract interface class FamilyRepository {
   /// to, so the home screen can say whose matches these are (and a wrong
   /// code is noticed). Null when that account has no public profile.
   Future<Result<String?>> getLinkedSingleName(String guardianUserId);
+
+  /// Guardian-side: the link as it stands - whose account, and as whom -
+  /// or null when this guardian is not linked yet. What the link screen
+  /// shows before replacing a link, and the settings card as "Bağlı hesap".
+  Future<Result<GuardianLink?>> getGuardianLink(String guardianUserId);
 
   /// FR-8.3: single-side — creates one on first call, returns the same
   /// code on every later call for this user.

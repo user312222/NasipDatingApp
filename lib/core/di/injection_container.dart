@@ -31,10 +31,12 @@ import '../../features/family/data/datasources/family_remote_data_source.dart';
 import '../../features/family/data/datasources/firestore_family_remote_data_source.dart';
 import '../../features/family/data/repositories/family_repository_impl.dart';
 import '../../features/family/domain/repositories/family_repository.dart';
+import '../../features/family/domain/usecases/get_guardian_link.dart';
 import '../../features/family/domain/usecases/get_or_create_invite_code.dart';
 import '../../features/family/domain/usecases/get_linked_single_name.dart';
 import '../../features/family/domain/usecases/get_visible_matches.dart';
 import '../../features/family/domain/usecases/link_guardian.dart';
+import '../../features/family/presentation/bloc/current_link_cubit.dart';
 import '../../features/family/presentation/bloc/family_link_cubit.dart';
 import '../../features/family/presentation/bloc/guardian_cubit.dart';
 import '../../features/feed/data/datasources/feed_remote_data_source.dart';
@@ -348,6 +350,8 @@ void _initFamily() {
       getLinkedSingleName: sl(),
     ),
   );
+  // Provided by whichever screen asks (the link screen, the settings card).
+  sl.registerFactory(() => CurrentLinkCubit(getGuardianLink: sl()));
   sl.registerFactory(
     () => FamilyLinkCubit(
       getOrCreateInviteCode: sl(),
@@ -360,6 +364,7 @@ void _initFamily() {
   sl.registerLazySingleton(() => LinkGuardian(sl()));
   sl.registerLazySingleton(() => GetVisibleMatches(sl()));
   sl.registerLazySingleton(() => GetLinkedSingleName(sl()));
+  sl.registerLazySingleton(() => GetGuardianLink(sl()));
   sl.registerLazySingleton(() => GetOrCreateInviteCode(sl()));
 
   // Data — the mock family source shares the mock matching source's

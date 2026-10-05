@@ -2,6 +2,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../matching/data/datasources/matching_remote_data_source.dart';
 import '../../../matching/domain/entities/candidate.dart';
 import '../../domain/entities/family_visible_match.dart';
+import '../../domain/entities/guardian_link.dart';
 import '../../domain/entities/relationship.dart';
 
 /// **Placeholder data source.** Stands in for Firestore — a guardian's
@@ -21,6 +22,7 @@ abstract interface class FamilyRemoteDataSource {
   });
   Future<List<FamilyVisibleMatch>> getVisibleMatches(String guardianUserId);
   Future<String?> getLinkedSingleName(String guardianUserId);
+  Future<GuardianLink?> getGuardianLink(String guardianUserId);
   Future<String> getOrCreateInviteCode(String singleUserId);
 }
 
@@ -33,7 +35,7 @@ class MockFamilyRemoteDataSource implements FamilyRemoteDataSource {
   /// (FR-8.3: ~7 days, regenerable).
   static const _demoCode = 'AILE1234';
 
-  final Set<String> _linkedGuardians = {};
+  final Map<String, GuardianLink> _links = {};
 
   @override
   Future<String> getOrCreateInviteCode(String singleUserId) async {
@@ -52,8 +54,15 @@ class MockFamilyRemoteDataSource implements FamilyRemoteDataSource {
     if (inviteCode.trim().toUpperCase() != _demoCode) {
       throw const ServerException('Bu aile kodu geçerli değil.');
     }
-    _linkedGuardians.add(guardianUserId);
+    _links[guardianUserId] = GuardianLink(
+      guardianName: guardianName,
+      relationship: relationship,
+    );
   }
+
+  @override
+  Future<GuardianLink?> getGuardianLink(String guardianUserId) async =>
+      _links[guardianUserId];
 
   /// The mock has no profile for the linked single, so there is no name.
   @override
@@ -64,7 +73,7 @@ class MockFamilyRemoteDataSource implements FamilyRemoteDataSource {
     String guardianUserId,
   ) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!_linkedGuardians.contains(guardianUserId)) {
+    if (!_links.containsKey(guardianUserId)) {
       throw const ServerException('Önce bir hesaba bağlanmalısın.');
     }
     final matches = await _matching.getMyMatches();

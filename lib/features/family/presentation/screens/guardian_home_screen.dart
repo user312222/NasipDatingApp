@@ -23,6 +23,10 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _load();
+  }
+
+  void _load() {
     final userId =
         context.read<AuthCubit>().currentUser?.id ?? 'unknown_guardian';
     context.read<GuardianCubit>().loadMatches(userId);
@@ -48,7 +52,15 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         ],
       ),
       body: WizardBackdrop(
-        child: BlocBuilder<GuardianCubit, GuardianState>(
+        child: BlocConsumer<GuardianCubit, GuardianState>(
+          // The link screen shares this cubit. When it is opened on top of
+          // this one to change the linked account, its attempt - made or
+          // failed - leaves the cubit in a link state, so the list
+          // underneath is loaded again: for the new account, or back as it
+          // was.
+          listenWhen: (previous, current) =>
+              current is GuardianLinked || current is GuardianLinkFailed,
+          listener: (context, state) => _load(),
           builder: (context, state) {
             if (state is GuardianMatchesLoading || state is GuardianLinked) {
               return const Center(child: CircularProgressIndicator());

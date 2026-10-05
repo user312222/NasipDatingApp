@@ -5,8 +5,17 @@ import 'package:binasip/core/result/result.dart';
 import 'package:binasip/features/auth/domain/entities/account_type.dart';
 import 'package:binasip/features/auth/domain/entities/auth_user.dart';
 import 'package:binasip/features/auth/domain/repositories/auth_repository.dart';
+import 'package:binasip/features/auth/domain/usecases/check_invite_code.dart';
+import 'package:binasip/features/auth/domain/usecases/get_current_session.dart';
+import 'package:binasip/features/auth/domain/usecases/request_phone_otp.dart';
+import 'package:binasip/features/auth/domain/usecases/submit_selfie_verification.dart';
+import 'package:binasip/features/auth/domain/usecases/verify_phone_otp.dart';
+import 'package:binasip/features/auth/domain/usecases/verify_sign_in_otp.dart';
+import 'package:binasip/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:binasip/features/consent/domain/repositories/consent_repository.dart';
+import 'package:binasip/features/consent/domain/usecases/record_consent.dart';
 import 'package:binasip/features/family/domain/entities/family_visible_match.dart';
+import 'package:binasip/features/family/domain/entities/guardian_link.dart';
 import 'package:binasip/features/family/domain/entities/relationship.dart';
 import 'package:binasip/features/family/domain/repositories/family_repository.dart';
 import 'package:binasip/features/feed/domain/entities/daily_question.dart';
@@ -285,6 +294,31 @@ class FakeAuthRepository implements AuthRepository {
   Future<Result<void>> logOut() async => const Ok(null);
 }
 
+/// An `AuthCubit` that already holds [user]'s session - for screens that
+/// read who is signed in. The caller closes it.
+Future<AuthCubit> signedInAuthCubit(AuthUser user) async {
+  final repo = FakeAuthRepository()..session = Ok(user);
+  final cubit = AuthCubit(
+    checkInviteCode: CheckInviteCode(repo),
+    requestPhoneOtp: RequestPhoneOtp(repo),
+    verifyPhoneOtp: VerifyPhoneOtp(repo),
+    verifySignInOtp: VerifySignInOtp(repo),
+    submitSelfieVerification: SubmitSelfieVerification(repo),
+    getCurrentSession: GetCurrentSession(repo),
+    recordConsent: RecordConsent(FakeConsentRepository()),
+  );
+  await cubit.restoreSession();
+  return cubit;
+}
+
+/// A verified guardian account, as `signedInAuthCubit` wants it.
+final testGuardianUser = AuthUser(
+  id: 'guardian',
+  phone: '5550000002',
+  accountType: AccountType.guardian,
+  verifiedAt: DateTime(2026, 1, 1),
+);
+
 class FakeConsentRepository implements ConsentRepository {
   /// The user ids a consent record was written for.
   final recordedFor = <String>[];
@@ -304,6 +338,16 @@ class FakeFamilyRepository implements FamilyRepository {
   Result<String?> singleName = const Ok(null);
   Result<void> linkResult = const Ok(null);
 
+  /// What [getGuardianLink] answers with; `Ok(null)` = not linked.
+  Result<GuardianLink?> currentLink = const Ok(null);
+
+  /// Every link that was asked for.
+  final linkCalls = <({String name, Relationship relationship, String code})>[];
+
+  @override
+  Future<Result<GuardianLink?>> getGuardianLink(String guardianUserId) async =>
+      currentLink;
+
   @override
   Future<Result<List<FamilyVisibleMatch>>> getVisibleMatches(
     String guardianUserId,
@@ -319,7 +363,14 @@ class FakeFamilyRepository implements FamilyRepository {
     required String guardianName,
     required Relationship relationship,
     required String inviteCode,
-  }) async => linkResult;
+  }) async {
+    linkCalls.add((
+      name: guardianName,
+      relationship: relationship,
+      code: inviteCode,
+    ));
+    return linkResult;
+  }
 
   @override
   Future<Result<String>> getOrCreateInviteCode(String singleUserId) =>
