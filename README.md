@@ -49,7 +49,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | --- | --- |
 | Phone + SMS OTP sign-in, session restore, log out | **Real** (Firebase Auth) |
 | Profiles, likes, matches, messages, reports, blocks, family links, consent records, account deletion | **Real** (Cloud Firestore, rules in [`firestore.rules`](firestore.rules)) |
-| Invite code check | **Firestore** — `inviteCodes/{CODE}` docs created by hand in the Console |
+| Invite code check | **Firestore, enforced by the rules** — `inviteCodes/{CODE}` docs created by hand in the Console; an account document can only be created with an active code, and member data (public profiles, reports, family codes) is closed to accounts without one |
 | Selfie / liveness verification | **Mock** — always succeeds; no camera is opened. A third-party provider is planned |
 | Photo upload | **Not implemented** — photos are picked and shown locally but not stored; people are shown as initial-letter avatars |
 | Photo moderation | **Mock** — filename heuristic only |
@@ -146,7 +146,7 @@ npm install      # first time only
 npm test
 ```
 
-It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap (both sides need a public profile), who may have a public profile at all, family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap (both sides need a public profile), who may have a public profile at all, the invite gate (an account needs an active code; non-members read nothing), linking a guardian (only with the family code of that very account), family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
 
 ---
 

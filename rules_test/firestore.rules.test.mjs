@@ -54,6 +54,13 @@ const minorBirth = () => {
   return Timestamp.fromDate(d);
 };
 
+// Gives each uid an account document, i.e. makes it a member of the beta
+// (what registering with a valid invite code does in the app).
+const seedMembers = (uids, accountType = 'single') =>
+  seed(async (db) => {
+    for (const uid of uids) await setDoc(doc(db, 'users', uid), { accountType });
+  });
+
 const MATCH = 'alice_bob';
 const seedMatch = () =>
   seed((db) => setDoc(doc(db, 'matches', MATCH), { users: ['alice', 'bob'], createdAt: Timestamp.now() }));
@@ -305,9 +312,17 @@ describe('profiles', () => {
     await assertFails(setDoc(doc(as('bob'), 'profiles', 'alice'), profile()));
   });
 
-  test('public profiles are readable by any signed-in user but not signed out', async () => {
+  test('public profiles are readable by members only (FR-1.3)', async () => {
     await seed((db) => setDoc(doc(db, 'publicProfiles', 'alice'), publicProfile()));
+    await seedMembers(['bob']);
+    await seedMembers(['gina'], 'guardian');
     await assertSucceeds(getDoc(doc(as('bob'), 'publicProfiles', 'alice')));
+    await assertSucceeds(getDocs(collection(as('bob'), 'publicProfiles')));
+    // A guardian needs them for the candidates their relative shared.
+    await assertSucceeds(getDoc(doc(as('gina'), 'publicProfiles', 'alice')));
+    // Signed in with a phone number, but never got past the invite gate.
+    await assertFails(getDoc(doc(as('carol'), 'publicProfiles', 'alice')));
+    await assertFails(getDocs(collection(as('carol'), 'publicProfiles')));
     await assertFails(getDoc(doc(anon(), 'publicProfiles', 'alice')));
   });
 
@@ -438,11 +453,58 @@ describe('family sharing', () => {
     await assertSucceeds(setDoc(doc(as('alice'), 'familyVisible', `${MATCH}_alice`), data));
   });
 
-  test('a guardian cannot link as someone else', async () => {
-    const link = { singleUserId: 'alice', guardianName: 'Gina', relationship: 'anne', linkedAt: serverTimestamp() };
-    await assertFails(setDoc(doc(as('carol'), 'guardianOf', 'gina'), link));
-    await assertSucceeds(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link));
-    await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), { ...link, relationship: 'kuzen' }));
+  describe('linking a guardian (FR-8.3)', () => {
+    const link = (over = {}) => ({
+      singleUserId: 'alice',
+      guardianName: 'Gina',
+      relationship: 'anne',
+      linkedAt: serverTimestamp(),
+      familyCode: 'ABCD1234',
+      ...over,
+    });
+    // alice and zoe each have a family code; gina is a guardian account.
+    const seedCodes = () =>
+      seed(async (db) => {
+        await setDoc(doc(db, 'users', 'gina'), { accountType: 'guardian' });
+        await setDoc(doc(db, 'users', 'alice'), { accountType: 'single' });
+        await setDoc(doc(db, 'users', 'bob'), { accountType: 'single' });
+        await setDoc(doc(db, 'familyInviteCodeLookup', 'ABCD1234'), { singleUserId: 'alice' });
+        await setDoc(doc(db, 'familyInviteCodeLookup', 'ZZZZ9999'), { singleUserId: 'zoe' });
+      });
+
+    test('works with the code of the account being linked', async () => {
+      await seedCodes();
+      await assertSucceeds(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link()));
+    });
+
+    test('knowing the uid is not enough: no code, no link', async () => {
+      await seedCodes();
+      const { familyCode, ...withoutCode } = link();
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), withoutCode));
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link({ familyCode: 'NOPE0000' })));
+    });
+
+    test('a code only links to its own owner', async () => {
+      await seedCodes();
+      // zoe's code cannot be used to attach to alice.
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link({ familyCode: 'ZZZZ9999' })));
+      await assertSucceeds(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link({ singleUserId: 'zoe', familyCode: 'ZZZZ9999' })));
+    });
+
+    test('only a guardian account, and only for itself', async () => {
+      await seedCodes();
+      // bob is a single account: it cannot become anyone's guardian.
+      await assertFails(setDoc(doc(as('bob'), 'guardianOf', 'bob'), link()));
+      // carol has no account at all.
+      await assertFails(setDoc(doc(as('carol'), 'guardianOf', 'carol'), link()));
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'someone_else'), link()));
+    });
+
+    test('other fields are still validated', async () => {
+      await seedCodes();
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link({ relationship: 'kuzen' })));
+      await assertFails(setDoc(doc(as('gina'), 'guardianOf', 'gina'), link({ guardianName: '' })));
+    });
   });
 });
 
@@ -498,6 +560,7 @@ describe('safety', () => {
   const report = (over = {}) => ({ reporterId: 'alice', targetUserId: 'bob', reason: 'scam', createdAt: serverTimestamp(), ...over });
 
   test('a report can be filed but never read back, not even by the reporter', async () => {
+    await seedMembers(['alice']);
     await assertSucceeds(addDoc(collection(as('alice'), 'reports'), report()));
     await seed((db) => setDoc(doc(db, 'reports', 'r1'), { reporterId: 'alice', targetUserId: 'bob', reason: 'scam', createdAt: Timestamp.now() }));
     await assertFails(getDoc(doc(as('alice'), 'reports', 'r1')));
@@ -505,6 +568,7 @@ describe('safety', () => {
   });
 
   test('invalid reports are rejected', async () => {
+    await seedMembers(['alice']);
     const col = collection(as('alice'), 'reports');
     await assertFails(addDoc(col, report({ reporterId: 'bob' })));
     await assertFails(addDoc(col, report({ targetUserId: 'alice' })));
@@ -512,7 +576,14 @@ describe('safety', () => {
     await assertFails(addDoc(collection(anon(), 'reports'), report()));
   });
 
+  test('reporting and blocking are for members only', async () => {
+    // carol signed in with a phone number but never registered.
+    await assertFails(addDoc(collection(as('carol'), 'reports'), report({ reporterId: 'carol' })));
+    await assertFails(setDoc(doc(as('carol'), 'blockedUsers', 'carol_bob'), { blockerId: 'carol', blockedId: 'bob', createdAt: serverTimestamp() }));
+  });
+
   test('blocking: create and read your own, nobody else\'s', async () => {
+    await seedMembers(['alice', 'bob']);
     await assertSucceeds(setDoc(doc(as('alice'), 'blockedUsers', 'alice_bob'), { blockerId: 'alice', blockedId: 'bob', createdAt: serverTimestamp() }));
     await assertSucceeds(getDoc(doc(as('alice'), 'blockedUsers', 'alice_bob')));
     await assertFails(getDoc(doc(as('bob'), 'blockedUsers', 'alice_bob')));
@@ -522,12 +593,69 @@ describe('safety', () => {
 });
 
 describe('account docs', () => {
-  test('users: only the owner, only valid account types', async () => {
-    await assertSucceeds(setDoc(doc(as('alice'), 'users', 'alice'), { accountType: 'single' }));
-    await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), { accountType: 'admin' }));
-    await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), { accountType: 'single', isAdmin: true }));
-    await assertFails(setDoc(doc(as('bob'), 'users', 'alice'), { accountType: 'single' }));
-    await assertFails(getDoc(doc(as('bob'), 'users', 'alice')));
+  describe('users: the account is the invite gate (FR-1.3)', () => {
+    const seedCodes = () =>
+      seed(async (db) => {
+        await setDoc(doc(db, 'inviteCodes', 'NASIP2026'), { active: true });
+        await setDoc(doc(db, 'inviteCodes', 'OTHER2026'), { active: true });
+        await setDoc(doc(db, 'inviteCodes', 'KAPALI01'), { active: false });
+      });
+    const account = (over = {}) => ({ accountType: 'single', inviteCode: 'NASIP2026', ...over });
+
+    test('can be created with an active invite code', async () => {
+      await seedCodes();
+      await assertSucceeds(setDoc(doc(as('alice'), 'users', 'alice'), account()));
+      await assertSucceeds(setDoc(doc(as('gina'), 'users', 'gina'), account({ accountType: 'guardian' })));
+    });
+
+    test('cannot be created without one', async () => {
+      await seedCodes();
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), { accountType: 'single' }));
+    });
+
+    test('cannot be created with an unknown, revoked or malformed code', async () => {
+      await seedCodes();
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ inviteCode: 'YOKBOYLE' })));
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ inviteCode: 'KAPALI01' })));
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ inviteCode: 'nasip2026' })));
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ inviteCode: 42 })));
+    });
+
+    test('only the owner, only valid fields', async () => {
+      await seedCodes();
+      await assertFails(setDoc(doc(as('bob'), 'users', 'alice'), account()));
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ accountType: 'admin' })));
+      await assertFails(setDoc(doc(as('alice'), 'users', 'alice'), account({ isAdmin: true })));
+      await assertSucceeds(setDoc(doc(as('alice'), 'users', 'alice'), account()));
+      await assertFails(getDoc(doc(as('bob'), 'users', 'alice')));
+    });
+
+    test('later steps can add to the account but not change its code', async () => {
+      await seedCodes();
+      const ref = doc(as('alice'), 'users', 'alice');
+      await assertSucceeds(setDoc(ref, account()));
+      // The liveness step: merge in `verifiedAt`, code untouched.
+      await assertSucceeds(setDoc(ref, { accountType: 'single', verifiedAt: Timestamp.now() }, { merge: true }));
+      await assertFails(setDoc(ref, { inviteCode: 'OTHER2026' }, { merge: true }));
+      await assertFails(setDoc(ref, { accountType: 'single' }));
+    });
+
+    test('an account from before the rule keeps working, without a code', async () => {
+      await seedCodes();
+      await seed((db) => setDoc(doc(db, 'users', 'alice'), { accountType: 'single' }));
+      const ref = doc(as('alice'), 'users', 'alice');
+      await assertSucceeds(setDoc(ref, { accountType: 'single', verifiedAt: Timestamp.now() }, { merge: true }));
+      await assertFails(setDoc(ref, { inviteCode: 'NASIP2026' }, { merge: true }));
+    });
+
+    test('a revoked code does not lock out the accounts made with it', async () => {
+      await seedCodes();
+      const ref = doc(as('alice'), 'users', 'alice');
+      await assertSucceeds(setDoc(ref, account()));
+      await seed((db) => setDoc(doc(db, 'inviteCodes', 'NASIP2026'), { active: false }));
+      await assertSucceeds(setDoc(ref, { accountType: 'single', verifiedAt: Timestamp.now() }, { merge: true }));
+      await assertSucceeds(getDoc(ref));
+    });
   });
 
   test('users: the sign-in door can look up its own account, present or not', async () => {
@@ -549,8 +677,18 @@ describe('account docs', () => {
     await assertFails(getDoc(doc(as('bob'), 'familyInviteCodes', 'alice')));
     await assertFails(setDoc(doc(as('alice'), 'familyInviteCodes', 'alice'), { code: 'ZZZZ9999' }));
     await assertSucceeds(setDoc(doc(as('alice'), 'familyInviteCodeLookup', 'ABCD1234'), { singleUserId: 'alice' }));
-    await assertSucceeds(getDoc(doc(as('bob'), 'familyInviteCodeLookup', 'ABCD1234')));
     await assertFails(setDoc(doc(as('bob'), 'familyInviteCodeLookup', 'ZZZZ9999'), { singleUserId: 'alice' }));
+  });
+
+  test('a family code can be looked up when known, never listed', async () => {
+    await seedMembers(['gina'], 'guardian');
+    await seed((db) => setDoc(doc(db, 'familyInviteCodeLookup', 'ABCD1234'), { singleUserId: 'alice' }));
+    await assertSucceeds(getDoc(doc(as('gina'), 'familyInviteCodeLookup', 'ABCD1234')));
+    // A list would hand out every code together with whose it is.
+    await assertFails(getDocs(collection(as('gina'), 'familyInviteCodeLookup')));
+    await assertFails(getDocs(query(collection(as('gina'), 'familyInviteCodeLookup'), where('singleUserId', '==', 'alice'))));
+    // Not a member: not even a known code.
+    await assertFails(getDoc(doc(as('carol'), 'familyInviteCodeLookup', 'ABCD1234')));
   });
 
   test('anything not listed is closed', async () => {

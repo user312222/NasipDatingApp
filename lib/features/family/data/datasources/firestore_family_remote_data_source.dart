@@ -85,11 +85,15 @@ class FirestoreFamilyRemoteDataSource implements FamilyRemoteDataSource {
       if (singleUserId == guardianUserId) {
         throw const ServerException('Kendi kodunla bağlanamazsın.');
       }
+      // The code goes into the link itself: the rules look it up again and
+      // only accept a link to the account that code belongs to, so a uid
+      // alone is never enough to become someone's guardian.
       await _db.collection('guardianOf').doc(guardianUserId).set({
         'singleUserId': singleUserId,
         'guardianName': guardianName,
         'relationship': relationship.name,
         'linkedAt': FieldValue.serverTimestamp(),
+        'familyCode': code,
       });
     } on FirebaseException catch (e) {
       logFailure('family', e);

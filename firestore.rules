@@ -18,6 +18,20 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The caller has an account document, i.e. is a member of the closed
+    // beta: `users/{uid}` can only be created with a valid invite code
+    // (see below), so its existence is the server-side form of the invite
+    // gate. Signing in with a phone number alone - which Firebase Auth
+    // allows anyone to do - opens nothing that is guarded by this.
+    function isMember() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isGuardian() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid))
+        .data.accountType == 'guardian';
+    }
+
     // The caller finished the profile wizard. A public profile is all the
     // other members ever see of someone, so nothing that reaches them - a
     // like, a feed answer, a like on an answer - is accepted from an
@@ -39,15 +53,37 @@ service cloud.firestore {
     // selfie verification succeeds. Both writes use `set(merge: true)`,
     // so `request.resource.data` below is the doc's state AFTER the
     // merge — that's why `verifiedAt` is only checked when present.
+    //
+    // FR-1.3: the account can only be created with an invite code that
+    // exists and is active (`inviteCodes/{CODE}`); that makes this document
+    // the proof of membership `isMember()` looks for. The code is written
+    // once and never changes. Accounts from before this rule have no
+    // `inviteCode` field and stay valid - they cannot add one either.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
 
-      allow create, update: if signedIn()
+      function validAccountFields() {
+        return request.resource.data.keys().hasOnly(
+                 ['accountType', 'verifiedAt', 'inviteCode'])
+          && request.resource.data.accountType in ['single', 'guardian']
+          && (!('verifiedAt' in request.resource.data)
+              || request.resource.data.verifiedAt is timestamp);
+      }
+
+      allow create: if signedIn()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['accountType', 'verifiedAt'])
-        && request.resource.data.accountType in ['single', 'guardian']
-        && (!('verifiedAt' in request.resource.data)
-            || request.resource.data.verifiedAt is timestamp);
+        && validAccountFields()
+        && request.resource.data.inviteCode is string
+        && request.resource.data.inviteCode.matches('[A-Z0-9]{4,32}')
+        && exists(/databases/$(database)/documents/inviteCodes/$(request.resource.data.inviteCode))
+        && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.inviteCode))
+             .data.active == true;
+
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && validAccountFields()
+        && request.resource.data.get('inviteCode', null)
+             == resource.data.get('inviteCode', null);
 
       // FR-7.1: part of account deletion's best-effort cleanup.
       allow delete: if signedIn() && request.auth.uid == userId;
@@ -105,7 +141,8 @@ service cloud.firestore {
     // note, education, photos or family opt-in — rules cannot hide single
     // fields, so sensitive ones live only in /profiles above.
     match /publicProfiles/{userId} {
-      allow read: if signedIn();
+      // Members only: this is every member's name, age and city.
+      allow read: if signedIn() && isMember();
 
       // FR-8.6: only single accounts. A guardian with a public profile
       // would show up as a candidate in discovery and could like people.
@@ -257,11 +294,13 @@ service cloud.firestore {
     }
 
     // familyInviteCodeLookup/{code} -> {singleUserId}: the reverse index a
-    // guardian needs to resolve a typed code — readable by any signed-in
-    // user (a code plus a uid, on its own, isn't sensitive), created once
-    // by the code's own owner in the same batch as the doc above.
+    // guardian needs to resolve a typed code. A single known code can be
+    // fetched by a member; the collection cannot be listed - a list would
+    // hand out every code together with whose it is. Created once by the
+    // code's own owner in the same batch as the doc above.
     match /familyInviteCodeLookup/{code} {
-      allow read: if signedIn();
+      allow get: if signedIn() && isMember();
+      allow list: if false;
 
       allow create: if signedIn()
         && resource == null
@@ -274,16 +313,25 @@ service cloud.firestore {
     }
 
     // guardianOf/{guardianUserId} -> {singleUserId, guardianName,
-    // relationship, linkedAt}: FR-8.2/8.3, one row per guardian. Only the
-    // guardian may write it — the invite-code lookup above is what
-    // actually validated the code client-side before this write happens.
+    // relationship, linkedAt, familyCode}: FR-8.2/8.3, one row per
+    // guardian. Only a guardian account may write its own row, and only
+    // with the family code of the very account it links to: the code is
+    // looked up here, so knowing someone's uid is not enough to become
+    // their "guardian" and read what they share with family (FR-8.3: no
+    // link without a valid code).
     match /guardianOf/{guardianUserId} {
       allow read: if signedIn() && request.auth.uid == guardianUserId;
 
       allow create, update: if signedIn()
         && request.auth.uid == guardianUserId
+        && isGuardian()
         && request.resource.data.keys().hasOnly(
-             ['singleUserId', 'guardianName', 'relationship', 'linkedAt'])
+             ['singleUserId', 'guardianName', 'relationship', 'linkedAt',
+              'familyCode'])
+        && request.resource.data.familyCode is string
+        && exists(/databases/$(database)/documents/familyInviteCodeLookup/$(request.resource.data.familyCode))
+        && get(/databases/$(database)/documents/familyInviteCodeLookup/$(request.resource.data.familyCode))
+             .data.singleUserId == request.resource.data.singleUserId
         && request.resource.data.singleUserId is string
         && request.resource.data.guardianName is string
         && request.resource.data.guardianName.size() > 0
@@ -471,6 +519,7 @@ service cloud.firestore {
     // the Admin SDK / console, not a client query.
     match /reports/{reportId} {
       allow create: if signedIn()
+        && isMember()
         && request.resource.data.keys().hasOnly(
              ['reporterId', 'targetUserId', 'reason', 'details', 'createdAt'])
         && request.resource.data.reporterId == request.auth.uid
@@ -493,6 +542,7 @@ service cloud.firestore {
     // sharing at the data layer only" pattern as `familyVisible`.
     match /blockedUsers/{blockId} {
       allow create: if signedIn()
+        && isMember()
         && blockId == request.auth.uid + '_' + request.resource.data.blockedId
         && request.resource.data.keys().hasOnly(
              ['blockerId', 'blockedId', 'createdAt'])

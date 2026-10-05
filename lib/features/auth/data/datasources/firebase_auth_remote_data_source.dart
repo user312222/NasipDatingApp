@@ -35,6 +35,13 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
 
   ConfirmationResult? _confirmation;
 
+  /// The invite code accepted on the entry screen, in its stored form.
+  /// Kept (like [_confirmation]) between the steps of one registration,
+  /// because the account document can only be created together with it -
+  /// `firestore.rules` checks the code again there, which is what makes
+  /// the invite gate hold on the server and not just in this app.
+  String? _acceptedInviteCode;
+
   @override
   Future<void> checkInviteCode(String code) async {
     final id = code.trim().toUpperCase();
@@ -46,6 +53,7 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
       if (doc.data()?['active'] != true) {
         throw const ServerException('Bu davetiye kodu tanınmıyor.');
       }
+      _acceptedInviteCode = id;
     } on FirebaseException catch (e) {
       logFailure('auth', e, needsSession: false);
       throw const ServerException('Kod doğrulanamadı.');
@@ -154,15 +162,21 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
   /// freshly-picked [freshAccountType], which would otherwise silently
   /// overwrite it) so `AuthCubit.verifyOtp` can short-circuit straight
   /// past selfie/profile-wizard instead of making the user redo them.
-  /// Best effort: any Firestore failure here falls through to the normal
-  /// fresh-registration path rather than blocking sign-in.
+  ///
+  /// For a new account this is also where the account document is created,
+  /// together with the invite code. That write is not optional: without the
+  /// document the account is not a member as far as the rules are
+  /// concerned and every later step would fail with no explanation. If it
+  /// cannot be written the session is ended and the reason reported, so the
+  /// person can try again from a clean start.
   Future<AuthUser> _resolveVerifiedUser(
     String uid,
     String phone,
     AccountType freshAccountType,
   ) async {
+    final ref = _db.collection('users').doc(uid);
     try {
-      final doc = await _db.collection('users').doc(uid).get();
+      final doc = await ref.get();
       final data = doc.data();
       final verifiedAt = (data?['verifiedAt'] as Timestamp?)?.toDate();
       if (verifiedAt != null) {
@@ -176,11 +190,27 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
           verifiedAt: verifiedAt,
         );
       }
-      await _db.collection('users').doc(uid).set({
-        'accountType': freshAccountType.name,
-      }, SetOptions(merge: true));
-    } on FirebaseException {
-      // Ignored — see doc comment above.
+      if (doc.exists) {
+        // Started earlier, not finished: the document (and the invite code
+        // it was made with) is already there.
+        await ref.set({
+          'accountType': freshAccountType.name,
+        }, SetOptions(merge: true));
+      } else {
+        await ref.set({
+          'accountType': freshAccountType.name,
+          'inviteCode': ?_acceptedInviteCode,
+        });
+      }
+    } on FirebaseException catch (e) {
+      logFailure('auth', e, needsSession: false);
+      _confirmation = null;
+      await _auth.signOut();
+      throw ServerException(
+        e.code == 'permission-denied'
+            ? 'Davetiye kodun artık geçerli değil. Yeni bir kodla tekrar dene.'
+            : 'Hesabın oluşturulamadı. Bağlantını kontrol edip tekrar dene.',
+      );
     }
     return AuthUser(id: uid, phone: phone, accountType: freshAccountType);
   }
@@ -195,7 +225,9 @@ class FirebaseAuthRemoteDataSource implements AuthRemoteDataSource {
           'verifiedAt': Timestamp.fromDate(verified.verifiedAt!),
       }, SetOptions(merge: true));
     } on FirebaseException {
-      // Best effort, same reasoning as verifyOtp above.
+      // Best effort: the account document already exists (see
+      // `_resolveVerifiedUser`); if `verifiedAt` cannot be stored now, the
+      // next session simply resumes at this step.
     }
     return verified;
   }
