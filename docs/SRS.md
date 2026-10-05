@@ -158,7 +158,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-1.5 | İki kapılı giriş | "Davetiye kodum var" (yeni kayıt) ya da "Hesabım var" (giriş) | Yeni kayıt mevcut sırayı izler; giriş yalnızca telefon + SMS kodu ister ve kayıtlı hesabı arar | Kayıtlı kullanıcı davetiye kodu, hesap türü ve rıza adımlarını yeniden doldurmadan, kayıtlı hesap türüyle içeri alınır; numaranın hesabı yoksa kullanıcı giriş ekranına döner, kayda yönlendirilir ve denemeden geriye hesap kalmaz |
 | FR-1.4 | KVKK rızası, telefon istenmeden önce | — | Aydınlatma metni gösterimi, iki ayrı açık rıza (veri işleme + yurt dışı aktarım) | İki rıza da onaylanmadan akış ilerlemez; rıza Firestore'da `consents/{uid}` altında kayıt altına alınır |
 
-**Kabul kriteri (uçtan uca):** Yeni bir kullanıcı davetiye kodu → hesap türü seçimi → KVKK rızası → telefon → OTP → selfie adımını tamamlamadan profil oluşturma veya keşif ekranına erişemez. Kayıtlı bir kullanıcı "Hesabım var" kapısından telefon → OTP ile, başka hiçbir adım doldurmadan uygulamaya girer; aynı kapı kayıtsız bir numarayı içeri almaz.
+**Kabul kriteri (uçtan uca):** Yeni bir kullanıcı davetiye kodu → hesap türü seçimi → KVKK rızası → telefon → OTP → selfie adımını tamamlamadan profil oluşturma veya keşif ekranına erişemez. Kayıtlı bir kullanıcı "Hesabım var" kapısından telefon → OTP ile, başka hiçbir adım doldurmadan uygulamaya girer; aynı kapı kayıtsız bir numarayı içeri almaz. Bu sıra adres çubuğuna adres yazılarak da atlanamaz (bkz. §5.2).
 
 ### FR-2 — Profil Oluşturma
 
@@ -255,6 +255,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 - Firestore güvenlik kuralları varsayılan-reddet ilkesiyle yazılmıştır (`firestore.rules`); bir koleksiyona açık `allow` kuralı olmadan erişilemez.
 - Günlük beğeni limiti (FR-4.3) ve karşılıklı-eşleşme koşulu (FR-4.2) yalnızca istemci mantığıyla değil, Firestore kurallarıyla da zorlanır.
 - Şikayet kayıtları (FR-6.1) hiçbir istemciden (şikayet eden dahil) okunamaz.
+- **Adresle erişim denetimi:** web'de her sayfanın adresi elle yazılabildiği için, hangi adresin kim tarafından açılabileceğine tek bir yönlendirme kuralı karar verir (`lib/core/router/route_access.dart`). Oturumu olmayan biri iç sayfaları; davetiye kodu ve rızayı geçmeyen biri telefon adımını; canlılık doğrulamasını bitirmeyen biri uygulamayı; profili olmayan bekâr kullanıcı keşif, akış, eşleşmeler ve sohbeti; veli hesabı bekâr kullanıcının hiçbir sayfasını açamaz - her biri ait olduğu adıma yönlendirilir. Profil kaydı ayrıca son adımda bütünüyle yeniden doğrulanır (fotoğraf, niyet, temel bilgiler, 18 yaş), böylece adresle atlanan bir adım eksik profil üretemez. Bu denetim istemci tarafındadır; verinin kendisini `firestore.rules` korur.
 - **Bilinen sınırlama:** Cloud Functions (Blaze plan) olmadığı için bazı kurallar tamamen istemci tarafında zorlanır; örneğin bir kullanıcının kendisini kimin beğendiğini teknik olarak okuyabilmesi gibi uçlar, ilgili veri kaynağı dosyalarında ve `firestore.rules`'ta yorum olarak işaretlenmiştir. Üretim öncesi bu uçların Cloud Functions ile kapatılması önerilir.
 
 ### 5.3 Gizlilik / Yasal Uygunluk (KVKK)

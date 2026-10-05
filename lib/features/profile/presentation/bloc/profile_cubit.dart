@@ -65,7 +65,14 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> submit(String userId) async {
     final draft = state.draft;
     final birthDate = draft.birthDate;
-    if (draft.intent == null || birthDate == null) {
+    // Each step checks its own part, but on the web a step can be opened
+    // by address without the ones before it - so the whole draft is
+    // checked once more here, the only place a profile is written.
+    if (!draft.hasValidPhotos) {
+      emit(ProfileSubmitError(draft, 'En az 1 fotoğraf eklemelisin.'));
+      return;
+    }
+    if (draft.intent == null || birthDate == null || !draft.hasValidDetails) {
       emit(ProfileSubmitError(draft, 'Eksik bilgi var.'));
       return;
     }

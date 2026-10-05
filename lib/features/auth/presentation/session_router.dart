@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/di/injection_container.dart';
 import '../../../core/result/result.dart';
+import '../../../core/router/profile_status_cache.dart';
 import '../../family/domain/usecases/get_visible_matches.dart';
-import '../../profile/domain/usecases/has_profile.dart';
 import '../domain/entities/account_type.dart';
 import '../domain/entities/auth_user.dart';
 
@@ -35,16 +35,11 @@ Future<void> routeActiveSession(BuildContext context, AuthUser user) async {
     return;
   }
 
-  final result = await sl<HasProfile>()(HasProfileParams(user.id));
+  // Through the cache the router also uses, so entering the app costs one
+  // profile lookup, not two.
+  final hasProfile = await sl<ProfileStatusCache>().check(user.id);
   if (!context.mounted) return;
-  switch (result) {
-    case Ok<bool>(value: true):
-      context.go('/discover');
-    case Ok<bool>():
-      context.go('/profile/photos');
-    case Err<bool>():
-      // Fail open to the profile wizard — re-submitting overwrites the
-      // same document, so this is never destructive.
-      context.go('/profile/photos');
-  }
+  // "No" and "could not tell" both open the profile wizard — re-submitting
+  // overwrites the same document, so this is never destructive.
+  context.go(hasProfile == true ? '/discover' : '/profile/photos');
 }

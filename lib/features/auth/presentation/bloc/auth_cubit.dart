@@ -91,10 +91,20 @@ class AuthCubit extends Cubit<AuthState> {
   /// same reason as [_accountType]: read once, when [verifyOtp] persists
   /// it for the freshly-created uid.
   bool _consentAccepted = false;
+  bool get consentAccepted => _consentAccepted;
 
   void acceptConsent() {
     _consentAccepted = true;
   }
+
+  /// Read by the router (`route_access.dart`) so the registration steps
+  /// cannot be reached out of order by typing an address: an invite code
+  /// was accepted, and a verification code was requested, in this session.
+  bool _inviteAccepted = false;
+  bool get inviteAccepted => _inviteAccepted;
+
+  bool _otpRequested = false;
+  bool get otpRequested => _otpRequested;
 
   Future<void> checkInviteCode(String code) async {
     emit(const InviteCheckInProgress());
@@ -102,6 +112,7 @@ class AuthCubit extends Cubit<AuthState> {
     switch (result) {
       case Ok<void>():
         _signingIn = false;
+        _inviteAccepted = true;
         emit(const InviteAccepted());
       case Err<void>():
         emit(const InviteRejected());
@@ -113,6 +124,7 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await _requestPhoneOtp(phone);
     switch (result) {
       case Ok<void>():
+        _otpRequested = true;
         emit(OtpSent(phone));
       case Err<void>(:final failure):
         emit(OtpRequestFailed(failure.message));

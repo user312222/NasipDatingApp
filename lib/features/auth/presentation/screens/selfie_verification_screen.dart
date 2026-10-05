@@ -3,10 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/result/result.dart';
+import '../../../../core/router/profile_status_cache.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/wizard_widgets.dart';
-import '../../../profile/domain/usecases/has_profile.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/entities/auth_user.dart';
 import '../bloc/auth_cubit.dart';
@@ -44,9 +43,9 @@ class _SelfieVerificationScreenState extends State<SelfieVerificationScreen> {
     AuthUser user,
   ) async {
     if (user.accountType == AccountType.single) {
-      final result = await sl<HasProfile>()(HasProfileParams(user.id));
+      final hasProfile = await sl<ProfileStatusCache>().check(user.id);
       if (!context.mounted) return;
-      if (result case Ok<bool>(value: true)) {
+      if (hasProfile == true) {
         context.go('/discover');
         return;
       }

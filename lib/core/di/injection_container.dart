@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../preferences/app_preferences.dart';
+import '../router/profile_status_cache.dart';
 
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/firebase_auth_remote_data_source.dart';
@@ -183,6 +184,9 @@ void _initProfile() {
   // Domain
   sl.registerLazySingleton(() => SaveProfile(sl()));
   sl.registerLazySingleton(() => HasProfile(sl()));
+  // Shared by the router and the session routing, so the profile is looked
+  // up once per session.
+  sl.registerLazySingleton(() => ProfileStatusCache(sl()));
 
   // Data
   sl.registerLazySingleton<ProfileRepository>(

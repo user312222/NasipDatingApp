@@ -159,6 +159,43 @@ void main() {
     });
   });
 
+  group('what the router is told', () {
+    test('nothing is unlocked at the start', () {
+      expect(cubit.inviteAccepted, isFalse);
+      expect(cubit.consentAccepted, isFalse);
+      expect(cubit.otpRequested, isFalse);
+      expect(cubit.isSigningIn, isFalse);
+    });
+
+    test('each registration step unlocks the next', () async {
+      await cubit.checkInviteCode('NASIP2026');
+      expect(cubit.inviteAccepted, isTrue);
+
+      cubit.acceptConsent();
+      expect(cubit.consentAccepted, isTrue);
+
+      await cubit.requestOtp('5550000009');
+      expect(cubit.otpRequested, isTrue);
+    });
+
+    test(
+      'a rejected invite code or a failed code request unlocks nothing',
+      () async {
+        repo
+          ..inviteResult = const Err(
+            ServerFailure('Bu davetiye kodu tanınmıyor.'),
+          )
+          ..otpRequestResult = const Err(ServerFailure('Kod gönderilemedi.'));
+
+        await cubit.checkInviteCode('YANLIS');
+        await cubit.requestOtp('5550000009');
+
+        expect(cubit.inviteAccepted, isFalse);
+        expect(cubit.otpRequested, isFalse);
+      },
+    );
+  });
+
   group('session restore', () {
     test('an active session is picked up', () async {
       repo.session = Ok(existing);

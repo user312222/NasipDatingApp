@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/screens/settings_screen.dart';
+import '../../features/auth/presentation/bloc/auth_cubit.dart';
 import '../../features/auth/presentation/screens/account_type_screen.dart';
 import '../../features/auth/presentation/screens/invite_gate_screen.dart';
 import '../../features/consent/presentation/screens/consent_screen.dart';
@@ -30,26 +33,46 @@ import '../../features/waitlist/presentation/screens/waitlist_screen.dart';
 import '../../screens/design_preview_screen.dart';
 import '../di/injection_container.dart';
 import 'main_shell.dart';
+import 'profile_status_cache.dart';
+import 'route_access.dart';
 
-/// Session restore only runs from `/` (`InviteGateScreen` calls
-/// `AuthCubit.restoreSession`), so a web reload — or any deep link — that
-/// starts on another route would open it with no signed-in user in
-/// `AuthCubit`. On the very first navigation, send such locations through
-/// `/` so the session is restored and the user is routed onward. Public
-/// pages are exempt.
 const _feedTab = 1;
 const _matchesTab = 2;
 
 bool _hasUnread(MatchesState state) =>
     state is MatchesLoaded && state.hasUnread;
 
-bool _booted = false;
-const _publicRoutes = {'/', '/waitlist', if (kDebugMode) '/design-preview'};
+/// Runs before every navigation and applies the rules in
+/// `route_access.dart`: who may open which location. It also covers the
+/// cold start - session restore only runs from `/` (`InviteGateScreen`
+/// calls `AuthCubit.restoreSession`), and a web reload or deep link that
+/// starts elsewhere finds nobody signed in yet, so it is sent through `/`
+/// and routed onward from there.
+///
+/// Synchronous whenever the answer is already known; only the first visit
+/// of a single user to the app proper waits for one profile lookup.
+FutureOr<String?> _guard(BuildContext context, GoRouterState state) {
+  final auth = context.read<AuthCubit>();
+  final location = state.matchedLocation;
+  final user = auth.currentUser;
 
-String? _bootRedirect(BuildContext context, GoRouterState state) {
-  if (_booted) return null;
-  _booted = true;
-  return _publicRoutes.contains(state.matchedLocation) ? null : '/';
+  String? decide(bool? hasProfile) => accessRedirect(
+    location,
+    AccessContext(
+      user: user,
+      hasProfile: hasProfile,
+      inviteAccepted: auth.inviteAccepted,
+      consentAccepted: auth.consentAccepted,
+      signingIn: auth.isSigningIn,
+      otpRequested: auth.otpRequested,
+      hasChatArgs: state.extra is ChatRouteArgs,
+    ),
+  );
+
+  if (user == null || !needsProfileCheck(location, user)) return decide(null);
+  final profiles = sl<ProfileStatusCache>();
+  if (profiles.isKnown(user.id)) return decide(true);
+  return profiles.check(user.id).then(decide);
 }
 
 /// App-wide route table. Each feature contributes its screens here;
@@ -62,7 +85,7 @@ String? _bootRedirect(BuildContext context, GoRouterState state) {
 /// partially-verified user) survives navigating between steps.
 final appRouter = GoRouter(
   initialLocation: '/',
-  redirect: _bootRedirect,
+  redirect: _guard,
   // Unknown addresses (a mistyped link, or the debug-only gallery in a
   // release build) fall back to the entry screen, which restores the
   // session, instead of go_router's bare "Page Not Found".
@@ -208,6 +231,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/chat',
       builder: (context, state) {
+        // `_guard` only lets this location through with its arguments.
         final args = state.extra! as ChatRouteArgs;
         return ChatScreen(
           matchId: args.matchId,

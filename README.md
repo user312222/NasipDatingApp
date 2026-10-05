@@ -70,7 +70,7 @@ The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Fu
 - **Backend:** Firebase — Authentication (phone), Cloud Firestore, App Check (off until configured)
 - **State management:** BLoC / Cubit (`flutter_bloc`), `equatable`
 - **Dependency injection:** `get_it`
-- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen)
+- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen). One guard (`lib/core/router/route_access.dart`) decides who may open which address - signed out, mid-registration, single with or without a profile, guardian - so typing a URL on the web cannot skip a step or reach another account type's screens
 - **Fonts:** Fraunces (display) and Sora (UI) via `google_fonts`
 
 ### Architecture
@@ -134,7 +134,7 @@ flutter analyze
 flutter test
 ```
 
-The Flutter tests cover the auth, chat, matches, matching, feed and guardian cubits, the two entry doors (registration and sign-in), the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
+The Flutter tests cover the auth, profile, chat, matches, matching, feed and guardian cubits, the route access rules, the two entry doors (registration and sign-in), the chat, matches and feed screens (unread dot, live updates, send errors, family nudge, one answer a day, likes, the day change) against fake repositories in `test/support/fakes.dart`, the tab bar (switching, the dots, tap callbacks), the "show my family" switch (match celebration and chat), the guardian's match card, the photo step, the shared widgets, the failure log filter, the chat timestamp formatter, the design gallery and an app-boot smoke test. Firestore-backed screens are still verified manually against a real project.
 
 #### Firestore security-rules tests
 
