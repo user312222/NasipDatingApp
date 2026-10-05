@@ -344,6 +344,66 @@ describe('profiles', () => {
     await assertFails(setDoc(ref, publicProfile({ madhhab: 'hanefi' })));
     await assertFails(setDoc(ref, publicProfile({ photoRefs: ['a.jpg'] })));
   });
+
+  describe('editing (FR-2.5): everything but the birth date', () => {
+    // Still an adult, so only the "may not move" rule can refuse it.
+    const otherAdultBirth = () => Timestamp.fromDate(new Date('1990-06-15'));
+
+    beforeEach(() =>
+      seed(async (db) => {
+        await setDoc(doc(db, 'users', 'alice'), { accountType: 'single' });
+        await setDoc(doc(db, 'profiles', 'alice'), profile());
+        await setDoc(doc(db, 'publicProfiles', 'alice'), publicProfile());
+      }));
+
+    test('the app\'s save - both documents, same birth date - goes through', async () => {
+      const db = as('alice');
+      const batch = writeBatch(db);
+      batch.set(
+        doc(db, 'profiles', 'alice'),
+        profile({ name: 'Ayşe Nur', city: 'Ankara', intent: 'notSureYet', photoVisibility: 'autoOnMatch', occupation: 'Mimar' }),
+      );
+      batch.set(
+        doc(db, 'publicProfiles', 'alice'),
+        publicProfile({ name: 'Ayşe Nur', city: 'Ankara', intent: 'notSureYet', occupation: 'Mimar' }),
+      );
+      await assertSucceeds(batch.commit());
+    });
+
+    test('the private profile\'s birth date cannot be moved', async () => {
+      const ref = doc(as('alice'), 'profiles', 'alice');
+      await assertFails(setDoc(ref, profile({ birthDate: otherAdultBirth() })));
+      await assertFails(updateDoc(ref, { birthDate: otherAdultBirth() }));
+      // Not even by a second.
+      await assertFails(updateDoc(ref, { birthDate: new Timestamp(adultBirth().seconds + 1, 0) }));
+    });
+
+    test('nor can the age other members see', async () => {
+      const ref = doc(as('alice'), 'publicProfiles', 'alice');
+      await assertFails(setDoc(ref, publicProfile({ birthDate: otherAdultBirth() })));
+      await assertFails(updateDoc(ref, { birthDate: otherAdultBirth() }));
+    });
+
+    test('a save that moves it is refused as a whole', async () => {
+      const db = as('alice');
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'profiles', 'alice'), profile({ city: 'Ankara', birthDate: otherAdultBirth() }));
+      batch.set(doc(db, 'publicProfiles', 'alice'), publicProfile({ city: 'Ankara', birthDate: otherAdultBirth() }));
+      await assertFails(batch.commit());
+
+      const stored = await getDoc(doc(db, 'profiles', 'alice'));
+      if (stored.data().city !== 'İzmir') throw new Error('the profile changed');
+    });
+
+    test('a first profile can still be created with any adult birth date', async () => {
+      await seedMembers(['bob']);
+      const db = as('bob');
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'profiles', 'bob'), profile({ userId: 'bob', birthDate: otherAdultBirth() }));
+      batch.set(doc(db, 'publicProfiles', 'bob'), publicProfile({ userId: 'bob', birthDate: otherAdultBirth() }));
+      await assertSucceeds(batch.commit());
+    });
+  });
 });
 
 describe('likes and the daily cap', () => {

@@ -32,7 +32,7 @@ The UI is Turkish only (v1). The product spec lives in [`docs/REQUIREMENTS.md`](
 | Area | What it does |
 | --- | --- |
 | **Onboarding** | Two doors on the entry screen. New here: invite code → account type (single / relative) → KVKK consent → phone + SMS OTP → liveness step → 5-step profile wizard. Already a member: "Hesabım var" → phone + SMS OTP → straight in |
-| **Profile** | "Profili düzenle" on the Hesap tab: name, city, intent, the optional details, photo visibility and the family signal on one page. The birth date is fixed after registration; photos are not editable yet (no storage) |
+| **Profile** | "Profili düzenle" on the Hesap tab: name, city, intent, the optional details, photo visibility and the family signal on one page. The birth date is fixed after registration (also in the rules); photos are not editable yet (no storage) |
 | **Navigation** | Single users get a bottom tab bar — Keşfet, Günün Sorusu, Eşleşmeler, Hesap; each tab keeps its own state. A dot on the Eşleşmeler tab flags unread replies, and one on the Günün Sorusu tab shows that today's question is still unanswered — both live from any tab. Relatives (guardian accounts) have a single home screen and no tab bar |
 | **Discovery** | Swipeable candidate card (drag or buttons), filters (city, age range, intent), daily like cap, match celebration |
 | **Matches & chat** | Matches list with last-message preview and unread dot, 1:1 text chat, one-time gentle "involve your family?" nudge |
@@ -71,7 +71,7 @@ The project runs on the Firebase **Spark (free) plan**, so there are no Cloud Fu
 - **Backend:** Firebase — Authentication (phone), Cloud Firestore, App Check (off until configured)
 - **State management:** BLoC / Cubit (`flutter_bloc`), `equatable`
 - **Dependency injection:** `get_it`
-- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen). One guard (`lib/core/router/route_access.dart`) decides who may open which address - signed out, mid-registration, single with or without a profile, guardian - so typing a URL on the web cannot skip a step or reach another account type's screens
+- **Routing:** `go_router` (a `StatefulShellRoute` holds the four tabs; chat and other full-screen pages are top-level routes that cover the bar; unknown addresses fall back to the entry screen). One guard (`lib/core/router/route_access.dart`) decides who may open which address - signed out, mid-registration, single with or without a profile, guardian - so typing a URL on the web cannot skip a step, reach another account type's screens, or reopen the profile wizard once a profile exists (that leads to the edit screen)
 - **Fonts:** Fraunces (display) and Sora (UI) via `google_fonts`
 
 ### Architecture
@@ -147,7 +147,7 @@ npm install      # first time only
 npm test
 ```
 
-It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap (both sides need a public profile), who may have a public profile at all, the invite gate (an account needs an active code; non-members read nothing), linking a guardian (only with the family code of that very account), family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap (both sides need a public profile), who may have a public profile at all, profile edits (everything but the birth date), the invite gate (an account needs an active code; non-members read nothing), linking a guardian (only with the family code of that very account), family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
 
 ---
 

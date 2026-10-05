@@ -24,7 +24,11 @@ void main() {
 
   /// Opens the edit screen the way the Hesap tab does: pushed on top of
   /// another page, so going back has somewhere to land.
-  Future<void> pumpEdit(WidgetTester tester, {Profile? profile}) async {
+  Future<void> pumpEdit(
+    WidgetTester tester, {
+    Profile? profile,
+    bool byAddress = false,
+  }) async {
     // Tall enough for the whole form, so nothing needs scrolling into view.
     tester.view.physicalSize = const Size(420, 2400);
     tester.view.devicePixelRatio = 1;
@@ -41,7 +45,9 @@ void main() {
     if (profile != null) repo.stored = Ok(ProfileModel.fromEntity(profile));
 
     final router = GoRouter(
-      initialLocation: '/account',
+      // By address there is no page underneath - where the redirect from a
+      // wizard step lands a member who already has a profile.
+      initialLocation: byAddress ? '/profile/edit' : '/account',
       routes: [
         GoRoute(
           path: '/account',
@@ -63,7 +69,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
-    await tester.tap(find.text('hesap sekmesi'));
+    if (!byAddress) await tester.tap(find.text('hesap sekmesi'));
     await tester.pumpAndSettle();
   }
 
@@ -315,6 +321,57 @@ void main() {
 
       expect(find.text('hesap sekmesi'), findsOneWidget);
       expect(repo.saved, isEmpty);
+    });
+  });
+
+  group('opened by address (nothing underneath)', () {
+    testWidgets('still has a way out: back goes to the Hesap tab', (
+      tester,
+    ) async {
+      await pumpEdit(tester, profile: testProfile(), byAddress: true);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('hesap sekmesi'), findsOneWidget);
+    });
+
+    testWidgets('unsaved changes ask first there too', (tester) async {
+      await pumpEdit(tester, profile: testProfile(), byAddress: true);
+      await tester.enterText(field('ŞEHİR'), 'Ankara');
+      await tester.pump();
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Değişiklikler kaydedilmedi'), findsOneWidget);
+      expect(onEditScreen(), isTrue);
+
+      await tester.tap(find.text('Kaydetmeden çık'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('hesap sekmesi'), findsOneWidget);
+      expect(repo.saved, isEmpty);
+    });
+
+    testWidgets('saving lands on the Hesap tab', (tester) async {
+      await pumpEdit(tester, profile: testProfile(), byAddress: true);
+
+      await tester.enterText(field('ŞEHİR'), 'Ankara');
+      await tester.pump();
+      await save(tester);
+
+      expect(repo.saved.single.city, 'Ankara');
+      expect(find.text('hesap sekmesi'), findsOneWidget);
+    });
+
+    testWidgets('a failed load has a way out as well', (tester) async {
+      repo.stored = const Err(ServerFailure('Profilin yüklenemedi.'));
+      await pumpEdit(tester, byAddress: true);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('hesap sekmesi'), findsOneWidget);
     });
   });
 

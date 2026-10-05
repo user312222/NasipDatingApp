@@ -56,13 +56,25 @@ const _singleAppRoutes = {
   '/profile/edit',
 };
 
+/// The steps of the profile wizard: for creating a profile, not for
+/// changing one (that is `/profile/edit`).
+const _wizardSteps = {
+  '/profile/photos',
+  '/profile/privacy',
+  '/profile/intent',
+  '/profile/details',
+  '/profile/family',
+};
+
+bool isWizardStep(String location) => _wizardSteps.contains(location);
+
 /// Whether [location] is one where a single user's profile matters, i.e.
 /// the router should look the profile up before deciding.
 bool needsProfileCheck(String location, AuthUser? user) =>
     user != null &&
     user.isVerified &&
     user.accountType == AccountType.single &&
-    (_singleAppRoutes.contains(location) || location == '/profile/complete');
+    (_singleAppRoutes.contains(location) || location.startsWith('/profile/'));
 
 /// Where [location] should be redirected to, or null when it may be shown.
 ///
@@ -125,8 +137,15 @@ String? accessRedirect(String location, AccessContext access) {
     return null;
   }
 
-  // The wizard is open to a verified single; its last page only once the
-  // profile exists.
+  // The wizard creates a profile, once. With a profile its steps lead to
+  // the edit screen instead - going through them again would rewrite the
+  // whole profile, birth date included, which is fixed after registration
+  // (FR-2.5).
+  if (isWizardStep(location)) {
+    return access.hasProfile == true ? '/profile/edit' : null;
+  }
+
+  // Its last page shows the finished profile, so only once there is one.
   if (location == '/profile/complete' && access.hasProfile == false) {
     return '/profile/photos';
   }

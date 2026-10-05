@@ -18,6 +18,27 @@ void main() {
     expect(ProfileModel.fromJson(profile.toJson()), profile);
   });
 
+  // firestore.rules refuses an update whose birth date differs from the
+  // stored one at all (FR-2.5), so the round trip has to be exact.
+  test('the birth date comes back as the same instant, as a local date', () {
+    final birthDate = DateTime(1999, 3, 28, 2, 30);
+    final json = ProfileModel(
+      userId: 'me',
+      name: 'Zeynep',
+      birthDate: birthDate,
+      city: 'İstanbul',
+      intent: ProfileIntent.marriage,
+      photoRefs: const ['photo_0.jpg'],
+      familyInvolvementOptIn: false,
+    ).toJson();
+
+    expect(json['birthDate'], endsWith('Z'));
+    final read = ProfileModel.fromJson(json).birthDate;
+    expect(read.isUtc, isFalse);
+    expect(read.isAtSameMomentAs(birthDate), isTrue);
+    expect(read.day, birthDate.day);
+  });
+
   test('optional fields that were never written stay empty', () {
     final json = ProfileModel.fromEntity(testProfile()).toJson()
       ..remove('educationLevel')

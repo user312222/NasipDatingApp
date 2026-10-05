@@ -110,28 +110,43 @@ service cloud.firestore {
     }
 
     // FR-2: the private profile — only its owner ever sees or writes it.
+    //
+    // FR-2.5: everything in it can be edited later except the birth date -
+    // age is one of the few things a match relies on, so an update may not
+    // move it. (Deleting the profile and creating it again still can: that
+    // is the path account deletion needs, and telling the two apart takes
+    // a Cloud Function.)
     match /profiles/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
 
-      allow create, update: if signedIn()
+      function validProfile() {
+        return request.resource.data.keys().hasOnly([
+                 'userId', 'name', 'birthDate', 'city', 'intent', 'photoRefs',
+                 'photoVisibility', 'familyInvolvementOptIn', 'educationLevel',
+                 'occupation', 'religiousPracticeNote', 'madhhab', 'updatedAt'])
+          && request.resource.data.userId == userId
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.city is string
+          && request.resource.data.intent in ['marriage', 'notSureYet']
+          && request.resource.data.photoVisibility in
+               ['hiddenUntilIUnlock', 'onRequestOnly', 'autoOnMatch']
+          && request.resource.data.photoRefs is list
+          && request.resource.data.photoRefs.size() >= 1
+          && request.resource.data.photoRefs.size() <= 6
+          && request.resource.data.familyInvolvementOptIn is bool
+          && isAdult(request.resource.data.birthDate);
+      }
+
+      allow create: if signedIn()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly([
-             'userId', 'name', 'birthDate', 'city', 'intent', 'photoRefs',
-             'photoVisibility', 'familyInvolvementOptIn', 'educationLevel',
-             'occupation', 'religiousPracticeNote', 'madhhab', 'updatedAt'])
-        && request.resource.data.userId == userId
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 60
-        && request.resource.data.city is string
-        && request.resource.data.intent in ['marriage', 'notSureYet']
-        && request.resource.data.photoVisibility in
-             ['hiddenUntilIUnlock', 'onRequestOnly', 'autoOnMatch']
-        && request.resource.data.photoRefs is list
-        && request.resource.data.photoRefs.size() >= 1
-        && request.resource.data.photoRefs.size() <= 6
-        && request.resource.data.familyInvolvementOptIn is bool
-        && isAdult(request.resource.data.birthDate);
+        && validProfile();
+
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && validProfile()
+        && request.resource.data.birthDate == resource.data.birthDate;
 
       // FR-7.1: users can delete their own profile.
       allow delete: if signedIn() && request.auth.uid == userId;
@@ -144,23 +159,34 @@ service cloud.firestore {
       // Members only: this is every member's name, age and city.
       allow read: if signedIn() && isMember();
 
+      function validPublicProfile() {
+        return request.resource.data.keys().hasOnly([
+                 'userId', 'name', 'birthDate', 'city', 'intent', 'occupation',
+                 'updatedAt'])
+          && request.resource.data.userId == userId
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.city is string
+          && request.resource.data.intent in ['marriage', 'notSureYet']
+          && (!('occupation' in request.resource.data)
+              || request.resource.data.occupation is string)
+          && isAdult(request.resource.data.birthDate);
+      }
+
       // FR-8.6: only single accounts. A guardian with a public profile
       // would show up as a candidate in discovery and could like people.
-      allow create, update: if signedIn()
+      allow create: if signedIn()
         && request.auth.uid == userId
         && isSingle()
-        && request.resource.data.keys().hasOnly([
-             'userId', 'name', 'birthDate', 'city', 'intent', 'occupation',
-             'updatedAt'])
-        && request.resource.data.userId == userId
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 60
-        && request.resource.data.city is string
-        && request.resource.data.intent in ['marriage', 'notSureYet']
-        && (!('occupation' in request.resource.data)
-            || request.resource.data.occupation is string)
-        && isAdult(request.resource.data.birthDate);
+        && validPublicProfile();
+
+      // FR-2.5: the age other members see does not move either.
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && isSingle()
+        && validPublicProfile()
+        && request.resource.data.birthDate == resource.data.birthDate;
 
       allow delete: if signedIn() && request.auth.uid == userId;
     }

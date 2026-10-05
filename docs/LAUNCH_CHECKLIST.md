@@ -73,7 +73,8 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 - [ ] **Cloud Functions ile kapanacak kural boşlukları** (`firestore.rules` başlık notu):
       kullanıcı kendisine gelen beğenileri okuyabiliyor; eşleşmeyi istemci oluşturuyor;
-      `publicProfiles` istemci tarafından yazılıyor.
+      `publicProfiles` istemci tarafından yazılıyor; doğum tarihi güncellemede kilitli
+      (FR-2.5) ama profil belgelerini silip yeniden oluşturan biri onu değiştirebiliyor.
 - [ ] **Atomik hesap silme.** `FirestoreAccountRemoteDataSource` best-effort çalışıyor;
       `likes`, `matches` ve mesajlar silinemiyor (iki tarafa ait).
 - [ ] **Fotoğraf yükleme** için Cloud Storage: `photoRefs` hâlâ yer tutucu dosya adı.
@@ -95,6 +96,8 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
       **Dikkat:** bu kurallar uygulamanın aynı sürümüyle birlikte yayınlanmalı - bu
       değişiklikten önceki bir derleme yeni hesap açamaz ve veli bağlayamaz (mevcut
       hesapların girişi etkilenmez). Yayındaki derlemeyi kurallarla aynı anda güncelle.
+      **Bekleyen:** doğum tarihi kilidi (profil güncellemesinde doğum tarihi değişemez,
+      FR-2.5). Eski derlemeleri bozmaz: tarihi değiştirmeyen her kayıt eskisi gibi geçer.
       (`firebase deploy --only firestore:rules --project binasip`).
 - [x] **Bileşik indeks gerekmiyor.** Uygulamadaki tüm sorgular ya yalnızca eşitlik filtresi
       kullanıyor ya da tek alanda sıralıyor (`messages` → `sentAt`); bunları Firestore'un

@@ -52,7 +52,8 @@ class ProfileModel extends Profile {
     return ProfileModel(
       userId: json['userId'] as String,
       name: name,
-      birthDate: DateTime.parse(birthDate),
+      // Written in UTC (see [toJson]); shown and compared as a local date.
+      birthDate: DateTime.parse(birthDate).toLocal(),
       city: city,
       intent: intent,
       photoRefs: (json['photoRefs'] as List? ?? const []).cast<String>(),
@@ -72,7 +73,11 @@ class ProfileModel extends Profile {
   Map<String, dynamic> toJson() => {
     'userId': userId,
     'name': name,
-    'birthDate': birthDate.toIso8601String(),
+    // In UTC, so reading it back gives exactly the same instant on any
+    // device: a local time without its offset can be ambiguous (a clock
+    // change), and `firestore.rules` refuses a profile update whose birth
+    // date differs from the stored one by anything at all (FR-2.5).
+    'birthDate': birthDate.toUtc().toIso8601String(),
     'city': city,
     'intent': intent.name,
     'photoRefs': photoRefs,

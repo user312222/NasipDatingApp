@@ -38,6 +38,13 @@ void _leave(BuildContext context) {
   }
 }
 
+/// The app bar shows its own back arrow only when there is a page
+/// underneath. Opened by address - which is also where the redirect from a
+/// wizard step lands (`route_access.dart`) - there is none, and the screen
+/// would have no way out; this arrow stands in for it.
+Widget? _backWhenOpenedByAddress(BuildContext context, VoidCallback onBack) =>
+    context.canPop() ? null : BackButton(onPressed: onBack);
+
 class _ProfileEditView extends StatelessWidget {
   const _ProfileEditView({required this.userId});
 
@@ -94,7 +101,10 @@ class _Frame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profili düzenle')),
+      appBar: AppBar(
+        leading: _backWhenOpenedByAddress(context, () => _leave(context)),
+        title: const Text('Profili düzenle'),
+      ),
       body: WizardBackdrop(child: SafeArea(child: child)),
     );
   }
@@ -207,7 +217,13 @@ class _ProfileEditFormState extends State<_ProfileEditForm> {
         if (!didPop) _confirmLeave();
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Profili düzenle')),
+        appBar: AppBar(
+          leading: _backWhenOpenedByAddress(
+            context,
+            () => dirty ? _confirmLeave() : _leave(context),
+          ),
+          title: const Text('Profili düzenle'),
+        ),
         body: WizardBackdrop(
           child: SafeArea(
             child: Column(

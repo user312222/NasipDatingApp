@@ -168,7 +168,7 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-2.2 | Niyet seçimi | "Evlilik" veya "Henüz emin değilim" | Seçim kaydı | Casual/flört seçeneği sunulmaz (pozisyonlama gereği) |
 | FR-2.3 | Temel bilgiler | Ad, doğum tarihi, şehir, eğitim/meslek (opsiyonel), dini pratik notu (opsiyonel), mezhep (opsiyonel) | Form doğrulama ve kayıt | Ad/doğum tarihi/şehir zorunlu; mezhep eşleştirmede opsiyonel bir filtre olarak sunulur (varsayılan "farketmez"), serbest metin de desteklenir |
 | FR-2.4 | "Aileme açığım" genel sinyali | Açık/kapalı toggle | Profil alanına kayıt | Varsayılan kapalı; tek başına hiçbir eşleşme verisini açığa çıkarmaz — eşleşme bazlı görünürlük ayrıca FR-8.4 ile belirlenir |
-| FR-2.5 | Profili düzenleme | Ad, şehir, niyet, eğitim, meslek, dini pratik notu, mezhep, fotoğraf görünürlüğü, "aileme açığım" | Kayıtlı profilin okunması, değişikliklerin doğrulanıp özel ve herkese açık belgeye birlikte yazılması | Doğum tarihi ve fotoğraflar bu ekrandan değiştirilemez; değişiklik yokken "Kaydet" kapalıdır; kaydedilmemiş değişiklikle çıkışta onay sorulur |
+| FR-2.5 | Profili düzenleme | Ad, şehir, niyet, eğitim, meslek, dini pratik notu, mezhep, fotoğraf görünürlüğü, "aileme açığım" | Kayıtlı profilin okunması, değişikliklerin doğrulanıp özel ve herkese açık belgeye birlikte yazılması | Doğum tarihi ve fotoğraflar bu ekrandan değiştirilemez; doğum tarihini değiştiren bir güncelleme kurallarca da reddedilir ve profili olan biri için kayıt sihirbazının adımları bu ekrana yönlenir; değişiklik yokken "Kaydet" kapalıdır; kaydedilmemiş değişiklikle çıkışta onay sorulur |
 
 **Hassas veri notu (KVKK m.6):** Dini pratik notu veya mezhep alanı doldurulduğunda (ve mezhep değeri salt "Belirtmek istemiyorum" değilse), kullanıcıdan bu özel nitelikli verinin işlenmesi için ayrı bir açık rıza istenir; onay verilmeden forma devam edilemez. Profil düzenlenirken (FR-2.5) bu rıza yalnızca bilgi yeni eklendiğinde ya da değiştirildiğinde yeniden istenir; kayıtlı bilgiye dokunulmadığında ya da bilgi silindiğinde istenmez.
 
@@ -324,6 +324,7 @@ FeedLike          { id (postId_userId), postId, userId, dayKey, createdAt }
 2. **Push bildirimi yok.** Sohbet ve eşleşme listesi Firestore dinleyicileriyle canlıdır, ama yalnızca uygulama açıkken; kapalı bir uygulamaya bildirim gitmez (Cloud Functions + FCM gerekir).
 3. **İstemci tarafında zorlanan kurallar.** Günlük beğeni limiti ve bazı erişim kısıtları Firestore kurallarıyla desteklense de, bazı uç durumlar (örn. "kim beni beğendi" bilgisinin teoride okunabilmesi) yalnızca Cloud Functions ile tam olarak kapatılabilir; bu, Blaze plana geçişe bağlıdır.
 4. **Silinen hesapların kalıntıları.** FR-7.1 kapsamında silinemeyen paylaşımlı kayıtlar (beğeniler, eşleşmeler, mesajlar), karşı taraf arayüzünde eksik profille yer tutucu olarak gösterilecek şekilde ele alınmıştır.
+5. **Doğum tarihi kilidinin sınırı.** Kurallar bir profil güncellemesinde doğum tarihinin değişmesini reddeder (FR-2.5), ama kullanıcı kendi profil belgelerini silebildiği için (hesap silme, FR-7.1) uygulamayı atlayan biri belgeleri silip başka bir tarihle yeniden oluşturabilir. Silme ile yeniden oluşturmayı ayırt etmek sunucu tarafı mantık (Cloud Functions) gerektirir.
 
 ---
 

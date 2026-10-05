@@ -204,6 +204,25 @@ void main() {
       );
     });
 
+    // FR-2.5: the wizard would rewrite the whole profile, birth date
+    // included; with a profile, changes go through the edit screen.
+    test('the wizard steps lead to the edit screen instead', () {
+      for (final location in [
+        '/profile/photos',
+        '/profile/privacy',
+        '/profile/intent',
+        '/profile/details',
+        '/profile/family',
+      ]) {
+        expect(
+          accessRedirect(location, access),
+          '/profile/edit',
+          reason: location,
+        );
+      }
+      expect(accessRedirect('/profile/edit', access), isNull);
+    });
+
     test('guardian pages and the finished liveness step send home', () {
       expect(accessRedirect('/guardian/home', access), '/discover');
       expect(accessRedirect('/guardian/link', access), '/discover');
@@ -213,7 +232,12 @@ void main() {
     test('an unknown profile state never locks the user out', () {
       final unknown = AccessContext(user: _single);
 
-      for (final location in _appRoutes) {
+      for (final location in [
+        ..._appRoutes,
+        '/profile/photos',
+        '/profile/family',
+        '/profile/complete',
+      ]) {
         expect(accessRedirect(location, unknown), isNull, reason: location);
       }
     });
@@ -263,8 +287,13 @@ void main() {
       // Editing needs a profile to edit, unlike the wizard next to it.
       expect(needsProfileCheck('/profile/edit', _single), isTrue);
 
-      expect(needsProfileCheck('/profile/photos', _single), isFalse);
+      // The wizard too: with a profile its steps are closed.
+      expect(needsProfileCheck('/profile/photos', _single), isTrue);
+      expect(needsProfileCheck('/profile/family', _single), isTrue);
+
       expect(needsProfileCheck('/settings', _single), isFalse);
+      expect(needsProfileCheck('/profile/photos', _guardian), isFalse);
+      expect(needsProfileCheck('/profile/photos', _unverified), isFalse);
       expect(needsProfileCheck('/discover', _guardian), isFalse);
       expect(needsProfileCheck('/discover', _unverified), isFalse);
       expect(needsProfileCheck('/discover', null), isFalse);
@@ -314,6 +343,46 @@ void main() {
       await cache.check('s');
 
       expect(cache.isKnown('someone_else'), isFalse);
+      expect(cache.known('someone_else', forWizardStep: true), isNull);
+    });
+
+    group('known (what the router can decide without a read)', () {
+      test('nothing before the first check', () {
+        expect(cache.known('s', forWizardStep: false), isNull);
+        expect(cache.known('s', forWizardStep: true), isNull);
+      });
+
+      test('a profile is known everywhere', () async {
+        repo.result = const Ok(true);
+        await cache.check('s');
+
+        expect(cache.known('s', forWizardStep: false), isTrue);
+        expect(cache.known('s', forWizardStep: true), isTrue);
+      });
+
+      test('a missing profile is trusted by the wizard steps only', () async {
+        await cache.check('s');
+
+        // Walking through the wizard costs no further reads...
+        expect(cache.known('s', forWizardStep: true), isFalse);
+        // ...but where a profile is required it is read again.
+        expect(cache.known('s', forWizardStep: false), isNull);
+      });
+
+      test('finishing the wizard replaces the "no"', () async {
+        await cache.check('s');
+        repo.result = const Ok(true);
+        await cache.check('s');
+
+        expect(cache.known('s', forWizardStep: true), isTrue);
+      });
+
+      test('a failed read leaves nothing known', () async {
+        repo.result = const Err(ServerFailure('Profil okunamadı.'));
+        await cache.check('s');
+
+        expect(cache.known('s', forWizardStep: true), isNull);
+      });
     });
   });
 }

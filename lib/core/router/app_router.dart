@@ -51,7 +51,8 @@ bool _hasUnread(MatchesState state) =>
 /// and routed onward from there.
 ///
 /// Synchronous whenever the answer is already known; only the first visit
-/// of a single user to the app proper waits for one profile lookup.
+/// of a single user to the app proper waits for one profile lookup (and so
+/// does the wizard's last page, where a "no" has just become a "yes").
 FutureOr<String?> _guard(BuildContext context, GoRouterState state) {
   final auth = context.read<AuthCubit>();
   final location = state.matchedLocation;
@@ -72,7 +73,8 @@ FutureOr<String?> _guard(BuildContext context, GoRouterState state) {
 
   if (user == null || !needsProfileCheck(location, user)) return decide(null);
   final profiles = sl<ProfileStatusCache>();
-  if (profiles.isKnown(user.id)) return decide(true);
+  final known = profiles.known(user.id, forWizardStep: isWizardStep(location));
+  if (known != null) return decide(known);
   return profiles.check(user.id).then(decide);
 }
 
