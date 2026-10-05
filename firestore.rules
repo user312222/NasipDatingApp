@@ -18,6 +18,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The caller finished the profile wizard. A public profile is all the
+    // other members ever see of someone, so nothing that reaches them - a
+    // like, a feed answer, a like on an answer - is accepted from an
+    // account without one. The app also routes such accounts to the wizard
+    // (lib/core/router/route_access.dart); this is the part that holds
+    // when the app is bypassed.
+    function hasPublicProfile() {
+      return exists(/databases/$(database)/documents/publicProfiles/$(request.auth.uid));
+    }
+
     function isAdult(birthDate) {
       // 18 * 365 days — approximate on purpose.
       return birthDate is timestamp
@@ -97,8 +107,11 @@ service cloud.firestore {
     match /publicProfiles/{userId} {
       allow read: if signedIn();
 
+      // FR-8.6: only single accounts. A guardian with a public profile
+      // would show up as a candidate in discovery and could like people.
       allow create, update: if signedIn()
         && request.auth.uid == userId
+        && isSingle()
         && request.resource.data.keys().hasOnly([
              'userId', 'name', 'birthDate', 'city', 'intent', 'occupation',
              'updatedAt'])
@@ -136,8 +149,10 @@ service cloud.firestore {
     }
 
     // FR-4.2: one doc per like, id "{from}_{to}". Creating it must also bump
-    // today's counter by one in the same batch (getAfter), and the target
-    // must have a public profile. Never updated or deleted by clients.
+    // today's counter by one in the same batch (getAfter), and both sides
+    // must have a public profile - the target (there is someone to like)
+    // and the caller (there is someone for the target to see). Never
+    // updated or deleted by clients.
     match /likes/{likeId} {
       allow get: if signedIn() && request.auth.uid in likeId.split('_');
       allow list: if signedIn()
@@ -151,6 +166,7 @@ service cloud.firestore {
         && request.resource.data.to != request.auth.uid
         && likeId == request.auth.uid + '_' + request.resource.data.to
         && request.resource.data.createdAt == request.time
+        && hasPublicProfile()
         && exists(/databases/$(database)/documents/publicProfiles/$(request.resource.data.to))
         && getAfter(/databases/$(database)/documents/likeCounters/$(
              request.auth.uid + '_'
@@ -316,7 +332,7 @@ service cloud.firestore {
         && request.resource.data.text.size() <= 280
         && request.resource.data.likeCount == 0
         && request.resource.data.createdAt == request.time
-        && exists(/databases/$(database)/documents/publicProfiles/$(request.auth.uid));
+        && hasPublicProfile();
 
       allow update: if signedIn() && isSingle()
         && resource.data.authorId != request.auth.uid
@@ -341,6 +357,7 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.userId == request.auth.uid;
 
       allow create: if signedIn() && isSingle()
+        && hasPublicProfile()
         && request.resource.data.keys().hasOnly(
              ['postId', 'userId', 'dayKey', 'createdAt'])
         && request.resource.data.userId == request.auth.uid

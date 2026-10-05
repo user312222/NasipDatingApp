@@ -88,7 +88,9 @@ Kullanıcı şu an bilerek Spark'ta; bunlar planı değiştirince ele alınacak.
 
 ## 5. Son kontroller
 
-- [ ] `firestore.rules` son halini deploy et
+- [ ] `firestore.rules` son halini deploy et. Son değişiklik (2026-10-05): beğeni ve akış
+      beğenisi için çağıranın herkese açık profili şart; herkese açık profili yalnızca tekil
+      hesaplar oluşturabilir.
       (`firebase deploy --only firestore:rules --project binasip`).
 - [x] **Bileşik indeks gerekmiyor.** Uygulamadaki tüm sorgular ya yalnızca eşitlik filtresi
       kullanıyor ya da tek alanda sıralıyor (`messages` → `sentAt`); bunları Firestore'un

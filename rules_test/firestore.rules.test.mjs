@@ -311,7 +311,19 @@ describe('profiles', () => {
     await assertFails(getDoc(doc(anon(), 'publicProfiles', 'alice')));
   });
 
+  test('only a single account can have a public profile (FR-8.6)', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'users', 'alice'), { accountType: 'single' });
+      await setDoc(doc(db, 'users', 'gina'), { accountType: 'guardian' });
+    });
+    await assertSucceeds(setDoc(doc(as('alice'), 'publicProfiles', 'alice'), publicProfile()));
+    await assertFails(setDoc(doc(as('gina'), 'publicProfiles', 'gina'), publicProfile({ userId: 'gina' })));
+    // No account document at all: nothing says this is a single account.
+    await assertFails(setDoc(doc(as('carol'), 'publicProfiles', 'carol'), publicProfile({ userId: 'carol' })));
+  });
+
   test('public profiles cannot carry sensitive fields', async () => {
+    await seed((db) => setDoc(doc(db, 'users', 'alice'), { accountType: 'single' }));
     const ref = doc(as('alice'), 'publicProfiles', 'alice');
     await assertSucceeds(setDoc(ref, publicProfile()));
     await assertFails(setDoc(ref, publicProfile({ madhhab: 'hanefi' })));
@@ -329,17 +341,29 @@ describe('likes and the daily cap', () => {
     return batch.commit();
   };
 
+  // alice, the one liking, has finished her profile unless a test says not.
+  const seedProfiles = (...uids) =>
+    seed(async (db) => {
+      for (const uid of uids) await setDoc(doc(db, 'publicProfiles', uid), { userId: uid });
+    });
+
   test('a first like with a counter of 1 works', async () => {
-    await seed((db) => setDoc(doc(db, 'publicProfiles', 'bob'), { userId: 'bob' }));
+    await seedProfiles('alice', 'bob');
     await assertSucceeds(likeBatch(as('alice'), 1));
   });
 
   test('a like without bumping the counter by one is rejected', async () => {
-    await seed((db) => setDoc(doc(db, 'publicProfiles', 'bob'), { userId: 'bob' }));
+    await seedProfiles('alice', 'bob');
     await assertFails(likeBatch(as('alice'), 2));
   });
 
   test('cannot like someone without a public profile', async () => {
+    await seedProfiles('alice');
+    await assertFails(likeBatch(as('alice'), 1));
+  });
+
+  test('cannot like without a public profile of your own', async () => {
+    await seedProfiles('bob');
     await assertFails(likeBatch(as('alice'), 1));
   });
 
@@ -350,6 +374,7 @@ describe('likes and the daily cap', () => {
 
   test('the cap stops at 12', async () => {
     await seed(async (db) => {
+      await setDoc(doc(db, 'publicProfiles', 'alice'), { userId: 'alice' });
       await setDoc(doc(db, 'publicProfiles', 'bob'), { userId: 'bob' });
       await setDoc(doc(db, 'likeCounters', counterId('alice')), { uid: 'alice', count: 12 });
     });
@@ -750,6 +775,13 @@ describe('feed (günün sorusu)', () => {
       await seedMembers();
       await seedPost('alice');
       await assertFails(like(as('gina'), 'gina', 'alice'));
+    });
+
+    test('a member who has not finished their profile cannot like', async () => {
+      await seedMembers();
+      await seed((db) => setDoc(doc(db, 'users', 'dave'), { accountType: 'single' }));
+      await seedPost('alice');
+      await assertFails(like(as('dave'), 'dave', 'alice'));
     });
   });
 });

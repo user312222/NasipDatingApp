@@ -146,7 +146,7 @@ npm install      # first time only
 npm test
 ```
 
-It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap, family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
+It covers chat messages, matches, unread markers, the waitlist, invite codes, profiles, likes and the daily cap (both sides need a public profile), who may have a public profile at all, family sharing, what a linked guardian can and cannot read, reports/blocks, the account docs and the question-of-the-day feed. Run it after every `firestore.rules` change, before deploying.
 
 ---
 
