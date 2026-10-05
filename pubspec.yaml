@@ -45,6 +45,8 @@ dependencies:
   cloud_firestore: ^6.10.0
   shared_preferences: ^2.5.5
   firebase_app_check: ^0.4.8
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

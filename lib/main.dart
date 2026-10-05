@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/config/app_check.dart';
+import 'core/config/app_locale.dart';
 import 'core/config/dev_flags.dart';
 import 'core/di/injection_container.dart';
 import 'core/restart/restart_app.dart';
@@ -48,6 +49,9 @@ class BiNasipApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
+        locale: kAppLocale,
+        supportedLocales: kSupportedLocales,
+        localizationsDelegates: kLocalizationsDelegates,
         routerConfig: appRouter,
       ),
     );
