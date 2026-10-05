@@ -70,4 +70,28 @@ class FirestoreProfileRemoteDataSource implements ProfileRemoteDataSource {
       throw const ServerException('Profil kontrol edilemedi.');
     }
   }
+
+  @override
+  Future<ProfileModel?> getProfile(String userId) async {
+    try {
+      final doc = await _db.collection('profiles').doc(userId).get();
+      final data = doc.data();
+      if (data == null) return null;
+      // The private document stores the birth date as a Timestamp (see
+      // [save]); the model reads the ISO form its own toJson writes.
+      final birthDate = data['birthDate'];
+      return ProfileModel.fromJson({
+        ...data,
+        'userId': userId,
+        if (birthDate is Timestamp)
+          'birthDate': birthDate.toDate().toIso8601String(),
+      });
+    } on FirebaseException catch (e) {
+      logFailure('profile', e);
+      throw const ServerException('Profilin yüklenemedi.');
+    } on FormatException catch (e) {
+      logFailure('profile', e);
+      throw const ServerException('Profilin okunamadı.');
+    }
+  }
 }

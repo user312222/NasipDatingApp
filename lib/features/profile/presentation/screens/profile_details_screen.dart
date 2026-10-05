@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/wizard_widgets.dart';
+import '../../domain/entities/profile.dart';
 import '../bloc/profile_cubit.dart';
+import '../widgets/profile_form_parts.dart';
 
 class ProfileDetailsScreen extends StatefulWidget {
   const ProfileDetailsScreen({super.key});
@@ -30,17 +32,10 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   /// devam etmeden önce bu kutunun işaretlenmesi şart.
   bool _sensitiveDataConsent = false;
 
-  static const _madhhabSuggestions = [
-    'Sünni',
-    'Caferi',
-    'Alevi',
-    'Belirtmek istemiyorum',
-  ];
-
   bool get _hasSensitiveData =>
       _religiousNoteController.text.trim().isNotEmpty ||
       (_madhhabController.text.trim().isNotEmpty &&
-          _madhhabController.text.trim() != 'Belirtmek istemiyorum');
+          _madhhabController.text.trim() != madhhabNoAnswer);
 
   @override
   void initState() {
@@ -185,75 +180,16 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _madhhabSuggestions
-                      .map(
-                        (m) => ActionChip(
-                          label: Text(m),
-                          onPressed: () =>
-                              setState(() => _madhhabController.text = m),
-                          backgroundColor: colors.plumTint,
-                          labelStyle: textTheme.bodyMedium?.copyWith(
-                            color: colors.plumStrong,
-                          ),
-                          side: BorderSide.none,
-                        ),
-                      )
-                      .toList(),
+                MadhhabSuggestions(
+                  onSelected: (madhhab) =>
+                      setState(() => _madhhabController.text = madhhab),
                 ),
                 if (_hasSensitiveData) ...[
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: colors.plumTint,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Din/mezhep bilgisi, KVKK’ya göre özel nitelikli '
-                          'veridir ve ayrı bir açık rıza gerektirir.',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colors.plumStrong,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () => setState(
-                            () =>
-                                _sensitiveDataConsent = !_sensitiveDataConsent,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Checkbox(
-                                value: _sensitiveDataConsent,
-                                onChanged: (v) => setState(
-                                  () => _sensitiveDataConsent = v ?? false,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Text(
-                                    'Yukarıda yazdığım dini pratik/mezhep '
-                                    'bilgisinin işlenmesini açıkça kabul '
-                                    'ediyorum.',
-                                    style: textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  SensitiveDataConsentCard(
+                    value: _sensitiveDataConsent,
+                    onChanged: (value) =>
+                        setState(() => _sensitiveDataConsent = value),
                   ),
                 ],
                 if (_error != null) ...[

@@ -10,6 +10,9 @@ abstract interface class ProfileRemoteDataSource {
 
   /// See `ProfileRepository.hasProfile`.
   Future<bool> hasProfile(String userId);
+
+  /// See `ProfileRepository.getProfile`.
+  Future<ProfileModel?> getProfile(String userId);
 }
 
 class MockProfileRemoteDataSource implements ProfileRemoteDataSource {
@@ -31,4 +34,8 @@ class MockProfileRemoteDataSource implements ProfileRemoteDataSource {
   @override
   Future<bool> hasProfile(String userId) async =>
       _profiles.any((p) => p.userId == userId);
+
+  @override
+  Future<ProfileModel?> getProfile(String userId) async =>
+      _profiles.where((p) => p.userId == userId).firstOrNull;
 }

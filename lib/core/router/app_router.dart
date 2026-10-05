@@ -25,6 +25,7 @@ import '../../features/matching/presentation/screens/matches_screen.dart';
 import '../../features/messaging/presentation/screens/chat_screen.dart';
 import '../../features/profile/presentation/screens/profile_complete_screen.dart';
 import '../../features/profile/presentation/screens/profile_details_screen.dart';
+import '../../features/profile/presentation/screens/profile_edit_screen.dart';
 import '../../features/profile/presentation/screens/profile_family_involvement_screen.dart';
 import '../../features/profile/presentation/screens/profile_intent_screen.dart';
 import '../../features/profile/presentation/screens/profile_photos_screen.dart';
@@ -159,6 +160,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/complete',
       builder: (context, state) => const ProfileCompleteScreen(),
+    ),
+    // Opened from the Hesap tab; covers the tab bar like the chat does.
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => ProfileEditScreen(
+        // `_guard` only lets a signed-in single with a profile through.
+        userId: context.read<AuthCubit>().currentUser?.id ?? 'unknown_user',
+      ),
     ),
     // The single user's home: four tabs behind the bottom bar. `/account`
     // is the same screen as `/settings`, which stays a standalone route for

@@ -27,6 +27,7 @@ const _appRoutes = [
   '/matches',
   '/account',
   '/family/settings',
+  '/profile/edit',
 ];
 
 class _FakeProfileRepository implements ProfileRepository {
@@ -41,6 +42,10 @@ class _FakeProfileRepository implements ProfileRepository {
 
   @override
   Future<Result<void>> saveProfile(Profile profile) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Result<Profile?>> getProfile(String userId) =>
       throw UnimplementedError();
 }
 
@@ -255,6 +260,8 @@ void main() {
       expect(needsProfileCheck('/discover', _single), isTrue);
       expect(needsProfileCheck('/chat', _single), isTrue);
       expect(needsProfileCheck('/profile/complete', _single), isTrue);
+      // Editing needs a profile to edit, unlike the wizard next to it.
+      expect(needsProfileCheck('/profile/edit', _single), isTrue);
 
       expect(needsProfileCheck('/profile/photos', _single), isFalse);
       expect(needsProfileCheck('/settings', _single), isFalse);

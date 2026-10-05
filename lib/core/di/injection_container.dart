@@ -83,9 +83,11 @@ import '../../features/profile/data/datasources/firestore_profile_remote_data_so
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/get_profile.dart';
 import '../../features/profile/domain/usecases/has_profile.dart';
 import '../../features/profile/domain/usecases/save_profile.dart';
 import '../../features/profile/presentation/bloc/profile_cubit.dart';
+import '../../features/profile/presentation/bloc/profile_edit_cubit.dart';
 import '../../features/waitlist/data/datasources/waitlist_remote_data_source.dart';
 import '../../features/waitlist/data/repositories/waitlist_repository_impl.dart';
 import '../../features/waitlist/domain/repositories/waitlist_repository.dart';
@@ -180,10 +182,15 @@ void _initConsent() {
 void _initProfile() {
   // Presentation — provided at the app root, same reasoning as AuthCubit.
   sl.registerFactory(() => ProfileCubit(saveProfile: sl()));
+  // One per visit to the edit screen, which provides it itself.
+  sl.registerFactory(
+    () => ProfileEditCubit(getProfile: sl(), saveProfile: sl()),
+  );
 
   // Domain
   sl.registerLazySingleton(() => SaveProfile(sl()));
   sl.registerLazySingleton(() => HasProfile(sl()));
+  sl.registerLazySingleton(() => GetProfile(sl()));
   // Shared by the router and the session routing, so the profile is looked
   // up once per session.
   sl.registerLazySingleton(() => ProfileStatusCache(sl()));

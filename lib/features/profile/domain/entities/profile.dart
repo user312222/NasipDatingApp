@@ -20,6 +20,10 @@ enum PhotoVisibility {
   autoOnMatch,
 }
 
+/// The madhhab choice that says nothing. Unlike any real value in that
+/// field it is not religious data, so it needs no KVKK m.6 consent.
+const madhhabNoAnswer = 'Belirtmek istemiyorum';
+
 /// A completed profile, ready to save. `photoRefs` are placeholder
 /// filenames for now — see `ProfileRemoteDataSource` — they'll become
 /// Firebase Storage download URLs once photo upload is wired.

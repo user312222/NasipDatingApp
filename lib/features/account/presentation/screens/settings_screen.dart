@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/preferences/app_preferences.dart';
 import '../../../../core/restart/restart_app.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/wizard_widgets.dart';
+import '../../../auth/domain/entities/account_type.dart';
 import '../../../auth/presentation/bloc/auth_cubit.dart';
 import '../bloc/account_cubit.dart';
 
@@ -86,6 +88,12 @@ class _SettingsView extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final user = context.read<AuthCubit>().currentUser;
     final userId = user?.id ?? 'unknown_user';
+    final plumOutlined = OutlinedButton.styleFrom(
+      foregroundColor: colors.plumStrong,
+      side: BorderSide(color: colors.plum.withValues(alpha: 0.5)),
+      minimumSize: const Size.fromHeight(50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
 
     return BlocConsumer<AccountCubit, AccountState>(
       listener: (context, state) {
@@ -168,6 +176,25 @@ class _SettingsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
+                // Guardian accounts have no profile (FR-8.2).
+                if (user?.accountType == AccountType.single) ...[
+                  SectionCard(
+                    icon: Icons.badge_outlined,
+                    title: 'Profilin',
+                    body:
+                        'Adını, şehrini, niyetini, hakkındaki bilgileri ve '
+                        'fotoğraf görünürlüğünü buradan güncelleyebilirsin.',
+                    child: OutlinedButton.icon(
+                      onPressed: (deleting || loggingOut)
+                          ? null
+                          : () => context.push('/profile/edit'),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Profili düzenle'),
+                      style: plumOutlined,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 ValueListenableBuilder<bool>(
                   valueListenable:
                       sl<AppPreferences>().showMatchMessagePreviews,
@@ -183,8 +210,8 @@ class _SettingsView extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Switch(
                         value: showPreviews,
-                        onChanged: (v) => sl<AppPreferences>()
-                            .setShowMatchMessagePreviews(v),
+                        onChanged: (v) =>
+                            sl<AppPreferences>().setShowMatchMessagePreviews(v),
                         activeThumbColor: Colors.white,
                         activeTrackColor: colors.plumFill,
                       ),
@@ -217,16 +244,7 @@ class _SettingsView extends StatelessWidget {
                           )
                         : const Icon(Icons.logout),
                     label: const Text('Çıkış yap'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.plumStrong,
-                      side: BorderSide(
-                        color: colors.plum.withValues(alpha: 0.5),
-                      ),
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    style: plumOutlined,
                   ),
                 ),
                 const SizedBox(height: 12),

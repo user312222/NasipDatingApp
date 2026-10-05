@@ -22,6 +22,10 @@ class _FakeProfileRepository implements ProfileRepository {
   @override
   Future<Result<bool>> hasProfile(String userId) async =>
       Ok(saved.any((p) => p.userId == userId));
+
+  @override
+  Future<Result<Profile?>> getProfile(String userId) =>
+      throw UnimplementedError();
 }
 
 void main() {

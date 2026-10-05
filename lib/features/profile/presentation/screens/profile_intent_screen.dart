@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../theme/wizard_widgets.dart';
-import '../../domain/entities/profile.dart';
 import '../bloc/profile_cubit.dart';
+import '../widgets/profile_form_parts.dart';
 
 class ProfileIntentScreen extends StatelessWidget {
   const ProfileIntentScreen({super.key});
@@ -28,24 +28,9 @@ class ProfileIntentScreen extends StatelessWidget {
                 totalSteps: 5,
               ),
               const SizedBox(height: 26),
-              OptionCard(
-                icon: Icons.diamond_outlined,
-                title: 'Evlilik',
-                subtitle: 'Ciddi, evliliğe yönelik bir ilişki arıyorum.',
-                selected: selected == ProfileIntent.marriage,
-                onTap: () => context.read<ProfileCubit>().updateIntent(
-                  ProfileIntent.marriage,
-                ),
-              ),
-              const SizedBox(height: 12),
-              OptionCard(
-                icon: Icons.hourglass_empty_rounded,
-                title: 'Henüz emin değilim',
-                subtitle: 'Süreç içinde netleşsin istiyorum.',
-                selected: selected == ProfileIntent.notSureYet,
-                onTap: () => context.read<ProfileCubit>().updateIntent(
-                  ProfileIntent.notSureYet,
-                ),
+              IntentOptions(
+                selected: selected,
+                onChanged: context.read<ProfileCubit>().updateIntent,
               ),
               const Spacer(),
               GradientButton(

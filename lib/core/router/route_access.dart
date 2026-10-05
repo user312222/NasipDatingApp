@@ -53,6 +53,7 @@ const _singleAppRoutes = {
   '/account',
   '/chat',
   '/family/settings',
+  '/profile/edit',
 };
 
 /// Whether [location] is one where a single user's profile matters, i.e.
@@ -116,19 +117,18 @@ String? accessRedirect(String location, AccessContext access) {
   if (location.startsWith('/guardian/')) return home;
 
   // --- Single accounts --------------------------------------------------
-  if (location.startsWith('/profile/')) {
-    // The wizard is open to a verified single; its last page only once
-    // the profile exists.
-    return location == '/profile/complete' && access.hasProfile == false
-        ? '/profile/photos'
-        : null;
-  }
-
+  // Checked before the wizard: `/profile/edit` is part of the app proper.
   if (_singleAppRoutes.contains(location)) {
     if (access.hasProfile == false) return '/profile/photos';
     // A chat page with no conversation to show (typed address, reload).
     if (location == '/chat' && !access.hasChatArgs) return '/matches';
     return null;
+  }
+
+  // The wizard is open to a verified single; its last page only once the
+  // profile exists.
+  if (location == '/profile/complete' && access.hasProfile == false) {
+    return '/profile/photos';
   }
 
   return null;

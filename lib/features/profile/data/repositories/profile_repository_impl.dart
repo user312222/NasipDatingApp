@@ -22,6 +22,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Result<Profile?>> getProfile(String userId) async {
+    try {
+      return Ok(await remoteDataSource.getProfile(userId));
+    } on ServerException catch (e) {
+      return Err(ServerFailure(e.message ?? 'Profilin yüklenemedi.'));
+    }
+  }
+
+  @override
   Future<Result<bool>> hasProfile(String userId) async {
     try {
       return Ok(await remoteDataSource.hasProfile(userId));

@@ -168,8 +168,9 @@ Her gereksinim; **girdi**, **işlem**, **çıktı/kabul kriteri** ve mevcut **uy
 | FR-2.2 | Niyet seçimi | "Evlilik" veya "Henüz emin değilim" | Seçim kaydı | Casual/flört seçeneği sunulmaz (pozisyonlama gereği) |
 | FR-2.3 | Temel bilgiler | Ad, doğum tarihi, şehir, eğitim/meslek (opsiyonel), dini pratik notu (opsiyonel), mezhep (opsiyonel) | Form doğrulama ve kayıt | Ad/doğum tarihi/şehir zorunlu; mezhep eşleştirmede opsiyonel bir filtre olarak sunulur (varsayılan "farketmez"), serbest metin de desteklenir |
 | FR-2.4 | "Aileme açığım" genel sinyali | Açık/kapalı toggle | Profil alanına kayıt | Varsayılan kapalı; tek başına hiçbir eşleşme verisini açığa çıkarmaz — eşleşme bazlı görünürlük ayrıca FR-8.4 ile belirlenir |
+| FR-2.5 | Profili düzenleme | Ad, şehir, niyet, eğitim, meslek, dini pratik notu, mezhep, fotoğraf görünürlüğü, "aileme açığım" | Kayıtlı profilin okunması, değişikliklerin doğrulanıp özel ve herkese açık belgeye birlikte yazılması | Doğum tarihi ve fotoğraflar bu ekrandan değiştirilemez; değişiklik yokken "Kaydet" kapalıdır; kaydedilmemiş değişiklikle çıkışta onay sorulur |
 
-**Hassas veri notu (KVKK m.6):** Dini pratik notu veya mezhep alanı doldurulduğunda (ve mezhep değeri salt "Belirtmek istemiyorum" değilse), kullanıcıdan bu özel nitelikli verinin işlenmesi için ayrı bir açık rıza istenir; onay verilmeden forma devam edilemez.
+**Hassas veri notu (KVKK m.6):** Dini pratik notu veya mezhep alanı doldurulduğunda (ve mezhep değeri salt "Belirtmek istemiyorum" değilse), kullanıcıdan bu özel nitelikli verinin işlenmesi için ayrı bir açık rıza istenir; onay verilmeden forma devam edilemez. Profil düzenlenirken (FR-2.5) bu rıza yalnızca bilgi yeni eklendiğinde ya da değiştirildiğinde yeniden istenir; kayıtlı bilgiye dokunulmadığında ya da bilgi silindiğinde istenmez.
 
 ### FR-3 — Mahremiyet / Modesty Kontrolleri
 

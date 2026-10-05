@@ -31,6 +31,44 @@ class ProfileModel extends Profile {
     madhhab: p.madhhab,
   );
 
+  /// The reverse of [toJson]. Throws a [FormatException] when a field
+  /// every profile must have is missing or of the wrong type.
+  ///
+  /// An unknown photo visibility falls back to the most restrictive level
+  /// (FR-3.2): a value this version does not know must never open photos.
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    final name = json['name'];
+    final city = json['city'];
+    final birthDate = json['birthDate'];
+    final intent = ProfileIntent.values
+        .where((i) => i.name == json['intent'])
+        .firstOrNull;
+    if (name is! String ||
+        city is! String ||
+        birthDate is! String ||
+        intent == null) {
+      throw const FormatException('Profile document is incomplete.');
+    }
+    return ProfileModel(
+      userId: json['userId'] as String,
+      name: name,
+      birthDate: DateTime.parse(birthDate),
+      city: city,
+      intent: intent,
+      photoRefs: (json['photoRefs'] as List? ?? const []).cast<String>(),
+      familyInvolvementOptIn: json['familyInvolvementOptIn'] == true,
+      photoVisibility:
+          PhotoVisibility.values
+              .where((v) => v.name == json['photoVisibility'])
+              .firstOrNull ??
+          PhotoVisibility.hiddenUntilIUnlock,
+      educationLevel: json['educationLevel'] as String?,
+      occupation: json['occupation'] as String?,
+      religiousPracticeNote: json['religiousPracticeNote'] as String?,
+      madhhab: json['madhhab'] as String?,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'userId': userId,
     'name': name,

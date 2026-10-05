@@ -21,6 +21,8 @@ import 'package:binasip/features/matching/domain/repositories/matching_repositor
 import 'package:binasip/features/messaging/domain/entities/chat_message.dart';
 import 'package:binasip/features/messaging/domain/entities/conversation.dart';
 import 'package:binasip/features/messaging/domain/repositories/messaging_repository.dart';
+import 'package:binasip/features/profile/domain/entities/profile.dart';
+import 'package:binasip/features/profile/domain/repositories/profile_repository.dart';
 import 'package:binasip/features/safety/domain/entities/report_reason.dart';
 import 'package:binasip/features/safety/domain/repositories/safety_repository.dart';
 
@@ -323,6 +325,57 @@ class FakeFamilyRepository implements FamilyRepository {
   Future<Result<String>> getOrCreateInviteCode(String singleUserId) =>
       throw UnimplementedError();
 }
+
+class FakeProfileRepository implements ProfileRepository {
+  /// What [getProfile] answers with.
+  Result<Profile?> stored = const Ok(null);
+  Result<void> saveResult = const Ok(null);
+
+  /// When set, [saveProfile] waits for it - to look at the "saving" state.
+  Completer<void>? pendingSave;
+  final saved = <Profile>[];
+  var reads = 0;
+
+  @override
+  Future<Result<Profile?>> getProfile(String userId) async {
+    reads++;
+    return stored;
+  }
+
+  @override
+  Future<Result<void>> saveProfile(Profile profile) async {
+    saved.add(profile);
+    await pendingSave?.future;
+    return saveResult;
+  }
+
+  @override
+  Future<Result<bool>> hasProfile(String userId) async => Ok(switch (stored) {
+    Ok<Profile?>(:final value) => value != null,
+    Err<Profile?>() => false,
+  });
+}
+
+/// A stored profile with every optional field filled except the religious
+/// ones, so tests can add those and see the consent rule react.
+Profile testProfile({
+  String? religiousPracticeNote,
+  String? madhhab,
+  PhotoVisibility photoVisibility = PhotoVisibility.hiddenUntilIUnlock,
+}) => Profile(
+  userId: 'me',
+  name: 'Zeynep',
+  birthDate: DateTime(DateTime.now().year - 27, 1, 1),
+  city: 'İstanbul',
+  intent: ProfileIntent.marriage,
+  photoRefs: const ['photo_0.jpg', 'photo_1.jpg'],
+  photoVisibility: photoVisibility,
+  familyInvolvementOptIn: false,
+  educationLevel: 'Lisans',
+  occupation: 'Mimar',
+  religiousPracticeNote: religiousPracticeNote,
+  madhhab: madhhab,
+);
 
 class FakeFeedRepository implements FeedRepository {
   final feeds = StreamController<Result<Feed>>();
